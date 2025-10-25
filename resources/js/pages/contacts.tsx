@@ -77,7 +77,6 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
     const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
     const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts?.data || []);
 
-    const responderTypes = ['BEST', 'BCCM', 'BCPC', 'BDRRM', 'BHERT', 'BHW', 'BPSO', 'BTMO', 'VAWC'];
     const statusOptions = ['Active', 'Inactive'];
     
     // Get unique branch/unit names from contacts
@@ -126,154 +125,91 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                 {/* Search and Filters - Horizontal Layout */}
                 <div className="flex max-w-4xl flex-wrap gap-4">
                     {/* Search Bar */}
-                    <Input
-                        placeholder="Search contact"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-12 min-w-[300px] flex-1"
-                    />
+                    <div className="relative w-80">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                            placeholder="Search contact"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
                     
-                    {/* Type Filter - Popover Dropdown */}
-                    <Popover open={isTypeDropdownOpen} onOpenChange={setIsTypeDropdownOpen}>
-                        <PopoverTrigger asChild className="h-12">
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={isTypeDropdownOpen}
-                                className="w-[180px] cursor-pointer justify-between"
-                            >
-                                {selectedType || 'Select barangay...'}
-                                <ChevronsUpDown className="opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[180px] p-0">
-                            <Command>
-                                <CommandInput
-                                    placeholder="Search branch/unit..."
-                                    className="h-9"
-                                />
-                                <CommandList>
-                                    <CommandEmpty>No branch/unit found.</CommandEmpty>
-                                    <CommandGroup>
-                                        {/* Add "All Branch/Units" option */}
-                                        <CommandItem
-                                            key="all-types"
-                                            value=""
-                                            onSelect={() => {
-                                                setSelectedType('');
-                                                setIsTypeDropdownOpen(false);
-                                            }}
-                                        >
-                                            All Branch/Units
-                                            <Check
-                                                className={cn(
-                                                    'ml-auto',
-                                                    selectedType === ''
-                                                        ? 'opacity-100'
-                                                        : 'opacity-0',
-                                                )}
-                                            />
-                                        </CommandItem>
-                                        {branchUnitNames.map((type) => (
-                                            <CommandItem
-                                                key={type}
-                                                value={type}
-                                                onSelect={(currentValue) => {
-                                                    setSelectedType(
-                                                        currentValue === selectedType
-                                                            ? ''
-                                                            : currentValue
-                                                    );
-                                                    setIsTypeDropdownOpen(false);
-                                                }}
-                                            >
-                                                {type}
-                                                <Check
-                                                    className={cn(
-                                                        'ml-auto',
-                                                        selectedType === type
-                                                            ? 'opacity-100'
-                                                            : 'opacity-0',
-                                                    )}
-                                                />
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
+                    {/* Type Filter - Working Dropdown */}
+                    <div className="w-64 relative">
+                        <button 
+                            onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap"
+                        >
+                            <span className={selectedType ? "text-foreground" : "text-muted-foreground"}>
+                                {selectedType || "Select Branch/Unit Name"}
+                            </span>
+                            <ChevronDown className="h-4 w-4 opacity-50 ml-2 flex-shrink-0" />
+                        </button>
+                        {isTypeDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-input rounded-md shadow-lg z-10">
+                                <div 
+                                    className="p-2 hover:bg-muted cursor-pointer text-sm"
+                                    onClick={() => {
+                                        setSelectedType('');
+                                        setIsTypeDropdownOpen(false);
+                                    }}
+                                >
+                                    All Branch/Units
+                                </div>
+                                {branchUnitNames.map((type) => (
+                                    <div
+                                        key={type}
+                                        className="p-2 hover:bg-muted cursor-pointer text-sm"
+                                        onClick={() => {
+                                            setSelectedType(type);
+                                            setIsTypeDropdownOpen(false);
+                                        }}
+                                    >
+                                        {type}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
 
-                    {/* Status Filter - Popover Dropdown */}
-                    <Popover open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
-                        <PopoverTrigger asChild className="h-12">
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={isStatusDropdownOpen}
-                                className="w-[180px] cursor-pointer justify-between"
-                            >
-                                {selectedStatus || 'Select role...'}
-                                <ChevronsUpDown className="opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[180px] p-0">
-                            <Command>
-                                <CommandInput
-                                    placeholder="Search status..."
-                                    className="h-9"
-                                />
-                                <CommandList>
-                                    <CommandEmpty>No status found.</CommandEmpty>
-                                    <CommandGroup>
-                                        {/* Add "All Status" option */}
-                                        <CommandItem
-                                            key="all-status"
-                                            value=""
-                                            onSelect={() => {
-                                                setSelectedStatus('');
-                                                setIsStatusDropdownOpen(false);
-                                            }}
-                                        >
-                                            All Status
-                                            <Check
-                                                className={cn(
-                                                    'ml-auto',
-                                                    selectedStatus === ''
-                                                        ? 'opacity-100'
-                                                        : 'opacity-0',
-                                                )}
-                                            />
-                                        </CommandItem>
-                                        {statusOptions.map((status) => (
-                                            <CommandItem
-                                                key={status}
-                                                value={status}
-                                                onSelect={(currentValue) => {
-                                                    setSelectedStatus(
-                                                        currentValue === selectedStatus
-                                                            ? ''
-                                                            : currentValue
-                                                    );
-                                                    setIsStatusDropdownOpen(false);
-                                                }}
-                                            >
-                                                {status}
-                                                <Check
-                                                    className={cn(
-                                                        'ml-auto',
-                                                        selectedStatus === status
-                                                            ? 'opacity-100'
-                                                            : 'opacity-0',
-                                                    )}
-                                                />
-                                            </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
+                    {/* Status Filter - Working Dropdown */}
+                    <div className="w-48 relative">
+                        <button 
+                            onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap"
+                        >
+                            <span className={selectedStatus ? "text-foreground" : "text-muted-foreground"}>
+                                {selectedStatus || "Active"}
+                            </span>
+                            <ChevronDown className="h-4 w-4 opacity-50 ml-2 flex-shrink-0" />
+                        </button>
+                        {isStatusDropdownOpen && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-input rounded-md shadow-lg z-10">
+                                <div 
+                                    className="p-2 hover:bg-muted cursor-pointer text-sm"
+                                    onClick={() => {
+                                        setSelectedStatus('');
+                                        setIsStatusDropdownOpen(false);
+                                    }}
+                                >
+                                    All Status
+                                </div>
+                                {statusOptions.map((status) => (
+                                    <div
+                                        key={status}
+                                        className="p-2 hover:bg-muted cursor-pointer text-sm"
+                                        onClick={() => {
+                                            setSelectedStatus(status);
+                                            setIsStatusDropdownOpen(false);
+                                        }}
+                                    >
+                                        {status}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Contacts Table */}
@@ -307,16 +243,13 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                                     </div>
                                     <div className="col-span-2">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                            contact.responder_type === 'BEST' ? 'bg-blue-100 text-blue-800' :
-                                            contact.responder_type === 'BCCM' ? 'bg-green-100 text-green-800' :
-                                            contact.responder_type === 'BCPC' ? 'bg-purple-100 text-purple-800' :
-                                            contact.responder_type === 'BDRRM' ? 'bg-red-100 text-red-800' :
-                                            contact.responder_type === 'BHERT' ? 'bg-orange-100 text-orange-800' :
-                                            contact.responder_type === 'BHW' ? 'bg-pink-100 text-pink-800' :
-                                            contact.responder_type === 'BPSO' ? 'bg-indigo-100 text-indigo-800' :
-                                            contact.responder_type === 'BTMO' ? 'bg-cyan-100 text-cyan-800' :
-                                            contact.responder_type === 'VAWC' ? 'bg-yellow-100 text-yellow-800' :
-                                            'bg-gray-100 text-gray-800'
+                                            contact.responder_type === 'Fire' ? 'bg-red-100 text-red-800' :
+                                            contact.responder_type === 'Emergency' ? 'bg-orange-100 text-orange-800' :
+                                            contact.responder_type === 'Crime' ? 'bg-purple-100 text-purple-800' :
+                                            contact.responder_type === 'Traffic' ? 'bg-yellow-100 text-yellow-800' :
+                                            contact.responder_type === 'Barangay' ? 'bg-green-100 text-green-800' :
+                                            contact.responder_type === 'Others' ? 'bg-gray-100 text-gray-800' :
+                                            'bg-blue-100 text-blue-800'
                                         }`}>
                                             {contact.responder_type}
                                         </span>
@@ -333,7 +266,7 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                                         <div className="font-medium">{contact.location}</div>
                                         {contact.latitude && contact.longitude && (
                                             <div className="text-sm text-muted-foreground">
-                                                {contact.latitude}, {contact.longitude}
+                                                {Number(contact.latitude).toFixed(2)}, {Number(contact.longitude).toFixed(2)}
                                             </div>
                                         )}
                                     </div>
