@@ -29,7 +29,7 @@ class ApiLoginController extends BaseApiController
 
             // Create access token with 'access-api' ability
             $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-            
+
             // Create refresh token with 'refresh-token' ability
             $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
 
@@ -97,6 +97,7 @@ class ApiLoginController extends BaseApiController
         try {
             // Revoke the current token
             $request->user()->currentAccessToken()->delete();
+            $request->user()->tokens()->delete();
 
             return $this->sendResponse(null, 'Logout successful');
         } catch (\Exception $e) {
@@ -172,12 +173,12 @@ class ApiLoginController extends BaseApiController
 
             $user = $request->user();
 
-            // Revoke the current refresh token
-            $request->user()->currentAccessToken()->delete();
+            // Delete ALL existing tokens (both access and refresh tokens)
+            $user->tokens()->delete();
 
             // Create new access token with 'access-api' ability
             $new_access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-            
+
             // Create new refresh token with 'refresh-token' ability
             $new_refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
 
