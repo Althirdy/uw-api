@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,7 +27,11 @@ class ApiLoginController extends BaseApiController
                 return $this->sendUnauthorized('Invalid credentials');
             }
 
-            $token = $user->createToken('mobile-app')->plainTextToken;
+            // Create access token with 'access-api' ability
+            $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
+            
+            // Create refresh token with 'refresh-token' ability
+            $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
 
             if ($user['role_id'] == 2 || $user['role_id'] == 1) {
                 $officialDetails = $user->officialDetails;
@@ -36,7 +41,8 @@ class ApiLoginController extends BaseApiController
                 }
 
                 return $this->sendResponse([
-                    'token' => $token,
+                    'token' => $access_token,
+                    'refreshToken' => $refresh_token,
                     'user' => [
                         'id' => $user->id,
                         'firstName' => $officialDetails->first_name,
@@ -57,7 +63,8 @@ class ApiLoginController extends BaseApiController
                 }
 
                 return $this->sendResponse([
-                    'token' => $token,
+                    'token' => $access_token,
+                    'refreshToken' => $refresh_token,
                     'user' => [
                         'id' => $user->id,
                         'firstName' => $citizenDetails->first_name,
@@ -152,6 +159,34 @@ class ApiLoginController extends BaseApiController
             return $this->sendError('Invalid user role');
         } catch (\Exception $e) {
             return $this->sendError('An error occurred while retrieving user details');
+        }
+    }
+
+    public function refreshToken(Request  $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            // Verify the token has 'refresh-token' ability
+            if (!$request->user()->tokenCan('refresh-token')) {
+                return $this->sendUnauthorized('Invalid token type. Please use refresh token.');
+            }
+
+            $user = $request->user();
+
+            // Revoke the current refresh token
+            $request->user()->currentAccessToken()->delete();
+
+            // Create new access token with 'access-api' ability
+            $new_access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
+            
+            // Create new refresh token with 'refresh-token' ability
+            $new_refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
+
+            return $this->sendResponse([
+                'token' => $new_access_token,
+                'refreshToken' => $new_refresh_token,
+            ], 'Token refreshed successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('An error occurred while refreshing the token');
         }
     }
 }

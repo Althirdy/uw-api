@@ -5,11 +5,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [ApiLoginController::class, 'login']);
-Route::post('/logout', [ApiLoginController::class, 'logout'])->middleware('auth:sanctum');
 
+// Logout requires access token
+Route::post('/logout', [ApiLoginController::class, 'logout'])
+    ->middleware(['auth:sanctum', 'ability.access']);
 
+// Refresh token endpoint - only accepts refresh tokens
+Route::post('/refresh-token', [ApiLoginController::class, 'refreshToken'])
+    ->middleware('auth:sanctum');
 
-Route::middleware('auth:sanctum')->group(function () {
+// Protected routes - require access token
+Route::middleware(['auth:sanctum', 'ability.access'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::get('user', [ApiLoginController::class, 'user']);
     });
