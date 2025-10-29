@@ -22,7 +22,6 @@ class ConcernRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'citizen_id' => 'required|integer|exists:users,id',
             'title' => 'required|string|max:100',
             'description' => 'required|string',
             'category' => 'required|string|in:safety,security,infrastructure,environment,noise,other',
@@ -41,9 +40,6 @@ class ConcernRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'citizen_id.required' => 'Citizen ID is required.',
-            'citizen_id.integer' => 'Citizen ID must be an integer.',
-            'citizen_id.exists' => 'Citizen ID does not exist.',
             'title.required' => 'Title is required.',
             'title.string' => 'Title must be a string.',
             'title.max' => 'Title cannot exceed 100 characters.',

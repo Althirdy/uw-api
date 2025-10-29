@@ -29,13 +29,15 @@ class ManualConcernController extends BaseApiController
     public function index()
     {
         try {
+            // Get only concerns belonging to the authenticated user
             $concerns = Concern::where('type', 'manual')
+                ->where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
                     }
                 ])
-                ->orderBy('created_at', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             $formattedConcerns = $concerns->map(function ($concern) {
@@ -80,7 +82,7 @@ class ManualConcernController extends BaseApiController
             // 🟢 Step 1: Create the Concern record
             $concern = Concern::create([
                 'type' => 'manual',
-                'citizen_id' => $validated['citizen_id'],
+                'citizen_id' => auth()->id(), // Use authenticated user's ID
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'status' => 'pending',
@@ -156,8 +158,10 @@ class ManualConcernController extends BaseApiController
     public function show(string $id)
     {
         try {
+            // Get concern only if it belongs to the authenticated user
             $concern = Concern::where('type', 'manual')
                 ->where('id', $id)
+                ->where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
@@ -166,7 +170,7 @@ class ManualConcernController extends BaseApiController
                 ->first();
 
             if (!$concern) {
-                return $this->sendError('Manual concern not found', [], 404);
+                return $this->sendError('Manual concern not found or you do not have permission to view it', [], 404);
             }
 
             $formattedConcern = [
@@ -204,8 +208,10 @@ class ManualConcernController extends BaseApiController
         DB::beginTransaction();
 
         try {
+            // Get concern only if it belongs to the authenticated user
             $concern = Concern::where('type', 'manual')
                 ->where('id', $id)
+                ->where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
@@ -214,7 +220,7 @@ class ManualConcernController extends BaseApiController
                 ->first();
 
             if (!$concern) {
-                return $this->sendError('Manual concern not found', [], 404);
+                return $this->sendError('Manual concern not found or you do not have permission to update it', [], 404);
             }
 
             // Update only title and description
@@ -264,12 +270,14 @@ class ManualConcernController extends BaseApiController
         DB::beginTransaction();
 
         try {
+            // Get concern only if it belongs to the authenticated user
             $concern = Concern::where('type', 'manual')
                 ->where('id', $id)
+                ->where('citizen_id', auth()->id())
                 ->first();
 
             if (!$concern) {
-                return $this->sendError('Manual concern not found', [], 404);
+                return $this->sendError('Manual concern not found or you do not have permission to delete it', [], 404);
             }
 
             // Soft delete the concern
