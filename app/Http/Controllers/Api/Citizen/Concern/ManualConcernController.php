@@ -82,7 +82,7 @@ class ManualConcernController extends BaseApiController
             // 🟢 Step 1: Create the Concern record
             $concern = Concern::create([
                 'type' => 'manual',
-                'citizen_id' => $validated['citizen_id'],
+                'citizen_id' => auth()->id(), // Use authenticated user's ID
                 'title' => $validated['title'],
                 'description' => $validated['description'],
                 'status' => 'pending',
