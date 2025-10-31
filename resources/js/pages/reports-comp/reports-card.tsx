@@ -46,12 +46,6 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
                             <span>Report ID: #{report.id}</span>
                         </CardTitle>
                         <CardDescription>
-<<<<<<< HEAD
-                            {' '}
-                            <Badge variant="default" className="text-sm">
-                                {report.status}
-                            </Badge>
-=======
                             <div className="flex gap-2">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                     report.report_type === 'CCTV' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
@@ -70,7 +64,6 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
                                     {report.status}
                                 </span>
                             </div>
->>>>>>> 1b8f3af (tempo lang)
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

@@ -79,6 +79,9 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
 
     const responderTypes = ['BEST', 'BCCM', 'BCPC', 'BDRRM', 'BHERT', 'BHW', 'BPSO', 'BTMO', 'VAWC'];
     const statusOptions = ['Active', 'Inactive'];
+    
+    // Get unique branch/unit names from contacts
+    const branchUnitNames = Array.from(new Set(contacts?.data?.map(c => c.branch_unit_name) || [])).sort();
 
     // Filter contacts based on search term, type, and status - client-side filtering as fallback
     useEffect(() => {
@@ -93,12 +96,6 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
             );
         };
         
-<<<<<<< HEAD
-        const matchesType = selectedType === '' || contact.responder_type === selectedType;
-        const matchesStatus = selectedStatus === '' || 
-            (selectedStatus === 'Active' && contact.active) ||
-            (selectedStatus === 'Inactive' && !contact.active);
-=======
         const matchesType = (contact: Contact) => {
             return selectedType === '' || contact.branch_unit_name === selectedType;
         };
@@ -108,7 +105,6 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                 (selectedStatus === 'Active' && contact.active) ||
                 (selectedStatus === 'Inactive' && !contact.active);
         };
->>>>>>> 1b8f3af (tempo lang)
         
         filteredResults = filteredResults.filter((contact) => 
             matchesSearch(contact) && matchesType(contact) && matchesStatus(contact)
@@ -130,93 +126,6 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                 {/* Search and Filters - Horizontal Layout */}
                 <div className="flex max-w-4xl flex-wrap gap-4">
                     {/* Search Bar */}
-<<<<<<< HEAD
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input
-                            placeholder="Search contact"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                        />
-                    </div>
-                    
-                    {/* Type Filter - Working Dropdown */}
-                    <div className="w-48 relative">
-                        <button 
-                            onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        >
-                            <span className={selectedType ? "text-foreground" : "text-muted-foreground"}>
-                                {selectedType || "Select Type"}
-                            </span>
-                            <ChevronDown className="h-4 w-4 opacity-50" />
-                        </button>
-                        {isTypeDropdownOpen && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-input rounded-md shadow-lg z-10">
-                                <div 
-                                    className="p-2 hover:bg-muted cursor-pointer text-sm"
-                                    onClick={() => {
-                                        setSelectedType('');
-                                        setIsTypeDropdownOpen(false);
-                                    }}
-                                >
-                                    All Types
-                                </div>
-                                {responderTypes.map((type) => (
-                                    <div
-                                        key={type}
-                                        className="p-2 hover:bg-muted cursor-pointer text-sm"
-                                        onClick={() => {
-                                            setSelectedType(type);
-                                            setIsTypeDropdownOpen(false);
-                                        }}
-                                    >
-                                        {type}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Status Filter - Working Dropdown */}
-                    <div className="w-48 relative">
-                        <button 
-                            onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        >
-                            <span className={selectedStatus ? "text-foreground" : "text-muted-foreground"}>
-                                {selectedStatus || "Select Status"}
-                            </span>
-                            <ChevronDown className="h-4 w-4 opacity-50" />
-                        </button>
-                        {isStatusDropdownOpen && (
-                            <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-input rounded-md shadow-lg z-10">
-                                <div 
-                                    className="p-2 hover:bg-muted cursor-pointer text-sm"
-                                    onClick={() => {
-                                        setSelectedStatus('');
-                                        setIsStatusDropdownOpen(false);
-                                    }}
-                                >
-                                    All Status
-                                </div>
-                                {statusOptions.map((status) => (
-                                    <div
-                                        key={status}
-                                        className="p-2 hover:bg-muted cursor-pointer text-sm"
-                                        onClick={() => {
-                                            setSelectedStatus(status);
-                                            setIsStatusDropdownOpen(false);
-                                        }}
-                                    >
-                                        {status}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-=======
                     <Input
                         placeholder="Search contact"
                         value={searchTerm}
@@ -365,7 +274,6 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                             </Command>
                         </PopoverContent>
                     </Popover>
->>>>>>> 1b8f3af (tempo lang)
                 </div>
 
                 {/* Contacts Table */}

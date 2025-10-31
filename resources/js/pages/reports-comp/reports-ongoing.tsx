@@ -48,12 +48,6 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                 <CardTitle className="line-clamp-2 text-base">
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-row items-center gap-2">
-<<<<<<< HEAD
-                            <Badge variant="default" className="text-sm">
-                                {report.report_type.toLocaleUpperCase()}
-                            </Badge>
-                            <Badge variant="default" className="text-sm">
-=======
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 report.report_type === 'CCTV' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
                                 report.report_type === 'Citizen Concern' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' :
@@ -68,9 +62,8 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                                 report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                                 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
                             }`}>
->>>>>>> 1b8f3af (tempo lang)
                                 {report.status.toLocaleUpperCase()}
-                            </Badge>
+                            </span>
                         </div>
 
                         <span className="text-md font-semibold">
