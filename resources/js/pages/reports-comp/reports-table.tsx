@@ -79,7 +79,7 @@ const ReportsTable = ({ reports, reportTypes }: ReportsTableProps) => {
                                 {report.transcript}
                             </TableCell>
                             <TableCell className="py-3">
-                                {report.latitute}, {report.longtitude}
+                                {Number(report.latitute).toFixed(2)}, {Number(report.longtitude).toFixed(2)}
                             </TableCell>
                             <TableCell className="py-3">
                                 {formatDateTime(report.created_at)}
@@ -91,7 +91,7 @@ const ReportsTable = ({ reports, reportTypes }: ReportsTableProps) => {
                                     report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                                     'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
                                 }`}>
-                                    {report.status.toLocaleUpperCase()}
+                                    {report.status}
                                 </span>
                             </TableCell>
                             <TableCell className="py-3">

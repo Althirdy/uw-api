@@ -11,7 +11,7 @@ import { ExternalLink, MapPin, Cpu, Camera, Activity, Zap } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { uwDevice_T } from '../type'
+import { uwDevice_T, cctv_T } from '@/pages/type'
 
 interface ViewUWDeviceProps {
     device: uwDevice_T
@@ -130,11 +130,11 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
                                             <div className="grid grid-cols-2 gap-4 mt-2">
                                                 <div>
                                                     <p className="text-xs font-medium text-muted-foreground">Latitude</p>
-                                                    <p className="text-xs">{device.custom_latitude}</p>
+                                                    <p className="text-xs">{Number(device.custom_latitude).toFixed(2)}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs font-medium text-muted-foreground">Longitude</p>
-                                                    <p className="text-xs">{device.custom_longitude}</p>
+                                                    <p className="text-xs">{Number(device.custom_longitude).toFixed(2)}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -156,7 +156,7 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
                             <Label className="text-sm font-medium text-muted-foreground">Linked CCTV Cameras</Label>
                             {device.cctv_cameras && device.cctv_cameras.length > 0 ? (
                                 <div className="space-y-3">
-                                    {device.cctv_cameras.map((camera, index) => (
+                                    {device.cctv_cameras.map((camera: cctv_T, index: number) => (
                                         <div key={index} className="p-3 border rounded-lg bg-muted/20">
                                             <div className="flex items-center gap-3">
                                                 <Camera className="h-4 w-4 text-blue-500" />

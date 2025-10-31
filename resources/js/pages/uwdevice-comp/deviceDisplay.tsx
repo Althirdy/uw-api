@@ -131,7 +131,7 @@ function UWDeviceDisplay({
                                         </div>
                                         {device.custom_latitude && device.custom_longitude && (
                                             <p className="text-xs text-muted-foreground">
-                                                {Number(device.custom_latitude).toFixed(6)}, {Number(device.custom_longitude).toFixed(6)}
+                                                {Number(device.custom_latitude).toFixed(2)}, {Number(device.custom_longitude).toFixed(2)}
                                             </p>
                                         )}
                                     </>

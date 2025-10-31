@@ -84,7 +84,7 @@ function ViewLocation({ location }: ViewLocationProps) {
                             <Label htmlFor="latitude">Latitude</Label>
                             <Input
                                 id="latitude"
-                                value={location.latitude}
+                                value={Number(location.latitude).toFixed(2)}
                                 readOnly
                                 className="bg-muted"
                             />
@@ -93,7 +93,7 @@ function ViewLocation({ location }: ViewLocationProps) {
                             <Label htmlFor="longitude">Longitude</Label>
                             <Input
                                 id="longitude"
-                                value={location.longitude}
+                                value={Number(location.longitude).toFixed(2)}
                                 readOnly
                                 className="bg-muted"
                             />

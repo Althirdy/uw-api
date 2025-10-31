@@ -85,15 +85,19 @@ const UserTable = ({
                             </TableCell>
                             <TableCell className="py-3">
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                    (user.citizen_details?.status || user.official_details?.status || 'ACTIVE').toLocaleUpperCase() === 'ACTIVE' 
+                                    (user.citizen_details?.status || user.official_details?.status || 'Active').charAt(0).toUpperCase() + (user.citizen_details?.status || user.official_details?.status || 'Active').slice(1).toLowerCase() === 'Active' 
                                         ? 'bg-green-100 text-green-800' 
                                         : 'bg-gray-100 text-gray-800'
                                 }`}>
                                     ● {(
                                         user.citizen_details?.status ||
                                         user.official_details?.status ||
-                                        'ACTIVE'
-                                    ).toLocaleUpperCase()}
+                                        'Active'
+                                    ).charAt(0).toUpperCase() + (
+                                        user.citizen_details?.status ||
+                                        user.official_details?.status ||
+                                        'Active'
+                                    ).slice(1).toLowerCase()}
                                 </span>
                             </TableCell>
                             <TableCell className="py-3">

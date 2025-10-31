@@ -32,7 +32,7 @@ class ReportSeeder extends Seeder
             [
                 'user_id'        => $users->skip(1)->first()?->id ?? $users->first()->id,
                 'report_type'    => 'Citizen Concern',
-                'transcript'     => 'Issue at Barangay 176A office.',
+                'transcript'     => 'Issue at Barangay 176-E office.',
                 'description'    => 'Altercation reported at the barangay hall.',
                 'latitute'       => '14.7751',
                 'longtitude'     => '121.0448',
@@ -43,7 +43,7 @@ class ReportSeeder extends Seeder
             [
                 'user_id'        => $users->skip(2)->first()?->id ?? $users->first()->id,
                 'report_type'    => 'CCTV',
-                'transcript'     => 'Altercation reported at the barangay 176A office.',
+                'transcript'     => 'Altercation reported at the barangay 176-E office.',
                 'description'    => 'Loud altercation between residents occurred at the barangay office during business hours.',
                 'latitute'       => '14.7730',
                 'longtitude'     => '121.0540',

@@ -19,9 +19,9 @@ class CctvDeviceSeeder extends Seeder
             Locations::insert([
                 [
                     'location_category' => 1, // Government
-                    'location_name' => 'Barangay 176A Hall',
+                    'location_name' => 'Barangay 176-E Hall',
                     'landmark' => 'Main Entrance',
-                    'barangay' => 'Barangay 176A',
+                    'barangay' => 'Barangay 176-E',
                     'latitude' => 14.7730,
                     'longitude' => 121.0540,
                     'description' => 'Main barangay hall building',
@@ -32,7 +32,7 @@ class CctvDeviceSeeder extends Seeder
                     'location_category' => 2, // Commercial
                     'location_name' => 'Metroplaza Phase 5',
                     'landmark' => 'Shopping Center',
-                    'barangay' => 'Barangay 176A',
+                    'barangay' => 'Barangay 176-E',
                     'latitude' => 14.7751,
                     'longitude' => 121.0448,
                     'description' => 'Commercial shopping area',
@@ -43,7 +43,7 @@ class CctvDeviceSeeder extends Seeder
                     'location_category' => 6, // Transportation
                     'location_name' => 'Main Road Junction',
                     'landmark' => 'Traffic Light',
-                    'barangay' => 'Barangay 176A',
+                    'barangay' => 'Barangay 176-E',
                     'latitude' => 14.7740,
                     'longitude' => 121.0530,
                     'description' => 'Major road intersection',

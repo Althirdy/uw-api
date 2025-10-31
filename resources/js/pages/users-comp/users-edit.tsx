@@ -147,9 +147,9 @@ function EditUser({ user, roles, children }: EditUserProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
+            <SheetContent className="flex flex-col h-full">
+                <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                    <SheetHeader className="flex-shrink-0 pb-4 border-b">
                         <div className="flex flex-row items-center gap-4">
                             <Avatar className="h-14 w-14">
                                 <AvatarFallback className="bg-primary text-2xl font-semibold text-primary-foreground">
@@ -167,7 +167,7 @@ function EditUser({ user, roles, children }: EditUserProps) {
                         </div>
                     </SheetHeader>
 
-                    <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
+                    <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
                         {/* Basic Information */}
 
                         {/* Contact Information & Role */}
@@ -467,7 +467,7 @@ function EditUser({ user, roles, children }: EditUserProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="px-4">
+                    <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
                         <div className="flex w-full flex-row justify-end gap-2">
                             <SheetClose asChild>
                                 <Button
