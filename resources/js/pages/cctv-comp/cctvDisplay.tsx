@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
     Camera,
-    BarChart3,
     ExternalLink,
     Edit,
     Trash2,
@@ -24,7 +23,6 @@ import ArchiveCCTV from './archiveCCTV'
 interface CCTVDisplayProps {
     onEdit?: (device: any) => void
     onDelete?: (device: any) => void
-    onViewReports?: (device: any) => void
     onViewStream?: (device: any) => void
     devices: paginated_T<cctv_T>
     locations: location_T[]
@@ -33,7 +31,6 @@ interface CCTVDisplayProps {
 function CCTVDisplay({
     onEdit,
     onDelete,
-    onViewReports,
     onViewStream,
     devices,
     locations = []
@@ -137,16 +134,7 @@ function CCTVDisplay({
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center justify-between pt-2">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => onViewReports?.(device)}
-                                    className="gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                >
-                                    <BarChart3 className="h-4 w-4" />
-                                    Reports
-                                </Button>
+                            <div className="flex items-center justify-end pt-2">
                                 <div className="flex items-center gap-1">
                                     <EditCCTVDevice location={locations} cctv={device} />
                                     <ArchiveCCTV cctv={device} />

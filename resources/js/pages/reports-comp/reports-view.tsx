@@ -60,8 +60,8 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader>
+            <SheetContent className="flex flex-col h-full">
+                <SheetHeader className="flex-shrink-0 pb-4 border-b">
                     <SheetTitle>Report Details</SheetTitle>
                     <SheetDescription className="flex flex-col gap-1">
                         <span>Report ID: #{report.id}</span>
@@ -71,7 +71,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         </Badge>
                     </SheetDescription>
                 </SheetHeader>
-                <div className="flex w-full flex-col justify-start gap-4 px-4 py-2">
+                <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
                     {/* Basic Information */}
 
                     <div className="flex flex-col gap-2">
@@ -125,7 +125,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         ])}
                     </div>
                 </div>
-                <SheetFooter>
+                <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
                     <SheetClose asChild>
                         <div className="flex w-full flex-col items-end justify-end gap-2">
                             {!report.is_acknowledge && (
@@ -133,7 +133,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                                     variant="default"
                                     size="sm"
                                     onClick={handleAcknowledge}
-                                    className="w-1/3 cursor-pointer py-6"
+                                    className="cursor-pointer"
                                 >
                                     <Check className="mr-2 inline h-4 w-4" />
                                     Acknowledge
@@ -142,7 +142,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="w-1/4 cursor-pointer py-4"
+                                className="cursor-pointer"
                             >
                                 <MoveLeft className="mr-2 inline h-4 w-4" />
                                 Return

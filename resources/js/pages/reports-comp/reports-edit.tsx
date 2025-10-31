@@ -90,9 +90,9 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
+            <SheetContent className="flex flex-col h-full">
+                <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                    <SheetHeader className="flex-shrink-0 pb-4 border-b">
                         <div className="flex flex-row items-center gap-4">
                             <div className="text-left">
                                 <h3 className="text-xl font-semibold">
@@ -122,7 +122,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                         </div>
                     </SheetHeader>
 
-                    <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
+                    <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
                         {/* Report Information */}
                         <div className="flex w-full flex-col gap-6">
                             <div className="grid flex-1 auto-rows-min gap-2">
@@ -375,7 +375,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="px-4">
+                    <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
                         <div className="flex w-full flex-row justify-end gap-2">
                             <SheetClose asChild>
                                 <Button

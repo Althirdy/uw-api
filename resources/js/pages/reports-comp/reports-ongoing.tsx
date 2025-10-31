@@ -48,10 +48,27 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                 <CardTitle className="line-clamp-2 text-base">
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-row items-center gap-2">
+<<<<<<< HEAD
                             <Badge variant="default" className="text-sm">
                                 {report.report_type.toLocaleUpperCase()}
                             </Badge>
                             <Badge variant="default" className="text-sm">
+=======
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                report.report_type === 'CCTV' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
+                                report.report_type === 'Citizen Concern' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' :
+                                report.report_type === 'Emergency' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
+                                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                            }`}>
+                                {report.report_type.toLocaleUpperCase()}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                report.status === 'Ongoing' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                report.status === 'Pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                            }`}>
+>>>>>>> 1b8f3af (tempo lang)
                                 {report.status.toLocaleUpperCase()}
                             </Badge>
                         </div>
@@ -82,7 +99,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="w-1/4 cursor-pointer"
+                        className="cursor-pointer"
                     >
                         <Open className="mr-1 inline h-4 w-4" />
                         View Details
@@ -92,7 +109,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                     <Button
                         variant="default"
                         size="sm"
-                        className="w-1/4 cursor-pointer"
+                        className="cursor-pointer"
                         onClick={handleAcknowledge}
                         disabled={report.is_acknowledge}
                     >
@@ -104,7 +121,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                     <Button
                         variant="default"
                         size="sm"
-                        className="w-1/4 cursor-pointer bg-green-600 hover:bg-green-700"
+                        className="cursor-pointer bg-green-600 hover:bg-green-700"
                         onClick={handleResolve}
                     >
                         <Check className="mr-1 inline h-4 w-4" />

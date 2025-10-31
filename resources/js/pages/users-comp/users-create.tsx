@@ -43,7 +43,7 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
             last_name: '',
             email: '',
             phone_number: '',
-            assigned_brgy: '',
+            assigned_brgy: 'Barangay 176-E',
             role_id: '',
             password: '',
             password_confirmation: '',
@@ -87,30 +87,36 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
     };
 
     const validatePassword = (value: string) => {
+        const isPurokLeader = data.role_id === '2';
+        const fieldName = isPurokLeader ? 'PIN' : 'Password';
+        
         if (!value) {
-            return 'Password is required';
+            return `${fieldName} is required`;
         }
         if (value.length < 8) {
-            return 'Password must be at least 8 characters';
+            return `${fieldName} must be at least 8 characters`;
         }
         if (!/[a-zA-Z]/.test(value)) {
-            return 'Password must contain at least one letter';
+            return `${fieldName} must contain at least one letter`;
         }
         if (!/[0-9]/.test(value)) {
-            return 'Password must contain at least one number';
+            return `${fieldName} must contain at least one number`;
         }
         if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
-            return 'Password must contain at least one symbol';
+            return `${fieldName} must contain at least one symbol`;
         }
         return '';
     };
 
     const validatePasswordConfirmation = (value: string, password: string) => {
+        const isPurokLeader = data.role_id === '2';
+        const fieldName = isPurokLeader ? 'PIN' : 'Password';
+        
         if (!value) {
-            return 'Password confirmation is required';
+            return `${fieldName} confirmation is required`;
         }
         if (value !== password) {
-            return 'Passwords do not match';
+            return `${fieldName}s do not match`;
         }
         return '';
     };
@@ -229,22 +235,17 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                     <Plus /> Add User
                 </Button>
             </SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
+            <SheetContent className="flex flex-col h-full">
+                <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                    <SheetHeader className="flex-shrink-0 pb-4 border-b">
                         <SheetTitle>Add New User</SheetTitle>
                         <SheetDescription>
                             Create a new user account with their personal
                             information and role assignment.
                         </SheetDescription>
                     </SheetHeader>
-                    <div className="grid flex-1 auto-rows-min gap-4 px-4 py-2">
+                    <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
                         <div className="grid flex-1 auto-rows-min gap-2">
-                            <div className="grid gap-3">
-                                <p className="text-sm font-medium text-[var(--gray)]">
-                                    Personal Information
-                                </p>
-                            </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="first-name">First Name</Label>
                                 <div>
@@ -333,11 +334,6 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
 
                         <div className="grid flex-1 auto-rows-min gap-2">
                             <div className="grid gap-3">
-                                <p className="text-sm font-medium text-[var(--gray)]">
-                                    Contact Information
-                                </p>
-                            </div>
-                            <div className="grid gap-3">
                                 <Label htmlFor="email">Email</Label>
                                 <div>
                                     <Input
@@ -398,11 +394,6 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                         </div>
 
                         <div className="grid flex-1 auto-rows-min gap-2">
-                            <div className="grid gap-3">
-                                <p className="text-sm font-medium text-[var(--gray)]">
-                                    Role & Location
-                                </p>
-                            </div>
                             <div className="flex w-full flex-row gap-4">
                                 <div className="grid flex-1 gap-3">
                                     <Label htmlFor="role">Role</Label>
@@ -428,14 +419,16 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                                 <SelectValue placeholder="" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {roles.map((role) => (
-                                                    <SelectItem
-                                                        key={role.id}
-                                                        value={role.id.toString()}
-                                                    >
-                                                        {role.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {roles
+                                                    .filter((role) => role.name !== 'Citizen')
+                                                    .map((role) => (
+                                                        <SelectItem
+                                                            key={role.id}
+                                                            value={role.id.toString()}
+                                                        >
+                                                            {role.name}
+                                                        </SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                         {(errors.role_id ||
@@ -504,13 +497,10 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                         </div>
 
                         <div className="grid flex-1 auto-rows-min gap-2">
-                            <div className="grid">
-                                <p className="text-sm font-medium text-[var(--gray)]">
-                                    Account Security
-                                </p>
-                            </div>
                             <div className="grid gap-3">
-                                <Label htmlFor="password">Password</Label>
+                                <Label htmlFor="password">
+                                    {data.role_id === '2' ? 'PIN' : 'Password'}
+                                </Label>
                                 <div>
                                     <Input
                                         id="password"
@@ -541,7 +531,7 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                             </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="password-confirmation">
-                                    Confirm Password
+                                    {data.role_id === '2' ? 'Confirm PIN' : 'Confirm Password'}
                                 </Label>
                                 <div>
                                     <Input
@@ -573,7 +563,7 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                             </div>
                         </div>
                     </div>
-                    <SheetFooter className="px-4">
+                    <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
                         <div className="flex w-full flex-row justify-end gap-2">
                             <SheetClose asChild>
                                 <Button

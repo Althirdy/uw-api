@@ -3,13 +3,28 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, ChevronDown } from 'lucide-react';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import AddContacts from './contacts-comp/add-contacts';
 import ViewContacts from './contacts-comp/view-contacts';
 import EditContacts from './contacts-comp/edit-contacts';
 import DeleteContacts from './contacts-comp/delete-contacts';
 import { Auth, type BreadcrumbItem } from '@/types';
 import { contacts } from '@/routes';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -60,38 +75,62 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
     const [selectedStatus, setSelectedStatus] = useState(filters?.active !== undefined ? (filters.active === '1' ? 'Active' : 'Inactive') : '');
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
     const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+    const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts?.data || []);
 
     const responderTypes = ['BEST', 'BCCM', 'BCPC', 'BDRRM', 'BHERT', 'BHW', 'BPSO', 'BTMO', 'VAWC'];
     const statusOptions = ['Active', 'Inactive'];
 
     // Filter contacts based on search term, type, and status - client-side filtering as fallback
-    const filteredContacts = contacts?.data?.filter((contact: Contact) => {
-        const matchesSearch = searchTerm === '' ||
-            contact.branch_unit_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            contact.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (contact.contact_person && contact.contact_person.toLowerCase().includes(searchTerm.toLowerCase()));
+    useEffect(() => {
+        let filteredResults = contacts?.data || [];
+
+        const matchesSearch = (contact: Contact) => {
+            if (searchTerm === '') return true;
+            return (
+                contact.branch_unit_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                contact.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (contact.contact_person && contact.contact_person.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+        };
         
+<<<<<<< HEAD
         const matchesType = selectedType === '' || contact.responder_type === selectedType;
         const matchesStatus = selectedStatus === '' || 
             (selectedStatus === 'Active' && contact.active) ||
             (selectedStatus === 'Inactive' && !contact.active);
+=======
+        const matchesType = (contact: Contact) => {
+            return selectedType === '' || contact.branch_unit_name === selectedType;
+        };
+
+        const matchesStatus = (contact: Contact) => {
+            return selectedStatus === '' || 
+                (selectedStatus === 'Active' && contact.active) ||
+                (selectedStatus === 'Inactive' && !contact.active);
+        };
+>>>>>>> 1b8f3af (tempo lang)
         
-        return matchesSearch && matchesType && matchesStatus;
-    }) || [];
+        filteredResults = filteredResults.filter((contact) => 
+            matchesSearch(contact) && matchesType(contact) && matchesStatus(contact)
+        );
+
+        setFilteredContacts(filteredResults);
+    }, [searchTerm, selectedType, selectedStatus, contacts?.data]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Contacts" />
             
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <div className="space-y-4 p-4">
                 {/* Header with Add Contact Button */}
                 <div className="flex items-center justify-start">
                     <AddContacts />
                 </div>
 
                 {/* Search and Filters - Horizontal Layout */}
-                <div className="flex flex-row gap-4 mb-6">
+                <div className="flex max-w-4xl flex-wrap gap-4">
                     {/* Search Bar */}
+<<<<<<< HEAD
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                         <Input
@@ -177,6 +216,156 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                             </div>
                         )}
                     </div>
+=======
+                    <Input
+                        placeholder="Search contact"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="h-12 min-w-[300px] flex-1"
+                    />
+                    
+                    {/* Type Filter - Popover Dropdown */}
+                    <Popover open={isTypeDropdownOpen} onOpenChange={setIsTypeDropdownOpen}>
+                        <PopoverTrigger asChild className="h-12">
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={isTypeDropdownOpen}
+                                className="w-[180px] cursor-pointer justify-between"
+                            >
+                                {selectedType || 'Select barangay...'}
+                                <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[180px] p-0">
+                            <Command>
+                                <CommandInput
+                                    placeholder="Search branch/unit..."
+                                    className="h-9"
+                                />
+                                <CommandList>
+                                    <CommandEmpty>No branch/unit found.</CommandEmpty>
+                                    <CommandGroup>
+                                        {/* Add "All Branch/Units" option */}
+                                        <CommandItem
+                                            key="all-types"
+                                            value=""
+                                            onSelect={() => {
+                                                setSelectedType('');
+                                                setIsTypeDropdownOpen(false);
+                                            }}
+                                        >
+                                            All Branch/Units
+                                            <Check
+                                                className={cn(
+                                                    'ml-auto',
+                                                    selectedType === ''
+                                                        ? 'opacity-100'
+                                                        : 'opacity-0',
+                                                )}
+                                            />
+                                        </CommandItem>
+                                        {branchUnitNames.map((type) => (
+                                            <CommandItem
+                                                key={type}
+                                                value={type}
+                                                onSelect={(currentValue) => {
+                                                    setSelectedType(
+                                                        currentValue === selectedType
+                                                            ? ''
+                                                            : currentValue
+                                                    );
+                                                    setIsTypeDropdownOpen(false);
+                                                }}
+                                            >
+                                                {type}
+                                                <Check
+                                                    className={cn(
+                                                        'ml-auto',
+                                                        selectedType === type
+                                                            ? 'opacity-100'
+                                                            : 'opacity-0',
+                                                    )}
+                                                />
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+
+                    {/* Status Filter - Popover Dropdown */}
+                    <Popover open={isStatusDropdownOpen} onOpenChange={setIsStatusDropdownOpen}>
+                        <PopoverTrigger asChild className="h-12">
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={isStatusDropdownOpen}
+                                className="w-[180px] cursor-pointer justify-between"
+                            >
+                                {selectedStatus || 'Select role...'}
+                                <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[180px] p-0">
+                            <Command>
+                                <CommandInput
+                                    placeholder="Search status..."
+                                    className="h-9"
+                                />
+                                <CommandList>
+                                    <CommandEmpty>No status found.</CommandEmpty>
+                                    <CommandGroup>
+                                        {/* Add "All Status" option */}
+                                        <CommandItem
+                                            key="all-status"
+                                            value=""
+                                            onSelect={() => {
+                                                setSelectedStatus('');
+                                                setIsStatusDropdownOpen(false);
+                                            }}
+                                        >
+                                            All Status
+                                            <Check
+                                                className={cn(
+                                                    'ml-auto',
+                                                    selectedStatus === ''
+                                                        ? 'opacity-100'
+                                                        : 'opacity-0',
+                                                )}
+                                            />
+                                        </CommandItem>
+                                        {statusOptions.map((status) => (
+                                            <CommandItem
+                                                key={status}
+                                                value={status}
+                                                onSelect={(currentValue) => {
+                                                    setSelectedStatus(
+                                                        currentValue === selectedStatus
+                                                            ? ''
+                                                            : currentValue
+                                                    );
+                                                    setIsStatusDropdownOpen(false);
+                                                }}
+                                            >
+                                                {status}
+                                                <Check
+                                                    className={cn(
+                                                        'ml-auto',
+                                                        selectedStatus === status
+                                                            ? 'opacity-100'
+                                                            : 'opacity-0',
+                                                    )}
+                                                />
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+>>>>>>> 1b8f3af (tempo lang)
                 </div>
 
                 {/* Contacts Table */}

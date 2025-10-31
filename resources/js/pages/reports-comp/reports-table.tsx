@@ -66,7 +66,18 @@ const ReportsTable = ({ reports, reportTypes }: ReportsTableProps) => {
                         >
                             <TableCell className="py-3">#{report.id}</TableCell>
                             <TableCell className="py-3">
+<<<<<<< HEAD
                                 {report.report_type}
+=======
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    report.report_type === 'CCTV' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
+                                    report.report_type === 'Citizen Concern' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' :
+                                    report.report_type === 'Emergency' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
+                                    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                                }`}>
+                                    {report.report_type}
+                                </span>
+>>>>>>> 1b8f3af (tempo lang)
                             </TableCell>
                             <TableCell className="py-3">
                                 {report.transcript}
@@ -78,7 +89,18 @@ const ReportsTable = ({ reports, reportTypes }: ReportsTableProps) => {
                                 {formatDateTime(report.created_at)}
                             </TableCell>
                             <TableCell className="py-3">
+<<<<<<< HEAD
                                 {report.status.toLocaleUpperCase()}
+=======
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    report.status === 'Ongoing' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                                    report.status === 'Pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                                    report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                                    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
+                                }`}>
+                                    {report.status.toLocaleUpperCase()}
+                                </span>
+>>>>>>> 1b8f3af (tempo lang)
                             </TableCell>
                             <TableCell className="py-3">
                                 <div className="flex justify-center gap-2">
