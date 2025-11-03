@@ -27,7 +27,7 @@ Route::get('health', function () {
 });
 
 
-Route::post('yolo/accidents/snapshot', [App\Http\Controllers\Api\Yolo\YoloAccidentController::class, 'ProcessSnapShot']);
+Route::post('yolo/accidents', [App\Http\Controllers\Api\Yolo\YoloAccidentController::class, 'ProcessSnapShot']);
 
 //========HeatmapContacts========//
 

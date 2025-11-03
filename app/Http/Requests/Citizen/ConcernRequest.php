@@ -26,6 +26,7 @@ class ConcernRequest extends FormRequest
             'description' => 'required|string',
             'category' => 'required|string|in:safety,security,infrastructure,environment,noise,other',
             'severity' => 'nullable|string|in:low,medium,high',
+            'address' => 'nullable|string',
             'transcript_text' => 'nullable|string',
             'longitude' => 'nullable|numeric',
             'latitude' => 'nullable|numeric',

@@ -16,12 +16,14 @@ class YoloAccidentController extends BaseApiController
     }
 
 
-
+    //Run GPT Wrap to analyze the Image if its real accident present or not 
     private function ValidateSnapShot($file)
     {
         return true;
     }
 
+
+    //Run GPT Wrap to Process the initial assessment
     private function ProcessImage($file)
     {
         $filePath = $this->fileUploadService->uploadSingle($file,'yolo');
@@ -36,7 +38,7 @@ class YoloAccidentController extends BaseApiController
         ];
 
     }
-
+    
     public function ProcessSnapShot(Request $request)
     {
         if ($request->hasFile('snapshot')) {
