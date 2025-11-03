@@ -21,6 +21,9 @@ class Concern extends Model
         'transcript_text',
         'longitude',
         'latitude',
+        'address',
+        'custom_location',
+        'severity',
     ];
 
     protected $casts = [

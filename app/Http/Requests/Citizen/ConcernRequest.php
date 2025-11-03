@@ -22,10 +22,10 @@ class ConcernRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'citizen_id' => 'required|integer|exists:users,id',
             'title' => 'required|string|max:100',
             'description' => 'required|string',
-            'category' => 'required|string|in:accident,fire,flood,crime,other',
+            'category' => 'required|string|in:safety,security,infrastructure,environment,noise,other',
+            'severity' => 'nullable|string|in:low,medium,high',
             'transcript_text' => 'nullable|string',
             'longitude' => 'nullable|numeric',
             'latitude' => 'nullable|numeric',
@@ -40,9 +40,6 @@ class ConcernRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'citizen_id.required' => 'Citizen ID is required.',
-            'citizen_id.integer' => 'Citizen ID must be an integer.',
-            'citizen_id.exists' => 'Citizen ID does not exist.',
             'title.required' => 'Title is required.',
             'title.string' => 'Title must be a string.',
             'title.max' => 'Title cannot exceed 100 characters.',
@@ -50,7 +47,9 @@ class ConcernRequest extends FormRequest
             'description.string' => 'Description must be a string.',
             'category.required' => 'Category is required.',
             'category.string' => 'Category must be a string.',
-            'category.in' => 'Category must be one of: accident, fire, flood, crime, other.',
+            'category.in' => 'Category must be one of: safety, security, infrastructure, environment, noise, other.',
+            'severity.string' => 'Severity must be a string.',
+            'severity.in' => 'Severity must be one of: low, medium, high.',
             'transcript_text.string' => 'Transcript text must be a string.',
             'longitude.numeric' => 'Longitude must be a numeric value.',
             'latitude.numeric' => 'Latitude must be a numeric value.',
