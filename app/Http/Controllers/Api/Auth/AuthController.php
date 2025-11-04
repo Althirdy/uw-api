@@ -32,7 +32,6 @@ class AuthController extends BaseApiController
 
             // Create access token with 'access-api' ability
             $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-
             // Create refresh token with 'refresh-token' ability
             $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
 
@@ -91,6 +90,11 @@ class AuthController extends BaseApiController
         } catch (\Exception $e) {
             return $this->sendError('Invalid Credentials');
         }
+    }
+
+    // Login for Purok Leader
+    public function loginPurokLeader(Request $request): \Illuminate\Http\JsonResponse{
+        return $this->sendError('Not implemented yet');
     }
     /**
      * Logout user (revoke token).
@@ -203,6 +207,18 @@ class AuthController extends BaseApiController
 
         try {
             DB::beginTransaction();
+
+            // Check if a citizen with the same name already exists
+            $existingCitizen = CitizenDetails::where('first_name', $validated['first_name'])
+                ->where('last_name', $validated['last_name'])
+                ->where('middle_name', $validated['middle_name'] ?? null)
+                ->where('suffix', $validated['suffix'] ?? null)
+                ->first();
+
+            if ($existingCitizen) {
+                DB::rollBack();
+                return $this->sendError('A user with this name is already registered. Please contact support if this is your account.');
+            }
 
             // Concatenate full name
             $fullName = trim($validated['first_name'] . ' ' . 
