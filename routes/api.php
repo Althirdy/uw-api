@@ -13,6 +13,8 @@ Route::prefix('otp')->group(function () {
     Route::post('/check', [OtpController::class, 'check']);
 });
 
+//========Auth Routes========//
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 // Logout requires access token
