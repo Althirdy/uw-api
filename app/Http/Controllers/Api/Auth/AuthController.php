@@ -199,6 +199,43 @@ class AuthController extends BaseApiController
     }
 
     /**
+     * Verify if citizen name is already registered
+     */
+    public function verifyNameAvailability(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $request->validate([
+                'first_name' => 'required|string|max:255',
+                'middle_name' => 'nullable|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'suffix' => 'nullable|string|max:10',
+            ]);
+
+            // Check if a citizen with the same name already exists
+            $existingCitizen = CitizenDetails::where('first_name', $request->first_name)
+                ->where('last_name', $request->last_name)
+                ->where('middle_name', $request->middle_name ?? null)
+                ->where('suffix', $request->suffix ?? null)
+                ->first();
+
+            if ($existingCitizen) {
+                return $this->sendResponse([
+                    'available' => false,
+                    'message' => 'A user with this name is already registered.'
+                ], 'Name verification completed');
+            }
+
+            return $this->sendResponse([
+                'available' => true,
+                'message' => 'Name is available for registration.'
+            ], 'Name verification completed');
+
+        } catch (\Exception $e) {
+            return $this->sendError('An error occurred while verifying name availability');
+        }
+    }
+
+    /**
      * Register a new citizen user
      */
     public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
@@ -207,18 +244,6 @@ class AuthController extends BaseApiController
 
         try {
             DB::beginTransaction();
-
-            // Check if a citizen with the same name already exists
-            $existingCitizen = CitizenDetails::where('first_name', $validated['first_name'])
-                ->where('last_name', $validated['last_name'])
-                ->where('middle_name', $validated['middle_name'] ?? null)
-                ->where('suffix', $validated['suffix'] ?? null)
-                ->first();
-
-            if ($existingCitizen) {
-                DB::rollBack();
-                return $this->sendError('A user with this name is already registered. Please contact support if this is your account.');
-            }
 
             // Concatenate full name
             $fullName = trim($validated['first_name'] . ' ' . 

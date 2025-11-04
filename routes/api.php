@@ -16,6 +16,7 @@ Route::prefix('otp')->group(function () {
 //========Auth Routes========//
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/verify-name-availability', [AuthController::class, 'verifyNameAvailability']);
 
 // Logout requires access token
 Route::post('/logout', [AuthController::class, 'logout'])
