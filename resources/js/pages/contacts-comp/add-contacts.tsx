@@ -299,7 +299,7 @@ function AddContacts() {
             <SheetContent className="flex flex-col h-full">
                 <form onSubmit={onSubmit} className="flex flex-col h-full">
                     {/* Fixed Header */}
-                    <div className="flex-shrink-0">
+                    <div className="sticky top-0 z-10 bg-background flex-shrink-0">
                         <SheetHeader>
                             <SheetTitle>Add Contacts</SheetTitle>
                             <SheetDescription>

@@ -151,7 +151,7 @@ function EditUWDevice({ location, device, cctvDevices }: EditUWDeviceProps): Rea
             <SheetContent className="flex flex-col h-full">
                 <form onSubmit={onSubmit} className="flex flex-col h-full">
                     {/* Fixed Header */}
-                    <SheetHeader className="flex-shrink-0 px-6 py-6 border-b">
+                    <SheetHeader className="sticky top-0 z-10 bg-background flex-shrink-0 px-6 py-6 border-b">
                         <SheetTitle>Edit IoT Sensor</SheetTitle>
                         <SheetDescription>
                             Update the IoT sensor configuration and linked cameras
@@ -278,11 +278,6 @@ function EditUWDevice({ location, device, cctvDevices }: EditUWDeviceProps): Rea
                     {/* Fixed Footer */}
                     <SheetFooter className="flex-shrink-0 px-6 py-4 border-t bg-background">
                         <div className="flex gap-2 w-full">
-                            <SheetClose asChild>
-                                <Button variant='outline' type="button" className="flex-1">
-                                    Cancel
-                                </Button>
-                            </SheetClose>
                             <Button
                                 type="submit"
                                 className="flex-1"
@@ -290,6 +285,11 @@ function EditUWDevice({ location, device, cctvDevices }: EditUWDeviceProps): Rea
                             >
                                 {isSubmitting ? 'Updating...' : 'Update Device'}
                             </Button>
+                            <SheetClose asChild>
+                                <Button variant='outline' type="button" className="flex-1">
+                                    Cancel
+                                </Button>
+                            </SheetClose>
                         </div>
                     </SheetFooter>
                 </form>

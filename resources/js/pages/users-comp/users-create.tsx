@@ -564,24 +564,24 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                         </div>
                     </div>
                     <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
-                        <div className="flex w-full flex-row justify-end gap-2">
+                        <div className="flex w-full gap-2">
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-1"
+                            >
+                                {processing ? 'Creating...' : 'Create User'}
+                            </Button>
                             <SheetClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
                                     data-sheet-close
-                                    className="cursor-pointer"
+                                    className="flex-1"
                                 >
                                     Cancel
                                 </Button>
                             </SheetClose>
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="cursor-pointer"
-                            >
-                                {processing ? 'Creating...' : 'Create User'}
-                            </Button>
                         </div>
                     </SheetFooter>
                 </form>

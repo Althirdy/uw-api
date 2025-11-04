@@ -49,7 +49,7 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
             </SheetTrigger>
             <SheetContent className="flex flex-col h-full">
                 {/* Fixed Header */}
-                <SheetHeader className="flex-shrink-0 px-6 py-6 border-b">
+                <SheetHeader className="sticky top-0 z-10 bg-background flex-shrink-0 px-6 py-6 border-b">
                     <SheetTitle className="flex items-center gap-2">
                         <Cpu className="h-5 w-5 text-green-600" />
                         Device Details

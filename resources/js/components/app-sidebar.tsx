@@ -86,6 +86,14 @@ export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
+                <NavUser />
+            </SidebarHeader>
+
+            <SidebarContent>
+                <NavMain items={mainNavItems} />
+            </SidebarContent>
+
+            <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
@@ -95,15 +103,6 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-            </SidebarHeader>
-
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
-            </SidebarContent>
-
-            <SidebarFooter>
-                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
-                <NavUser />
             </SidebarFooter>
         </Sidebar>
     );

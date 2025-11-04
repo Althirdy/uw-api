@@ -307,7 +307,7 @@ export default function EditContacts({ contact }: EditContactsProps) {
             <SheetContent className="flex flex-col h-full">
                 <form onSubmit={onSubmit} className="flex flex-col h-full">
                     {/* Fixed Header */}
-                    <div className="flex-shrink-0">
+                    <div className="sticky top-0 z-10 bg-background flex-shrink-0">
                         <SheetHeader>
                             <SheetTitle>Edit Contact</SheetTitle>
                             <SheetDescription>
@@ -545,7 +545,7 @@ export default function EditContacts({ contact }: EditContactsProps) {
                     
                     {/* Fixed Footer */}
                     <div className="flex-shrink-0">
-                        <SheetFooter className="px-4 py-4 flex-row space-x-2">
+                        <SheetFooter className="px-4 py-4 flex gap-2">
                             <Button
                                 type="submit"
                                 disabled={processing}

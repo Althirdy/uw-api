@@ -355,27 +355,24 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="px-4">
-                        <div className="flex w-full flex-row justify-end gap-2">
-                            <SheetClose asChild>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    data-sheet-close
-                                    className="cursor-pointer"
-                                >
-                                    <MoveLeft className="mr-2 h-4 w-4" />
-                                    Cancel
-                                </Button>
-                            </SheetClose>
+                    <SheetFooter className="px-4 flex gap-2">
+                        <Button
+                            type="submit"
+                            disabled={processing}
+                            className="flex-1"
+                        >
+                            {processing ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                        <SheetClose asChild>
                             <Button
-                                type="submit"
-                                disabled={processing}
-                                className="cursor-pointer"
+                                type="button"
+                                variant="outline"
+                                data-sheet-close
+                                className="flex-1"
                             >
-                                {processing ? 'Saving...' : 'Save Changes'}
+                                Cancel
                             </Button>
-                        </div>
+                        </SheetClose>
                     </SheetFooter>
                 </form>
             </SheetContent>

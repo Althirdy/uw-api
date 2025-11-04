@@ -206,7 +206,7 @@ function AddUWDevice({ location, cctvDevices }: { location: location_T[], cctvDe
             <SheetContent className="flex flex-col h-full">
                 <form onSubmit={onSubmit} className="flex flex-col h-full">
                     {/* Fixed Header */}
-                    <SheetHeader className="flex-shrink-0 px-6 py-6 border-b">
+                    <SheetHeader className="sticky top-0 z-10 bg-background flex-shrink-0 px-6 py-6 border-b">
                         <SheetTitle>Add New IoT Sensor</SheetTitle>
                         <SheetDescription>
                             Configure a new IoT sensor and link it to CCTV cameras

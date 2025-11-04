@@ -54,7 +54,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                                 report.report_type === 'Emergency' ? 'bg-red-100 text-red-800' :
                                 'bg-gray-100 text-gray-800'
                             }`}>
-                                {report.report_type.toLocaleUpperCase()}
+                                {report.report_type === 'CCTV' ? 'CCTV' : report.report_type.charAt(0).toUpperCase() + report.report_type.slice(1).toLowerCase()}
                             </span>
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 report.status === 'Ongoing' ? 'bg-yellow-100 text-yellow-800' :
@@ -62,7 +62,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                                 report.status === 'Resolved' ? 'bg-green-100 text-green-800' :
                                 'bg-gray-100 text-gray-800'
                             }`}>
-                                {report.status.toLocaleUpperCase()}
+                                {report.status.charAt(0).toUpperCase() + report.status.slice(1).toLowerCase()}
                             </span>
                         </div>
 
@@ -76,7 +76,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                 <div className="flex flex-col text-xs text-muted-foreground">
                     <span className="flex flex-row items-center gap-2 text-sm">
                         <LocateFixed className="mr-1 inline h-4 w-4" />
-                        {report.latitute}, {report.longtitude}
+                        {parseFloat(report.latitute).toFixed(2)}, {parseFloat(report.longtitude).toFixed(2)}
                     </span>
                     <span className="flex flex-row items-center gap-2 text-sm">
                         <Clock className="mr-1 inline h-4 w-4" />

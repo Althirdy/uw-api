@@ -376,25 +376,24 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                     </div>
 
                     <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
-                        <div className="flex w-full flex-row justify-end gap-2">
+                        <div className="flex w-full gap-2">
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-1"
+                            >
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </Button>
                             <SheetClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
                                     data-sheet-close
-                                    className="cursor-pointer"
+                                    className="flex-1"
                                 >
-                                    <MoveLeft className="mr-2 h-4 w-4" />
                                     Cancel
                                 </Button>
                             </SheetClose>
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="cursor-pointer"
-                            >
-                                {processing ? 'Saving...' : 'Save Changes'}
-                            </Button>
                         </div>
                     </SheetFooter>
                 </form>
