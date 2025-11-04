@@ -17,9 +17,12 @@ return new class extends Migration
             $table->enum('type', ['manual', 'voice']);
             $table->string('title', 100);
             $table->text('description');
-            $table->enum('category', ['accident', 'fire', 'flood', 'crime', 'other']);
+            $table->enum('category', ['safety', 'security', 'infrastructure', 'environment', 'noise', 'other']);
             $table->enum('status', ['pending', 'ongoing', 'escalated', 'resolved'])->default('pending');
+            $table->enum('severity', ['low', 'medium', 'high']);
             $table->text('transcript_text')->nullable();
+            $table->string('address')->nullable();
+            $table->string('custom_location')->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->softDeletes();

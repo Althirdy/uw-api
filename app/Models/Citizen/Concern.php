@@ -21,6 +21,9 @@ class Concern extends Model
         'transcript_text',
         'longitude',
         'latitude',
+        'address',
+        'custom_location',
+        'severity',
     ];
 
     protected $casts = [
@@ -30,11 +33,6 @@ class Concern extends Model
 
     public function media()
     {
-        return $this->hasMany(IncidentMedia::class, 'concern_id');
-    }
-
-    public function citizen()
-    {
-        return $this->belongsTo(User::class, 'citizen_id');
+        return $this->morphMany(IncidentMedia::class, 'source');
     }
 }
