@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\LoginRequest;
+use App\Http\Requests\Api\Auth\RegisterRequest;
+use App\Models\CitizenDetails;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends BaseApiController
@@ -190,4 +193,82 @@ class AuthController extends BaseApiController
             return $this->sendError('An error occurred while refreshing the token');
         }
     }
+
+    /**
+     * Register a new citizen user
+     */
+    public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
+    {
+        $validated = $request->validated();
+
+        try {
+            DB::beginTransaction();
+
+            // Concatenate full name
+            $fullName = trim($validated['first_name'] . ' ' . 
+                           ($validated['middle_name'] ?? '') . ' ' . 
+                           $validated['last_name'] . 
+                           ($validated['suffix'] ? ' ' . $validated['suffix'] : ''));
+
+            // Create user record
+            $user = User::create([
+                'name' => $fullName,
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'email_verified_at' => now(), // Set verification timestamp
+                'role_id' => 3, // Default citizen role
+            ]);
+
+            // Create citizen details record
+            $citizenDetails = CitizenDetails::create([
+                'user_id' => $user->id,
+                'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
+                'last_name' => $validated['last_name'],
+                'suffix' => $validated['suffix'] ?? null,
+                'date_of_birth' => $validated['date_of_birth'],
+                'phone_number' => $validated['phone_number'],
+                'address' => $validated['address'],
+                'barangay' => $validated['barangay'],
+                'city' => $validated['city'],
+                'province' => $validated['province'],
+                'postal_code' => $validated['postal_code'],
+                'is_verified' => true, // Mark as verified after OTP verification
+            ]);
+
+            DB::commit();
+
+            // Generate tokens
+            $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
+            $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
+
+            // Return response with user data
+            return $this->sendResponse([
+                'token' => $access_token,
+                'refreshToken' => $refresh_token,
+                'user' => [
+                    'id' => $user->id,
+                    'firstName' => $citizenDetails->first_name,
+                    'lastName' => $citizenDetails->last_name,
+                    'middleName' => $citizenDetails->middle_name,
+                    'suffix' => $citizenDetails->suffix,
+                    'email' => $user->email,
+                    'role' => 'Citizen',
+                    'address' => $citizenDetails->address,
+                    'phoneNumber' => $citizenDetails->phone_number,
+                    'barangay' => $citizenDetails->barangay,
+                    'city' => $citizenDetails->city,
+                    'province' => $citizenDetails->province,
+                    'postalCode' => $citizenDetails->postal_code,
+                    'isVerified' => $citizenDetails->is_verified,
+                ]
+            ], 'Registration successful');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->sendError('Registration failed: ' . $e->getMessage());
+        }
+    }
+
+    
 }
