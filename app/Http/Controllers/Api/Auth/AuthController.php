@@ -10,7 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
-class ApiLoginController extends BaseApiController
+class AuthController extends BaseApiController
 {
     //****LOGIN METHODD */
 
