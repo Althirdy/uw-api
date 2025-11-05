@@ -45,23 +45,23 @@ class UserSeeder extends Seeder
 
         // Create Purok Leader User
         User::firstOrCreate(
-            ['email' => 'enrico@gmail.com'],
+            ['email' => 'adoracion@gmail.com'],
             [
                 'role_id' => 2,
-                'name' => 'Enrico Guina',
-                'password' => Hash::make('password'),
+                'name' => 'Adoracion S. Jumadiao',
+                'password' => Hash::make('1001'),
                 'email_verified_at' => now(),
             ]
         );
         OfficialsDetails::firstOrCreate(
-            ['user_id' => User::where('email', 'enrico@gmail.com')->first()->id],
+            ['user_id' => User::where('email', 'adoracion@gmail.com')->first()->id],
             [
                 'contact_number' => '+63 987-654-3210',
-                'first_name' => 'Enrico',
-                'middle_name' => 'L.',
-                'last_name' => 'Guina',
+                'first_name' => 'Adoracion',
+                'middle_name' => 'S.',
+                'last_name' => 'Jumadiao',
                 'suffix' => null,
-                'office_address' => 'Ph 1 Pkg 1',
+                'office_address' => 'Pkg 1A Bicolandia',
                 'assigned_brgy' => 'Barangay 176-E',
                 'latitude' => '14.6095',
                 'longitude' => '120.9742',
