@@ -17,7 +17,8 @@ class Accident extends Model
         'severity',
     ];
     
-    public function accidentMedia(){
-        return $this->hasMany(IncidentMedia::class, 'incident_id', 'id');
+    public function media()
+    {
+        return $this->morphMany(IncidentMedia::class, 'source');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Operator;
 use App\Http\Controllers\Controller;
 use App\Models\PublicPost;
 use App\Models\Report;
+use App\Models\Accident;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,39 +16,60 @@ class ReportController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = Report::with(['user', 'acknowledgedBy']);
+        // Get accidents with media instead of reports
+        $query = Accident::with(['media']);
 
         // Search functionality
         if ($request->has('search') && $request->search) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('transcript', 'like', "%{$searchTerm}%")
+                $q->where('title', 'like', "%{$searchTerm}%")
                   ->orWhere('description', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('user', function ($userQuery) use ($searchTerm) {
-                      $userQuery->where('name', 'like', "%{$searchTerm}%");
-                  });
+                  ->orWhere('accident_type', 'like', "%{$searchTerm}%");
             });
         }
 
-        // Filter by report type
+        // Filter by accident type
         if ($request->has('report_type') && $request->report_type) {
-            $query->where('report_type', $request->report_type);
+            $query->where('accident_type', $request->report_type);
         }
 
-        // Filter by acknowledgment status
+        // Filter by status
         if ($request->has('acknowledged') && $request->acknowledged !== '') {
-            $query->where('is_acknowledge', $request->acknowledged === 'true');
+            $statusFilter = $request->acknowledged === 'true' ? 'resolved' : 'pending';
+            $query->where('status', $statusFilter);
         }
 
-        $reports = $query->orderBy('created_at', 'desc')
+        $accidents = $query->orderBy('created_at', 'desc')
                         ->paginate(10)
                         ->withQueryString();
 
+        // Transform accidents data to match reports structure
+        $accidents->getCollection()->transform(function ($accident) {
+            return [
+                'id' => $accident->id,
+                'report_type' => ucfirst($accident->accident_type),
+                'transcript' => $accident->title,
+                'description' => $accident->description,
+                'latitute' => $accident->latitude,
+                'longtitude' => $accident->longitude,
+                'is_acknowledge' => $accident->status !== 'pending',
+                'status' => ucfirst($accident->status),
+                'created_at' => $accident->created_at,
+                'updated_at' => $accident->updated_at,
+                'user' => null, // Accidents don't have users (YOLO detected)
+                'acknowledgedBy' => null,
+                'media' => $accident->media->map(function ($media) {
+                    return $media->original_path;
+                })->toArray(),
+            ];
+        });
+
         return Inertia::render('reports', [
-            'reports' => $reports,
+            'reports' => $accidents,
             'filters' => $request->only(['search', 'report_type', 'acknowledged']),
-            'reportTypes' => Report::getReportTypes(),
-            'statusOptions' => Report::getStatusOptions(),
+            'reportTypes' => ['Accident', 'Fire', 'Flood'], // Accident types
+            'statusOptions' => ['Pending', 'Ongoing', 'Resolved', 'Archived'],
         ]);
     }
 
@@ -129,33 +151,37 @@ class ReportController extends Controller
         ]);
     }
 
-    public function update(Request $request, Report $report)
+    public function update(Request $request, $id)
     {
         try {
+            // Find accident instead of report
+            $accident = Accident::findOrFail($id);
+
             $validated = $request->validate([
-                'report_type' => 'required|string|in:' . implode(',', Report::getReportTypes()),
-                'transcript' => 'required|string|max:500',
+                'report_type' => 'required|string',
+                'transcript' => 'nullable|string|max:500',
                 'description' => 'required|string|max:1000',
                 'latitute' => 'required|numeric|between:-90,90',
                 'longtitude' => 'required|numeric|between:-180,180',
-                'user_id' => 'nullable|exists:users,id',
-                'is_acknowledge' => 'nullable|boolean',
-                'acknowledge_by' => 'nullable|exists:users,id',
-                'status' => 'nullable|string|in:Pending,Ongoing,Resolved,Archived',
+                'status' => 'nullable|string|in:pending,ongoing,resolved,archived',
             ]);
-
-            // Auto-set status to 'Ongoing' if report is being acknowledged
-            if (isset($validated['is_acknowledge']) && $validated['is_acknowledge'] === true) {
-                $validated['status'] = 'Ongoing';
-            }
 
             DB::beginTransaction();
             try {
-                $report->update($validated);
+                // Map report fields to accident fields
+                $accident->update([
+                    'title' => $validated['transcript'] ?? $accident->title,
+                    'description' => $validated['description'],
+                    'latitude' => $validated['latitute'],
+                    'longitude' => $validated['longtitude'],
+                    'accident_type' => strtolower($validated['report_type']),
+                    'status' => $validated['status'] ?? $accident->status,
+                ]);
+
                 DB::commit();
 
                 return redirect()->route('reports')
-                    ->with('success', 'Report updated successfully.');
+                    ->with('success', 'Accident report updated successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
                 return back()
@@ -167,18 +193,20 @@ class ReportController extends Controller
         }
     }
 
-    public function destroy(Report $report)
+    public function destroy($id)
     {
         try {
+            $accident = Accident::findOrFail($id);
+
             DB::beginTransaction();
             try {
-                // Set status to 'Archived' before soft deleting
-                $report->update(['status' => 'Archived']);
-                $report->delete();
+                // Set status to 'archived' before deleting
+                $accident->update(['status' => 'archived']);
+                $accident->delete();
                 DB::commit();
 
                 return redirect()->route('reports')
-                    ->with('success', 'Report archived successfully.');
+                    ->with('success', 'Accident report archived successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
                 return back()
@@ -190,30 +218,27 @@ class ReportController extends Controller
         }
     }
 
-    public function acknowledge(Report $report)
+    public function acknowledge($id)
     {
         try {
-            if ($report->isAcknowledged()) {
+            $accident = Accident::findOrFail($id);
+
+            // Check if already acknowledged (not pending)
+            if ($accident->status !== 'pending') {
                 return back()->with('error', 'Report is already acknowledged.');
             }
 
             DB::beginTransaction();
             try {
-                $report->acknowledge(auth()->id());
-                
-                // Automatically create a public post for the acknowledged report if it doesn't exist
-                if (!$report->publicPost) {
-                    PublicPost::create([
-                        'report_id' => $report->id,
-                        'published_by' => auth()->id(),
-                        'published_at' => null, // Draft by default
-                    ]);
-                }
+                // Update status to ongoing when acknowledged
+                $accident->update([
+                    'status' => 'ongoing'
+                ]);
                 
                 DB::commit();
 
                 return redirect()->route('reports')
-                    ->with('success', 'Report acknowledged and added to public posts.')
+                    ->with('success', 'Accident report acknowledged successfully.')
                     ->with('refresh', true);
             } catch (\Exception $e) {
                 DB::rollBack();
