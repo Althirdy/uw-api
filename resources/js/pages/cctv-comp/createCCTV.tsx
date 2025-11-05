@@ -193,6 +193,8 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                     <Input
                                         id="fps"
                                         type="number"
+                                        min="30"
+                                        max="120"
                                         value={data.fps}
                                         onChange={(e) => setData('fps', e.target.value)}
                                     />
@@ -208,8 +210,6 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                             <SelectGroup>
                                                 <SelectItem value="4k">4K</SelectItem>
                                                 <SelectItem value="1080p">1080p</SelectItem>
-                                                <SelectItem value="720p">720p</SelectItem>
-                                                <SelectItem value="480p">480p</SelectItem>
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
