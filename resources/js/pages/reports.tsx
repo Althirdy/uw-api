@@ -3,8 +3,19 @@ import AppLayout from '@/layouts/app-layout';
 import { reports as reportRoutes } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { List, Table } from 'lucide-react';
+import { List, Table, Wifi, WifiOff } from 'lucide-react';
 import { useState } from 'react';
+import { useAccidentRealtime } from '@/hooks/use-accident-realtime';
+import { Badge } from '@/components/ui/badge';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 
 import { reports_T, ReportsProps } from '@/types/report-types';
 import ReportsCard from './reports-comp/reports-card';
@@ -16,6 +27,10 @@ const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
     const [filteredReports, setFilteredReports] = useState<reports_T[]>(
         reports.data,
     );
+    console.log(filteredReports)
+
+    // Real-time connection
+    const { isConnected } = useAccidentRealtime();
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -28,6 +43,26 @@ const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Reports Page" />
             <div className="space-y-4 p-4">
+                {/* Real-time Connection Status */}
+                <div className="flex items-center justify-end">
+                    <Badge 
+                        variant={isConnected ? 'default' : 'secondary'} 
+                        className="gap-1"
+                    >
+                        {isConnected ? (
+                            <>
+                                <Wifi className="h-3 w-3" />
+                                Live Updates Active
+                            </>
+                        ) : (
+                            <>
+                                <WifiOff className="h-3 w-3" />
+                                Connecting...
+                            </>
+                        )}
+                    </Badge>
+                </div>
+
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1">
                         <h1 className="text-md font-semibold">
@@ -38,7 +73,7 @@ const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
                             attention.
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {reports.data
                             .filter((report) => !report.is_acknowledge)
                             .map((report) => (
@@ -74,11 +109,43 @@ const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
                         </TabsList>
                     </div>
 
+<<<<<<< HEAD
                     <TabsContent value="card" className="w-full">
+=======
+                    <TabsContent value="card" className="w-full space-y-6">
+>>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
                         <ReportsCard
                             reports={filteredReports}
                             reportTypes={reportTypes}
                         />
+                        
+                        {/* Pagination */}
+                        {reports.links && (
+                            <Pagination className='flex justify-end'>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious href={reports.prev_page_url || '#'} />
+                                    </PaginationItem>
+                                    {
+                                        reports.links.map((link: { url: string | null; active: boolean; label: string }, index: number) => {
+                                            if (link.url !== null && index !== 0 && index !== reports.links.length - 1) {
+                                                return (
+                                                    <PaginationItem key={index}>
+                                                        <PaginationLink isActive={link.active} href={link.url || '#'}>{link.label}</PaginationLink>
+                                                    </PaginationItem>
+                                                )
+                                            }
+                                        })
+                                    }
+                                    <PaginationItem>
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                    <PaginationItem>
+                                        <PaginationNext href={reports.next_page_url || '#'} />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        )}
                     </TabsContent>
                     <TabsContent value="table" className="w-full">
                         <ReportsTable

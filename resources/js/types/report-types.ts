@@ -15,11 +15,15 @@ export type reports_T = {
     status: string;
     created_at: string;
     updated_at: string;
+<<<<<<< HEAD
     media?: {
         id: number;
         original_path: string;
         media_type: string;
     }[];
+=======
+    media?: string[]; // Array of image URLs
+>>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
 };
 
 export type ReportsProps = {
@@ -27,6 +31,8 @@ export type ReportsProps = {
         data: reports_T[];
         links: any[];
         meta: any;
+        prev_page_url: string | null;
+        next_page_url: string | null;
     };
     filters: {
         search?: string;

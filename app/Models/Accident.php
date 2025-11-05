@@ -17,6 +17,7 @@ class Accident extends Model
         'severity',
     ];
     
+<<<<<<< HEAD
     /**
      * Get all media for this accident (polymorphic relationship)
      */
@@ -31,5 +32,10 @@ class Accident extends Model
     public function accidentMedia()
     {
         return $this->media();
+=======
+    public function media()
+    {
+        return $this->morphMany(IncidentMedia::class, 'source');
+>>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
     }
 }
