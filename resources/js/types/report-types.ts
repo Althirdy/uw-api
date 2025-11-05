@@ -15,6 +15,11 @@ export type reports_T = {
     status: string;
     created_at: string;
     updated_at: string;
+    media?: {
+        id: number;
+        original_path: string;
+        media_type: string;
+    }[];
 };
 
 export type ReportsProps = {

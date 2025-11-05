@@ -23,6 +23,8 @@ import {
     Phone,
     TriangleAlert,
     User,
+    Camera,
+    Clock,
 } from 'lucide-react';
 
 type ViewReportDetailsProps = {
@@ -57,37 +59,72 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
             },
         );
     };
+
+    // Get first image from media
+    const firstImage = report.media && report.media.length > 0 
+        ? report.media[0].original_path 
+        : null;
+
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
                 <SheetHeader>
-                    <SheetTitle>Report Details</SheetTitle>
-                    <SheetDescription className="flex flex-col gap-1">
-                        <span>Report ID: #{report.id}</span>
-
-                        <Badge variant="default" className="text-sm">
-                            {report.status}
-                        </Badge>
+                    <SheetTitle>Incident Details</SheetTitle>
+                    <SheetDescription className="flex flex-col gap-2">
+                        <span className="text-base font-semibold">Report ID: #{report.id}</span>
+                        <div className="flex gap-2 flex-wrap">
+                            <Badge variant="default" className="text-xs">
+                                {report.report_type}
+                            </Badge>
+                            <Badge 
+                                variant={report.status === 'Pending' ? 'destructive' : 'default'} 
+                                className="text-xs"
+                            >
+                                {report.status.toUpperCase()}
+                            </Badge>
+                        </div>
                     </SheetDescription>
                 </SheetHeader>
                 <div className="flex w-full flex-col justify-start gap-4 px-4 py-2">
-                    {/* Basic Information */}
-
+                    {/* Accident Image */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md">Incident Snapshot</p>
+                        <p className="text-md font-semibold">Incident Snapshot</p>
                         <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                            <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                            {firstImage ? (
+                                <>
+                                    <img 
+                                        src={firstImage} 
+                                        alt="Accident snapshot" 
+                                        className="h-full w-full object-cover"
+                                    />
+                                    <div className="absolute top-2 right-2">
+                                        <Badge variant="destructive" className="text-xs">
+                                            <Camera className="mr-1 h-3 w-3" />
+                                            YOLO Detection
+                                        </Badge>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="relative h-full w-full bg-muted flex items-center justify-center">
+                                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                                    <Camera className="h-16 w-16 text-muted-foreground/20 relative z-10" />
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <div className="flex flex-col">
-                        <p className="text-md">Incident Description</p>
-                        <p className="text-md text-muted-foreground">
+
+                    {/* Incident Description */}
+                    <div className="flex flex-col gap-1">
+                        <p className="text-md font-semibold">Incident Description</p>
+                        <p className="text-sm text-muted-foreground">
                             {report.description}
                         </p>
                     </div>
+
+                    {/* Details */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md">Details</p>
+                        <p className="text-md font-semibold">Details</p>
                         {renderDetailItems([
                             {
                                 icon: LocateFixed,
@@ -97,30 +134,28 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                                 icon: TriangleAlert,
                                 text: report.report_type,
                             },
-
                             {
-                                icon: Globe,
+                                icon: Clock,
                                 text: `Reported: ${formatDateTime(report.created_at)}`,
                             },
                         ])}
                     </div>
+
+                    {/* Report Information - Show "Unknown" for YOLO detections */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md">Report Information</p>
+                        <p className="text-md font-semibold">Report Information</p>
                         {renderDetailItems([
                             {
                                 icon: User,
-                                text: `${report.user?.name || 'Unknown'}`,
+                                text: report.user?.name || 'Unknown',
                             },
                             {
                                 icon: Mail,
-                                text: `${report.user?.email || 'No email provided'}`,
+                                text: report.user?.email || 'No email provided',
                             },
                             {
                                 icon: Phone,
-                                text: `${
-                                    report.user?.official_details
-                                        ?.contact_number
-                                }`,
+                                text: report.user?.official_details?.contact_number || 'undefined',
                             },
                         ])}
                     </div>
