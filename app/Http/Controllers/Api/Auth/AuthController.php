@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\LoginRequest;
+use App\Http\Requests\Api\Auth\PurokLeaderLoginRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Models\CitizenDetails;
 use App\Models\User;
@@ -93,9 +94,59 @@ class AuthController extends BaseApiController
     }
 
     // Login for Purok Leader
-    public function loginPurokLeader(Request $request): \Illuminate\Http\JsonResponse
+    public function loginPurokLeader(PurokLeaderLoginRequest $request): \Illuminate\Http\JsonResponse
     {
-        return $this->sendError('Not implemented yet');
+        $validated = $request->validated();
+
+        try {
+            // Get all Purok Leaders (role_id = 2)
+            $purokLeaders = User::with(['role', 'officialDetails'])
+                ->where('role_id', 2)
+                ->get();
+
+            // Find the user with matching PIN
+            $user = null;
+            foreach ($purokLeaders as $leader) {
+                if (Hash::check($validated['pin'], $leader->password)) {
+                    $user = $leader;
+                    break;
+                }
+            }
+
+            if (!$user) {
+                return $this->sendUnauthorized('Invalid PIN');
+            }
+
+            // Create access token with 'access-api' ability
+            $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
+            
+            // Create refresh token with 'refresh-token' ability
+            $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
+
+            $officialDetails = $user->officialDetails;
+
+            if (!$officialDetails) {
+                return $this->sendError('Official details not found for this user');
+            }
+
+            return $this->sendResponse([
+                'token' => $access_token,
+                'refreshToken' => $refresh_token,
+                'user' => [
+                    'id' => $user->id,
+                    'firstName' => $officialDetails->first_name,
+                    'lastName' => $officialDetails->last_name,
+                    'middleName' => $officialDetails->middle_name,
+                    'suffix' => $officialDetails->suffix,
+                    'email' => $user->email,
+                    'role' => $user->role->name,
+                    'officeAddress' => $officialDetails->office_address,
+                    'phoneNumber' => $officialDetails->contact_number,
+                ]
+            ], 'Login successful');
+        } catch (\Exception $e) {
+            return $this->sendUnauthorized('Invalid PIN');
+        }
     }
     /**
      * Logout user (revoke token).
