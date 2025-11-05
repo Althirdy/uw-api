@@ -17,7 +17,19 @@ class Accident extends Model
         'severity',
     ];
     
-    public function accidentMedia(){
-        return $this->hasMany(IncidentMedia::class, 'incident_id', 'id');
+    /**
+     * Get all media for this accident (polymorphic relationship)
+     */
+    public function media()
+    {
+        return $this->morphMany(IncidentMedia::class, 'source');
+    }
+    
+    /**
+     * Legacy relationship name for backward compatibility
+     */
+    public function accidentMedia()
+    {
+        return $this->media();
     }
 }
