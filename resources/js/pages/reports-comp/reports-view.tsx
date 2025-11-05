@@ -128,7 +128,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         {renderDetailItems([
                             {
                                 icon: LocateFixed,
-                                text: `${report.latitute}, ${report.longtitude}`,
+                                text: `${Number(report.latitute).toFixed(2)}, ${Number(report.longtitude).toFixed(2)}`,
                             },
                             {
                                 icon: TriangleAlert,
@@ -160,30 +160,28 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         ])}
                     </div>
                 </div>
-                <SheetFooter>
-                    <SheetClose asChild>
-                        <div className="flex w-full flex-col items-end justify-end gap-2">
-                            {!report.is_acknowledge && (
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={handleAcknowledge}
-                                    className="w-1/3 cursor-pointer py-6"
-                                >
-                                    <Check className="mr-2 inline h-4 w-4" />
-                                    Acknowledge
-                                </Button>
-                            )}
+                <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
+                    <div className="flex w-full gap-2">
+                        {!report.is_acknowledge && (
+                            <Button
+                                variant="default"
+                                onClick={handleAcknowledge}
+                                className="flex-1"
+                            >
+                                <Check className="mr-2 inline h-4 w-4" />
+                                Acknowledge
+                            </Button>
+                        )}
+                        <SheetClose asChild>
                             <Button
                                 variant="outline"
-                                size="sm"
-                                className="w-1/4 cursor-pointer py-4"
+                                className={!report.is_acknowledge ? "flex-1" : "w-full"}
                             >
-                                <MoveLeft className="mr-2 inline h-4 w-4" />
+                                {!report.is_acknowledge && <MoveLeft className="mr-2 inline h-4 w-4" />}
                                 Return
                             </Button>
-                        </div>
-                    </SheetClose>
+                        </SheetClose>
+                    </div>
                 </SheetFooter>
             </SheetContent>
         </Sheet>

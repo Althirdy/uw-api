@@ -188,9 +188,9 @@ function EditLocation({ location, locationCategory = [] }: { location: location_
                     <SquarePen size={20} />
                 </div>
             </SheetTrigger>
-            <SheetContent className="overflow-y-auto">
-                <form onSubmit={onSubmit}>
-                    <SheetHeader>
+            <SheetContent className="flex flex-col">
+                <form onSubmit={onSubmit} className="flex flex-col h-full">
+                    <SheetHeader className="sticky top-0 z-10 bg-background pb-4">
                         <SheetTitle className="flex items-center gap-2">
                             <MapPin className="h-5 w-5" />
                             Edit Location
@@ -199,7 +199,8 @@ function EditLocation({ location, locationCategory = [] }: { location: location_
                             Update the location details and coordinates.
                         </SheetDescription>
                     </SheetHeader>
-                    <div className="grid flex-1 auto-rows-min gap-6 px-4 py-6">
+                    <div className="flex-1 overflow-y-auto px-4 py-6 pb-20">
+                        <div className="grid auto-rows-min gap-6">
                         <div className="grid gap-3">
                             <div>
                                 <Label htmlFor="edit-location-name">Location Name</Label>
@@ -406,23 +407,28 @@ function EditLocation({ location, locationCategory = [] }: { location: location_
                             </div>
                         </div>
                     </div>
-                    <SheetFooter className="px-4">
-                        <Button
-                            type="submit"
-                            disabled={processing}
-                        >
-                            {processing ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                        <SheetClose asChild>
+                    </div>
+                    <SheetFooter className="sticky bottom-0 z-10 bg-background pt-4 px-4">
+                        <div className="flex gap-2 w-full">
                             <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handleCancel}
+                                type="submit"
                                 disabled={processing}
+                                className="flex-1"
                             >
-                                Cancel
+                                {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
-                        </SheetClose>
+                            <SheetClose asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleCancel}
+                                    disabled={processing}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                            </SheetClose>
+                        </div>
                     </SheetFooter>
                 </form>
             </SheetContent>

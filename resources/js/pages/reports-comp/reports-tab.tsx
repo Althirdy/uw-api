@@ -88,7 +88,7 @@ const ReportActionTab = ({
     return (
         <div className="flex max-w-4xl flex-wrap gap-4">
             <Input
-                placeholder="Search reports by description, type, or reporter"
+                placeholder="Search reports"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-12 min-w-[300px] flex-1"

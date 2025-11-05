@@ -251,11 +251,6 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                     {/* Fixed Footer */}
                     <SheetFooter className="flex-shrink-0 px-6 py-4 border-t bg-background">
                         <div className="flex gap-2 w-full">
-                            <SheetClose asChild>
-                                <Button variant='outline' type="button" className="flex-1">
-                                    Cancel
-                                </Button>
-                            </SheetClose>
                             <Button
                                 type="submit"
                                 disabled={processing}
@@ -263,6 +258,11 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                             >
                                 {processing ? 'Saving...' : 'Add CCTV'}
                             </Button>
+                            <SheetClose asChild>
+                                <Button variant='outline' type="button" className="flex-1">
+                                    Cancel
+                                </Button>
+                            </SheetClose>
                         </div>
                     </SheetFooter>
                 </form>

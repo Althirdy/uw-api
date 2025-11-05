@@ -423,16 +423,18 @@ function CreateLocation({ locationCategory = [] }: { locationCategory?: Location
 
                     {/* Fixed Footer */}
                     <SheetFooter className="flex-shrink-0 pt-4 border-t bg-background">
-                        <Button
-                            type="submit"
-                            disabled={processing}
-                            className="flex-1"
-                        >
-                            {processing ? 'Creating...' : 'Add Location'}
-                        </Button>
-                        <SheetClose asChild>
-                            <Button variant='outline' type="button" className="flex-1">Cancel</Button>
-                        </SheetClose>
+                        <div className="flex gap-2 w-full">
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-1"
+                            >
+                                {processing ? 'Creating...' : 'Add Location'}
+                            </Button>
+                            <SheetClose asChild>
+                                <Button variant='outline' type="button" className="flex-1">Cancel</Button>
+                            </SheetClose>
+                        </div>
                     </SheetFooter>
                 </form>
             </SheetContent>

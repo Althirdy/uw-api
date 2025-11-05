@@ -3,13 +3,28 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, ChevronDown } from 'lucide-react';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import AddContacts from './contacts-comp/add-contacts';
 import ViewContacts from './contacts-comp/view-contacts';
 import EditContacts from './contacts-comp/edit-contacts';
 import DeleteContacts from './contacts-comp/delete-contacts';
 import { Auth, type BreadcrumbItem } from '@/types';
 import { contacts } from '@/routes';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -60,39 +75,57 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
     const [selectedStatus, setSelectedStatus] = useState(filters?.active !== undefined ? (filters.active === '1' ? 'Active' : 'Inactive') : '');
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
     const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+    const [filteredContacts, setFilteredContacts] = useState<Contact[]>(contacts?.data || []);
 
-    const responderTypes = ['BEST', 'BCCM', 'BCPC', 'BDRRM', 'BHERT', 'BHW', 'BPSO', 'BTMO', 'VAWC'];
     const statusOptions = ['Active', 'Inactive'];
+    
+    // Get unique branch/unit names from contacts
+    const branchUnitNames = Array.from(new Set(contacts?.data?.map(c => c.branch_unit_name) || [])).sort();
 
     // Filter contacts based on search term, type, and status - client-side filtering as fallback
-    const filteredContacts = contacts?.data?.filter((contact: Contact) => {
-        const matchesSearch = searchTerm === '' ||
-            contact.branch_unit_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            contact.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (contact.contact_person && contact.contact_person.toLowerCase().includes(searchTerm.toLowerCase()));
+    useEffect(() => {
+        let filteredResults = contacts?.data || [];
+
+        const matchesSearch = (contact: Contact) => {
+            if (searchTerm === '') return true;
+            return (
+                contact.branch_unit_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                contact.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (contact.contact_person && contact.contact_person.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+        };
         
-        const matchesType = selectedType === '' || contact.responder_type === selectedType;
-        const matchesStatus = selectedStatus === '' || 
-            (selectedStatus === 'Active' && contact.active) ||
-            (selectedStatus === 'Inactive' && !contact.active);
+        const matchesType = (contact: Contact) => {
+            return selectedType === '' || contact.branch_unit_name === selectedType;
+        };
+
+        const matchesStatus = (contact: Contact) => {
+            return selectedStatus === '' || 
+                (selectedStatus === 'Active' && contact.active) ||
+                (selectedStatus === 'Inactive' && !contact.active);
+        };
         
-        return matchesSearch && matchesType && matchesStatus;
-    }) || [];
+        filteredResults = filteredResults.filter((contact) => 
+            matchesSearch(contact) && matchesType(contact) && matchesStatus(contact)
+        );
+
+        setFilteredContacts(filteredResults);
+    }, [searchTerm, selectedType, selectedStatus, contacts?.data]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Contacts" />
             
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
+            <div className="space-y-4 p-4">
                 {/* Header with Add Contact Button */}
                 <div className="flex items-center justify-start">
                     <AddContacts />
                 </div>
 
                 {/* Search and Filters - Horizontal Layout */}
-                <div className="flex flex-row gap-4 mb-6">
+                <div className="flex max-w-4xl flex-wrap gap-4">
                     {/* Search Bar */}
-                    <div className="relative flex-1">
+                    <div className="relative w-80">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                         <Input
                             placeholder="Search contact"
@@ -103,15 +136,15 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                     </div>
                     
                     {/* Type Filter - Working Dropdown */}
-                    <div className="w-48 relative">
+                    <div className="w-64 relative">
                         <button 
                             onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap"
                         >
                             <span className={selectedType ? "text-foreground" : "text-muted-foreground"}>
-                                {selectedType || "Select Type"}
+                                {selectedType || "Select Branch/Unit Name"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50" />
+                            <ChevronDown className="h-4 w-4 opacity-50 ml-2 flex-shrink-0" />
                         </button>
                         {isTypeDropdownOpen && (
                             <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-input rounded-md shadow-lg z-10">
@@ -122,9 +155,9 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                                         setIsTypeDropdownOpen(false);
                                     }}
                                 >
-                                    All Types
+                                    All Branch/Units
                                 </div>
-                                {responderTypes.map((type) => (
+                                {branchUnitNames.map((type) => (
                                     <div
                                         key={type}
                                         className="p-2 hover:bg-muted cursor-pointer text-sm"
@@ -144,12 +177,12 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                     <div className="w-48 relative">
                         <button 
                             onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            className="flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 whitespace-nowrap"
                         >
                             <span className={selectedStatus ? "text-foreground" : "text-muted-foreground"}>
-                                {selectedStatus || "Select Status"}
+                                {selectedStatus || "Active"}
                             </span>
-                            <ChevronDown className="h-4 w-4 opacity-50" />
+                            <ChevronDown className="h-4 w-4 opacity-50 ml-2 flex-shrink-0" />
                         </button>
                         {isStatusDropdownOpen && (
                             <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-input rounded-md shadow-lg z-10">
@@ -210,16 +243,13 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                                     </div>
                                     <div className="col-span-2">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                            contact.responder_type === 'BEST' ? 'bg-blue-100 text-blue-800' :
-                                            contact.responder_type === 'BCCM' ? 'bg-green-100 text-green-800' :
-                                            contact.responder_type === 'BCPC' ? 'bg-purple-100 text-purple-800' :
-                                            contact.responder_type === 'BDRRM' ? 'bg-red-100 text-red-800' :
-                                            contact.responder_type === 'BHERT' ? 'bg-orange-100 text-orange-800' :
-                                            contact.responder_type === 'BHW' ? 'bg-pink-100 text-pink-800' :
-                                            contact.responder_type === 'BPSO' ? 'bg-indigo-100 text-indigo-800' :
-                                            contact.responder_type === 'BTMO' ? 'bg-cyan-100 text-cyan-800' :
-                                            contact.responder_type === 'VAWC' ? 'bg-yellow-100 text-yellow-800' :
-                                            'bg-gray-100 text-gray-800'
+                                            contact.responder_type === 'Fire' ? 'bg-red-100 text-red-800' :
+                                            contact.responder_type === 'Emergency' ? 'bg-orange-100 text-orange-800' :
+                                            contact.responder_type === 'Crime' ? 'bg-purple-100 text-purple-800' :
+                                            contact.responder_type === 'Traffic' ? 'bg-yellow-100 text-yellow-800' :
+                                            contact.responder_type === 'Barangay' ? 'bg-green-100 text-green-800' :
+                                            contact.responder_type === 'Others' ? 'bg-gray-100 text-gray-800' :
+                                            'bg-blue-100 text-blue-800'
                                         }`}>
                                             {contact.responder_type}
                                         </span>
@@ -236,7 +266,7 @@ export default function Contacts({ auth, contacts, filters }: ContactsPageProps)
                                         <div className="font-medium">{contact.location}</div>
                                         {contact.latitude && contact.longitude && (
                                             <div className="text-sm text-muted-foreground">
-                                                {contact.latitude}, {contact.longitude}
+                                                {Number(contact.latitude).toFixed(2)}, {Number(contact.longitude).toFixed(2)}
                                             </div>
                                         )}
                                     </div>

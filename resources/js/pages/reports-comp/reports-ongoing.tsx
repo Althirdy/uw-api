@@ -133,7 +133,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                     <Button
                         variant="default"
                         size="sm"
-                        className="w-1/4 cursor-pointer bg-green-600 hover:bg-green-700"
+                        className="cursor-pointer bg-green-600 hover:bg-green-700"
                         onClick={handleResolve}
                     >
                         <Check className="mr-1 inline h-4 w-4" />
