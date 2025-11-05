@@ -200,47 +200,63 @@ class AuthController extends BaseApiController
     }
 
     /**
-     * Verify if citizen name is already registered
+     * Verify registration information availability (name and email)
      */
-    public function verifyNameAvailability(Request $request): \Illuminate\Http\JsonResponse
+    public function verifyRegistrationInfo(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             $validated = $request->validate([
-                'first_name' => 'required|string|max:255',
+                'email' => 'nullable|email',
+                'first_name' => 'nullable|string|max:255',
                 'middle_name' => 'nullable|string|max:255',
-                'last_name' => 'required|string|max:255',
+                'last_name' => 'nullable|string|max:255',
                 'suffix' => 'nullable|string|max:10',
             ]);
 
-            // Check if a citizen with the same name already exists
-            $query = CitizenDetails::where('first_name', $validated['first_name'])
-                ->where('last_name', $validated['last_name']);
+            $results = [];
 
-            if (isset($validated['middle_name'])) {
-                $query->where('middle_name', $validated['middle_name']);
+            // Check email availability if provided
+            if (!empty($validated['email'])) {
+                $existingEmail = User::where('email', $validated['email'])->first();
+                $results['email'] = [
+                    'available' => !$existingEmail,
+                    'message' => $existingEmail 
+                        ? 'This email is already registered.' 
+                        : 'Email is available.'
+                ];
             }
 
-            if (isset($validated['suffix'])) {
-                $query->where('suffix', $validated['suffix']);
+            // Check name availability if first_name and last_name are provided
+            if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
+                $query = CitizenDetails::where('first_name', $validated['first_name'])
+                    ->where('last_name', $validated['last_name']);
+
+                if (isset($validated['middle_name'])) {
+                    $query->where('middle_name', $validated['middle_name']);
+                }
+
+                if (isset($validated['suffix'])) {
+                    $query->where('suffix', $validated['suffix']);
+                }
+
+                $existingCitizen = $query->first();
+                $results['name'] = [
+                    'available' => !$existingCitizen,
+                    'message' => $existingCitizen 
+                        ? 'A user with this name is already registered.' 
+                        : 'Name is available.'
+                ];
             }
 
-            $existingCitizen = $query->first();
-
-            if ($existingCitizen) {
-                return $this->sendResponse([
-                    'available' => false,
-                    'message' => 'A user with this name is already registered.'
-                ], 'Name verification completed');
+            if (empty($results)) {
+                return $this->sendError('Please provide email or name information to verify', null, 400);
             }
 
-            return $this->sendResponse([
-                'available' => true,
-                'message' => 'Name is available for registration.'
-            ], 'Name verification completed');
+            return $this->sendResponse($results, 'Verification completed');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->sendError('Validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
-            return $this->sendError('An error occurred while verifying name availability: ' . $e->getMessage());
+            return $this->sendError('An error occurred while verifying registration information: ' . $e->getMessage());
         }
     }
 
