@@ -75,15 +75,19 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
 
+        console.log('Updating report...');
+        console.log('Form data:', data);
+
         put(`/report/${report.id}`, {
-            onSuccess: (page) => {
+            onSuccess: () => {
+                console.log('Report updated successfully');
                 reset();
-                const closeButton = document.querySelector(
-                    '[data-sheet-close]',
-                ) as HTMLButtonElement;
-                if (closeButton) closeButton.click();
+                // Force page reload to show updated data
+                window.location.reload();
             },
-            preserveScroll: true,
+            onError: (errors) => {
+                console.log('Server validation errors:', errors);
+            },
         });
     };
 

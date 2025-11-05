@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(UserSeeder::class);
-        $this->call(ReportSeeder::class);
+            // $this->call(ReportSeeder::class);
         $this->call(PublicPostSeeder::class);
     }
 }
