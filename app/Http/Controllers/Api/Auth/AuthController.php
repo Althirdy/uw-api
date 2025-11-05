@@ -93,7 +93,8 @@ class AuthController extends BaseApiController
     }
 
     // Login for Purok Leader
-    public function loginPurokLeader(Request $request): \Illuminate\Http\JsonResponse{
+    public function loginPurokLeader(Request $request): \Illuminate\Http\JsonResponse
+    {
         return $this->sendError('Not implemented yet');
     }
     /**
@@ -204,7 +205,7 @@ class AuthController extends BaseApiController
     public function verifyNameAvailability(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'middle_name' => 'nullable|string|max:255',
                 'last_name' => 'required|string|max:255',
@@ -212,11 +213,18 @@ class AuthController extends BaseApiController
             ]);
 
             // Check if a citizen with the same name already exists
-            $existingCitizen = CitizenDetails::where('first_name', $request->first_name)
-                ->where('last_name', $request->last_name)
-                ->where('middle_name', $request->middle_name ?? null)
-                ->where('suffix', $request->suffix ?? null)
-                ->first();
+            $query = CitizenDetails::where('first_name', $validated['first_name'])
+                ->where('last_name', $validated['last_name']);
+
+            if (isset($validated['middle_name'])) {
+                $query->where('middle_name', $validated['middle_name']);
+            }
+
+            if (isset($validated['suffix'])) {
+                $query->where('suffix', $validated['suffix']);
+            }
+
+            $existingCitizen = $query->first();
 
             if ($existingCitizen) {
                 return $this->sendResponse([
@@ -229,9 +237,10 @@ class AuthController extends BaseApiController
                 'available' => true,
                 'message' => 'Name is available for registration.'
             ], 'Name verification completed');
-
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->sendError('Validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
-            return $this->sendError('An error occurred while verifying name availability');
+            return $this->sendError('An error occurred while verifying name availability: ' . $e->getMessage());
         }
     }
 
@@ -246,10 +255,10 @@ class AuthController extends BaseApiController
             DB::beginTransaction();
 
             // Concatenate full name
-            $fullName = trim($validated['first_name'] . ' ' . 
-                           ($validated['middle_name'] ?? '') . ' ' . 
-                           $validated['last_name'] . 
-                           ($validated['suffix'] ? ' ' . $validated['suffix'] : ''));
+            $fullName = trim($validated['first_name'] . ' ' .
+                ($validated['middle_name'] ?? '') . ' ' .
+                $validated['last_name'] .
+                ($validated['suffix'] ? ' ' . $validated['suffix'] : ''));
 
             // Create user record
             $user = User::create([
@@ -304,12 +313,9 @@ class AuthController extends BaseApiController
                     'isVerified' => $citizenDetails->is_verified,
                 ]
             ], 'Registration successful');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->sendError('Registration failed: ' . $e->getMessage());
         }
     }
-
-    
 }
