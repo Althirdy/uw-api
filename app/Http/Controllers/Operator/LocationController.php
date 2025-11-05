@@ -18,12 +18,18 @@ class LocationController extends Controller
     public function store(LocationRequest $request)
     {
         try {
-            $this->locationService->createLocation($request->validated());
+            $validated = $request->validated();
+            \Log::info('Creating location with data:', $validated);
+            
+            $this->locationService->createLocation($validated);
 
             return redirect()->back()->with('success', 'Location created successfully!');
         } catch (\Exception $e) {
+            \Log::error('Failed to create location: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return redirect()->back()
-                ->with('error', 'An error occurred while creating the location.')
+                ->withErrors(['error' => 'An error occurred while creating the location: ' . $e->getMessage()])
                 ->withInput();
         }
     }

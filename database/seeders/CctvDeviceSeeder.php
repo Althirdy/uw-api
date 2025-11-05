@@ -30,7 +30,7 @@ class CctvDeviceSeeder extends Seeder
                 ],
                 [
                     'location_category' => 2, // Commercial
-                    'location_name' => 'Metroplaza Phase 5',
+                    'location_name' => 'Dali Store',
                     'landmark' => 'Shopping Center',
                     'barangay' => 'Barangay 176-E',
                     'latitude' => 14.7751,

@@ -106,12 +106,12 @@ class UserController extends Controller
                     'first_name' => $validated['first_name'],
                     'middle_name' => $validated['middle_name'],
                     'last_name' => $validated['last_name'],
-                    'suffix' => $validated['suffix'],
-                    'contact_number' => $validated['phone_number'],
-                    'office_address' => $validated['office_address'],
-                    'assigned_brgy' => $validated['assigned_brgy'] ?? $validated['barangay'] ?? null,
-                    'latitude' => $validated['latitude'],
-                    'longitude' => $validated['longitude'],
+                    'suffix' => $validated['suffix'] ?? null,
+                    'contact_number' => $validated['phone_number'] ?? '',
+                    'office_address' => $validated['office_address'] ?? 'N/A',
+                    'assigned_brgy' => $validated['assigned_brgy'] ?? $validated['barangay'] ?? '',
+                    'latitude' => $validated['latitude'] ?? null,
+                    'longitude' => $validated['longitude'] ?? null,
                 ]);
             } elseif ($validated['role_id'] == 3) {
                 // Citizen - create CitizenDetails
@@ -139,8 +139,10 @@ class UserController extends Controller
                 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Failed to create user: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return back()
-                ->with('error', 'Failed to create user. Please try again.')
+                ->withErrors(['error' => 'Failed to create user: ' . $e->getMessage()])
                 ->withInput();
         }
     }
