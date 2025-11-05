@@ -50,7 +50,7 @@ const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
                     </div>
                 </div>
 
-                <Tabs defaultValue="table" className="w-full space-y-2">
+                <Tabs defaultValue="card" className="w-full space-y-2">
                     <div className="flex flex-row gap-4">
                         <ReportActionTab
                             reports={reports}
@@ -60,28 +60,28 @@ const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
                         />
                         <TabsList className="h-12 w-24">
                             <TabsTrigger
-                                value="table"
-                                className="cursor-pointer"
-                            >
-                                <List className="h-8 w-8" />
-                            </TabsTrigger>
-                            <TabsTrigger
                                 value="card"
                                 className="cursor-pointer"
                             >
                                 <Table className="h-4 w-4" />
                             </TabsTrigger>
+                            <TabsTrigger
+                                value="table"
+                                className="cursor-pointer"
+                            >
+                                <List className="h-8 w-8" />
+                            </TabsTrigger>
                         </TabsList>
                     </div>
 
-                    <TabsContent value="table" className="w-full">
-                        <ReportsTable
+                    <TabsContent value="card" className="w-full">
+                        <ReportsCard
                             reports={filteredReports}
                             reportTypes={reportTypes}
                         />
                     </TabsContent>
-                    <TabsContent value="card" className="w-full">
-                        <ReportsCard
+                    <TabsContent value="table" className="w-full">
+                        <ReportsTable
                             reports={filteredReports}
                             reportTypes={reportTypes}
                         />
