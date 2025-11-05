@@ -204,7 +204,7 @@ class AuthController extends BaseApiController
     public function verifyNameAvailability(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $request->validate([
+            $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'middle_name' => 'nullable|string|max:255',
                 'last_name' => 'required|string|max:255',
@@ -212,11 +212,10 @@ class AuthController extends BaseApiController
             ]);
 
             // Check if a citizen with the same name already exists
-            $existingCitizen = CitizenDetails::where('first_name', $request->first_name)
-                ->where('last_name', $request->last_name)
-                ->where('middle_name', $request->middle_name ?? null)
-                ->where('suffix', $request->suffix ?? null)
-                ->first();
+            $query = CitizenDetails::where('first_name', $validated['first_name'])
+                ->where('last_name', $validated['last_name']);
+
+            $existingCitizen = $query->first();
 
             if ($existingCitizen) {
                 return $this->sendResponse([
@@ -230,8 +229,10 @@ class AuthController extends BaseApiController
                 'message' => 'Name is available for registration.'
             ], 'Name verification completed');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->sendError('Validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
-            return $this->sendError('An error occurred while verifying name availability');
+            return $this->sendError('An error occurred while verifying name availability: ' . $e->getMessage());
         }
     }
 
