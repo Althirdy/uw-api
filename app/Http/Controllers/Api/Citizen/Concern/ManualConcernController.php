@@ -7,6 +7,8 @@ use App\Http\Requests\Citizen\ConcernRequest;
 use App\Http\Requests\Citizen\UpdateConcernRequest;
 use App\Models\Citizen\Concern;
 use App\Models\IncidentMedia;
+use App\Models\ConcernDistribution;
+use App\Events\ConcernAssigned;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -125,9 +127,24 @@ class ManualConcernController extends BaseApiController
                 }
             }
 
+            // 🔵 Step 4: Distribute concern to purok leader
+            // TODO: Replace hardcoded purok_leader_id with actual location-based logic
+            // For now, all concerns are assigned to purok leader with ID = 2 (Adoracion S. Jumadiao)
+            $purokLeaderId = 2;
+
+            $distribution = ConcernDistribution::create([
+                'concern_id' => $concern->id,
+                'purok_leader_id' => $purokLeaderId,
+                'status' => 'assigned',
+                'assigned_at' => now(),
+            ]);
+
+            // 🟣 Step 5: Broadcast real-time notification to purok leader
+            event(new ConcernAssigned($concern, $distribution, $uploadedMedia));
+
             DB::commit();
 
-            // 🟢 Step 4: Return successful response
+            // 🟢 Step 6: Return successful response
             return $this->sendResponse([
                 'concern' => [
                     'id' => $concern->id,
