@@ -109,11 +109,7 @@ const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
                         </TabsList>
                     </div>
 
-<<<<<<< HEAD
-                    <TabsContent value="card" className="w-full">
-=======
                     <TabsContent value="card" className="w-full space-y-6">
->>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
                         <ReportsCard
                             reports={filteredReports}
                             reportTypes={reportTypes}

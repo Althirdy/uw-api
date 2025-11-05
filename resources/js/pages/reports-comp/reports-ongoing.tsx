@@ -44,11 +44,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
 
     // Get first image from media
     const firstImage = report.media && report.media.length > 0 
-<<<<<<< HEAD
-        ? report.media[0].original_path 
-=======
         ? report.media[0]
->>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
         : null;
 
     return (

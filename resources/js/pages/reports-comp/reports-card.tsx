@@ -27,11 +27,7 @@ type ReportsCardProps = {
 
 const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
     return (
-<<<<<<< HEAD
-        <div className="grid auto-rows-min gap-4 md:grid-cols-3 lg:grid-cols-4">
-=======
         <div className="grid auto-rows-min gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
->>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
             {reports.length === 0 && (
                 <div className="col-span-full py-8 text-center text-gray-500">
                     No reports found matching your selection.
@@ -40,123 +36,6 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
 
             {/* Use filtered_roles for displaying cards */}
             {reports.map((report) => {
-<<<<<<< HEAD
-                const firstImage = report.media && report.media.length > 0 
-                    ? report.media[0].original_path 
-                    : null;
-
-                return (
-                    <Card
-                        key={report.id}
-                        className="relative overflow-hidden rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border flex flex-col"
-                    >
-                        {/* Accident Image */}
-                        {firstImage ? (
-                            <div className="relative h-40 w-full overflow-hidden bg-muted">
-                                <img 
-                                    src={firstImage} 
-                                    alt="Accident detection" 
-                                    className="h-full w-full object-cover"
-                                />
-                                <div className="absolute top-2 right-2">
-                                    <Badge variant="destructive" className="text-xs">
-                                        <Camera className="mr-1 h-3 w-3" />
-                                        YOLO
-                                    </Badge>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="relative h-40 w-full bg-muted flex items-center justify-center">
-                                <Camera className="h-10 w-10 text-muted-foreground/20" />
-                            </div>
-                        )}
-
-                        <CardHeader className="pb-3">
-                            <CardTitle>
-                                <span className="text-base">Report ID: #{report.id}</span>
-                            </CardTitle>
-                            <CardDescription>
-                                <div className="flex gap-2 flex-wrap">
-                                    <Badge variant="default" className="text-xs">
-                                        {report.report_type}
-                                    </Badge>
-                                    <Badge 
-                                        variant={report.status === 'Pending' ? 'destructive' : 'default'} 
-                                        className="text-xs"
-                                    >
-                                        {report.status}
-                                    </Badge>
-                                </div>
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                            <div className="flex flex-col gap-2">
-                                <div>
-                                    <p className="text-sm font-semibold">Incident Description</p>
-                                    <p className="text-sm text-muted-foreground line-clamp-3">
-                                        {report.description}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <div className="flex w-full justify-end gap-2">
-                                <Tooltip>
-                                    <ViewReportDetails report={report}>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="cursor-pointer"
-                                            >
-                                                <Open className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                    </ViewReportDetails>
-                                    <TooltipContent>
-                                        <p>View Details</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <EditReport
-                                        report={report}
-                                        reportTypes={reportTypes}
-                                    >
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="cursor-pointer"
-                                            >
-                                                <SquarePen className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                    </EditReport>
-                                    <TooltipContent>
-                                        <p>Edit User</p>
-                                    </TooltipContent>
-                                </Tooltip>
-
-                                <Tooltip>
-                                    <ArchiveReport report={report}>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="cursor-pointer"
-                                            >
-                                                <Archive className="h-4 w-4 text-[var(--destructive)]" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                    </ArchiveReport>
-                                    <TooltipContent>
-                                        <p>Archive User</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </div>
-                        </CardFooter>
-                    </Card>
-=======
                 // Get first image from media
                 const firstImage = report.media && report.media.length > 0 
                     ? report.media[0]
@@ -265,7 +144,6 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
                         </div>
                     </CardFooter>
                 </Card>
->>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
                 );
             })}
         </div>
