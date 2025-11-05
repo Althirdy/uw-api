@@ -24,6 +24,23 @@ class UserRequest extends FormRequest
     {
         $userId = $this->route('user') ? $this->route('user')->id : null;
         $isUpdate = $this->isMethod('PUT') || $this->isMethod('PATCH');
+        $isPurokLeader = $this->input('role_id') == 2;
+
+        // Different password validation for Purok Leader (PIN) vs other roles
+        if ($isUpdate) {
+            $passwordRules = 'nullable';
+        } else {
+            $passwordRules = ['required', 'string', 'confirmed'];
+            
+            if ($isPurokLeader) {
+                // PIN validation for Purok Leader - only numbers, min 4 digits
+                $passwordRules[] = 'regex:/^\d+$/';
+                $passwordRules[] = 'min:4';
+            } else {
+                // Regular password validation for other roles
+                $passwordRules[] = Password::min(8)->letters()->numbers()->symbols();
+            }
+        }
 
         return [
             'first_name' => 'required|string|max:255|regex:/^[a-zA-Z\s\'-]+$/',
@@ -38,12 +55,7 @@ class UserRequest extends FormRequest
             ],
             'phone_number' => 'nullable|regex:/^[0-9+\-\s]{10,20}$/',
             'role_id' => $isUpdate ? 'nullable|exists:roles,id' : 'required|numeric|exists:roles,id',
-            'password' => $isUpdate ? 'nullable' : [
-                'required',
-                'string',
-                Password::min(8)->letters()->numbers()->symbols(),
-                'confirmed',
-            ],
+            'password' => $passwordRules,
             'status' => 'nullable|string|in:Active,Inactive,Archived',
             // For citizens
             'date_of_birth' => 'nullable|date|before:today',
@@ -68,6 +80,9 @@ class UserRequest extends FormRequest
      */
     public function messages(): array
     {
+        $isPurokLeader = $this->input('role_id') == 2;
+        $passwordFieldName = $isPurokLeader ? 'PIN' : 'Password';
+        
         return [
             'first_name.required' => 'First name is required.',
             'first_name.regex' => 'First name can only contain letters, spaces, hyphens, and apostrophes.',
@@ -85,8 +100,10 @@ class UserRequest extends FormRequest
             'phone_number.regex' => 'Phone number must be a valid format (10-20 digits, can include +, -, and spaces).',
             'role_id.required' => 'User role is required.',
             'role_id.exists' => 'The selected role is invalid.',
-            'password.required' => 'Password is required.',
-            'password.confirmed' => 'Password confirmation does not match.',
+            'password.required' => $passwordFieldName . ' is required.',
+            'password.confirmed' => $passwordFieldName . ' confirmation does not match.',
+            'password.regex' => $isPurokLeader ? 'PIN must contain only numbers.' : null,
+            'password.min' => $isPurokLeader ? 'PIN must be at least 4 digits.' : 'Password must be at least 8 characters.',
             'status.in' => 'Status must be Active, Inactive, or Archived.',
             'date_of_birth.date' => 'Date of birth must be a valid date.',
             'date_of_birth.before' => 'Date of birth must be before today.',

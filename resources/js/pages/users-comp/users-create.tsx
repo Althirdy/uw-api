@@ -33,6 +33,10 @@ type CreateUserForm = {
     role_id: string;
     password: string;
     password_confirmation: string;
+    suffix?: string;
+    office_address?: string;
+    latitude?: string;
+    longitude?: string;
 };
 
 function CreateUsers({ roles }: { roles: roles_T[] }) {
@@ -47,6 +51,10 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
             role_id: '',
             password: '',
             password_confirmation: '',
+            suffix: '',
+            office_address: '',
+            latitude: '',
+            longitude: '',
         });
 
     const [clientErrors, setClientErrors] = useState<Partial<CreateUserForm>>(
@@ -86,26 +94,45 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
         return '';
     };
 
-    const validatePassword = (value: string) => {
+    const validatePassword = (value: string, roleId?: string) => {
+        const isPurokLeader = (roleId || data.role_id) === '2';
+        const fieldName = isPurokLeader ? 'PIN' : 'Password';
+        
         if (!value) {
             return 'Password is required';
         }
-        if (value.length < 8) {
-            return 'Password must be at least 8 characters';
-        }
-        if (!/[a-zA-Z]/.test(value)) {
-            return 'Password must contain at least one letter';
-        }
-        if (!/[0-9]/.test(value)) {
-            return 'Password must contain at least one number';
-        }
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
-            return 'Password must contain at least one symbol';
+        
+        // Different validation for PIN (Purok Leader) vs Password
+        if (isPurokLeader) {
+            // PIN should only contain numbers
+            if (!/^\d+$/.test(value)) {
+                return 'PIN must contain only numbers';
+            }
+            if (value.length < 4) {
+                return 'PIN must be at least 4 digits';
+            }
+        } else {
+            // Regular password validation
+            if (value.length < 8) {
+                return `${fieldName} must be at least 8 characters`;
+            }
+            if (!/[a-zA-Z]/.test(value)) {
+                return `${fieldName} must contain at least one letter`;
+            }
+            if (!/[0-9]/.test(value)) {
+                return `${fieldName} must contain at least one number`;
+            }
+            if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+                return `${fieldName} must contain at least one symbol`;
+            }
         }
         return '';
     };
 
-    const validatePasswordConfirmation = (value: string, password: string) => {
+    const validatePasswordConfirmation = (value: string, password: string, roleId?: string) => {
+        const isPurokLeader = (roleId || data.role_id) === '2';
+        const fieldName = isPurokLeader ? 'PIN' : 'Password';
+        
         if (!value) {
             return 'Password confirmation is required';
         }
@@ -202,23 +229,31 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
             }
         });
 
+        console.log('Validation errors:', validationErrors);
+        console.log('Form data:', data);
+
         if (Object.keys(validationErrors).length > 0) {
             setClientErrors(validationErrors);
+            console.log('Form has validation errors, not submitting');
             return;
         }
 
         // Clear client errors and submit
         setClientErrors({});
+        console.log('Submitting form...');
+        console.log('Form data being sent:', data);
         post('/user', {
-            onSuccess: (page) => {
+            onSuccess: () => {
+                console.log('User created successfully');
                 reset();
                 setClientErrors({});
-                const closeButton = document.querySelector(
-                    '[data-sheet-close]',
-                ) as HTMLButtonElement;
-                if (closeButton) closeButton.click();
+                // Force page reload to show the new user
+                window.location.href = '/users';
             },
-            preserveScroll: true,
+            onError: (errors) => {
+                console.log('Server validation errors:', errors);
+                console.error('Full error object:', JSON.stringify(errors, null, 2));
+            },
         });
     };
 
@@ -415,6 +450,24 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                                     ...prev,
                                                     role_id: undefined,
                                                 }));
+                                                // Revalidate password when role changes
+                                                if (data.password) {
+                                                    const passwordError = validatePassword(data.password);
+                                                    setClientErrors((prev) => ({
+                                                        ...prev,
+                                                        password: passwordError || undefined,
+                                                    }));
+                                                }
+                                                if (data.password_confirmation) {
+                                                    const confirmError = validatePasswordConfirmation(
+                                                        data.password_confirmation,
+                                                        data.password
+                                                    );
+                                                    setClientErrors((prev) => ({
+                                                        ...prev,
+                                                        password_confirmation: confirmError || undefined,
+                                                    }));
+                                                }
                                             }}
                                         >
                                             <SelectTrigger

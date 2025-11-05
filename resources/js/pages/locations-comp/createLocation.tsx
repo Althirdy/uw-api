@@ -35,13 +35,46 @@ const barangay = [
     { id: 6, name: 'Brgy 176 - F' },
 ]
 
+const packages = [
+    { id: 1, name: 'Pkg. 1A Bicolandia' },
+    { id: 2, name: 'Pkg. 1B Powerline' },
+    { id: 3, name: 'Pkg. 1C Sampalukan' },
+    { id: 4, name: 'Pkg. 2 Botlog' },
+    { id: 5, name: 'Pkg. 2 GK Staging' },
+    { id: 6, name: 'Pkg. 3 Kaunlaran' },
+    { id: 7, name: 'Pkg. 3 Maharlika' },
+    { id: 8, name: 'Pkg. 3 Maharlika 2' },
+    { id: 9, name: 'Pkg. 3 Damayan' },
+    { id: 10, name: 'Pkg. 4A Atlantika' },
+    { id: 11, name: 'Pkg. 4B Aklan Wire' },
+    { id: 12, name: 'Pkg. 5 San Roque' },
+    { id: 13, name: 'Pkg. 5 Brgy. Annex (BFP)' },
+    { id: 14, name: 'Pkg. 5 Crasher' },
+    { id: 15, name: 'Pkg. 5 Gatnai' },
+    { id: 16, name: 'Pkg. 6 Bayanihan' },
+    { id: 17, name: 'Pkg. 7A Lakan' },
+    { id: 18, name: 'Pkg. 7B PhilRad' },
+    { id: 19, name: 'Pkg. 7B  Khulits Court' },
+    { id: 20, name: 'Pkg. 7B Dating Daan' },
+    { id: 21, name: 'Pkg. 7C GS Senior High' },
+    { id: 22, name: 'Pkg. 8A North Cal' },
+    { id: 23, name: 'Pkg. 8B Makati' },
+    { id: 24, name: 'Pkg. 9 Plaza Maria Upper' },
+    { id: 25, name: 'Pkg. 9 Plaza Maria Lower' },
+]
+
 type Barangay = {
     id: number;
     name: string;
 }
 
+type Package = {
+    id: number;
+    name: string;
+}
+
 type SelectionState = {
-    value: Barangay | LocationCategory_T | null;
+    value: Barangay | LocationCategory_T | Package | null;
     open: boolean;
 }
 
@@ -64,6 +97,11 @@ function CreateLocation({ locationCategory = [] }: { locationCategory?: Location
 
 
     // Combined states for both selectors
+    const [packageState, setPackageState] = useState<SelectionState>({
+        value: null,
+        open: false
+    });
+
     const [barangayState, setBarangayState] = useState<SelectionState>({
         value: null,
         open: false
@@ -78,6 +116,15 @@ function CreateLocation({ locationCategory = [] }: { locationCategory?: Location
         latitude: '',
         longitude: ''
     });
+
+    // Handlers for package selection
+    const handlePackageSelect = (selected: Package | null) => {
+        setPackageState({
+            value: selected,
+            open: false
+        });
+        setData('location_name', selected ? selected.name : '');
+    };
 
     // Handlers for barangay selection
     const handleBarangaySelect = (selected: Barangay | null) => {
@@ -109,8 +156,13 @@ function CreateLocation({ locationCategory = [] }: { locationCategory?: Location
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        console.log('Submitting location form...');
+        console.log('Form data:', data);
+        
         post('/locations', {
             onSuccess: () => {
+                console.log('Location created successfully');
                 // Show success toast
                 toast({
                     title: "Success!",
@@ -120,21 +172,26 @@ function CreateLocation({ locationCategory = [] }: { locationCategory?: Location
 
                 // Reset form
                 reset();
+                setPackageState({ value: null, open: false });
                 setBarangayState({ value: null, open: false });
                 setCategoryState({ value: null, open: false });
                 setCoordinates({ latitude: '', longitude: '' });
 
-                // Close the sheet
-                setSheetOpen(false);
+                // Force page reload to show the new location
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
             },
             onError: (errors) => {
+                console.log('Server validation errors:', errors);
+                console.error('Full error object:', JSON.stringify(errors, null, 2));
+                
                 // Show error toast
                 toast({
                     title: "Error",
                     description: "Failed to create location. Please check your inputs and try again.",
                     variant: "destructive",
                 });
-
             }
         });
     }
@@ -159,16 +216,58 @@ function CreateLocation({ locationCategory = [] }: { locationCategory?: Location
                     {/* Scrollable Form Content */}
                     <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
                         <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="location-name">Location Name</Label>
-                                <Input
-                                    id="location-name"
-                                    placeholder="e.g Ph-1 Palengke"
-                                    value={data.location_name}
-                                    onChange={(e) => setData('location_name', e.target.value)}
-                                />
-                                {errors.location_name && <p className="text-red-500 text-sm mt-1">{errors.location_name}</p>}
-                            </div>
+                            {/* Location Name (Package) Selector */}
+                            <Popover
+                                open={packageState.open}
+                                onOpenChange={(open: boolean) => setPackageState(prev => ({ ...prev, open }))}
+                            >
+                                <PopoverTrigger asChild>
+                                    <div>
+                                        <Label className='mb-2'>Location Name</Label>
+                                        <Button
+                                            type='button'
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={packageState.open}
+                                            className="w-full justify-between"
+                                        >
+                                            {packageState.value ? (packageState.value as Package).name : "Select Package"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </div>
+                                </PopoverTrigger>
+                                <PopoverContent className="p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Search package..." />
+                                        <CommandList>
+                                            <CommandEmpty>No package found.</CommandEmpty>
+                                            <CommandGroup>
+                                                {packages.map((pkg) => (
+                                                    <CommandItem
+                                                        key={pkg.id}
+                                                        value={pkg.name}
+                                                        onSelect={() => handlePackageSelect(
+                                                            (packageState.value as Package)?.id === pkg.id ? null : pkg
+                                                        )}
+                                                    >
+                                                        {pkg.name}
+                                                        <Check
+                                                            className={cn(
+                                                                "ml-auto",
+                                                                (packageState.value as Package)?.id === pkg.id
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                            )}
+                                                        />
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
+                            {errors.location_name && <p className="text-red-500 text-sm mt-1">{errors.location_name}</p>}
+                            
                             <div>
                                 <Label htmlFor="location-landmark">Near Landmark</Label>
                                 <Input
