@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Services\FileUploadService;
 use App\Models\Accident;
 use App\Models\IncidentMedia;
+use App\Events\AccidentDetected;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -25,29 +26,37 @@ class YoloAccidentController extends BaseApiController
         return true;
     }
 
-    private function ProcessImage($file)
+    private function ProcessImage($file, Request $request)
     {
         try {
             DB::beginTransaction();
 
-            // 1. Upload image to storage and get public URL
+            // 1. Get dynamic data from request (sent by YOLO script)
+            $accidentType = $request->input('accident_type', 'accident');
+            $severity = $request->input('severity', 'Medium'); // Default: Medium (matches ENUM)
+            $title = $request->input('title', 'YOLO Detected Incident');
+            $description = $request->input('description', 'Incident automatically detected by YOLO AI system');
+            $latitude = $request->input('latitude', '14.123456');
+            $longitude = $request->input('longitude', '121.123456');
+
+            // 2. Upload image to storage and get public URL
             $uploadResult = $this->fileUploadService->uploadSingle($file, 'yolo');
             $publicUrl = $uploadResult['public_url'] ?? null;
             $storagePath = $uploadResult['storage_path'] ?? null;
 
-            // 2. Create accident record with hardcoded data
+            // 3. Create accident record with dynamic data from YOLO
             $accident = Accident::create([
-                'title' => 'YOLO Detected Accident',
-                'description' => 'Accident automatically detected by YOLO AI system',
-                'latitude' => '14.123456',
-                'longitude' => '121.123456',
+                'title' => $title,
+                'description' => $description,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'occurred_at' => now(),
-                'accident_type' => 'accident',
+                'accident_type' => $accidentType,
                 'status' => 'pending',
-                'severity' => 'medium',
+                'severity' => $severity,
             ]);
 
-            // 3. Create incident media record and link to accident
+            // 4. Create incident media record and link to accident
             $incidentMedia = IncidentMedia::create([
                 'source_type' => Accident::class,
                 'source_id' => $accident->id,
@@ -61,7 +70,8 @@ class YoloAccidentController extends BaseApiController
                 'mime_type' => $uploadResult['mime_type'] ?? $file->getMimeType(),
                 'detection_metadata' => [
                     'detection_source' => 'yolo',
-                    'detection_type' => 'accident',
+                    'detection_type' => $accidentType,
+                    'severity' => $severity,
                     'confidence' => null,
                     'detected_objects' => null,
                 ],
@@ -70,6 +80,15 @@ class YoloAccidentController extends BaseApiController
             ]);
 
             DB::commit();
+
+            // 5. Broadcast the event to all connected clients
+            broadcast(new AccidentDetected($accident));
+
+            Log::info('Accident detected and broadcasted', [
+                'accident_id' => $accident->id,
+                'type' => $accidentType,
+                'severity' => $severity
+            ]);
 
             return [
                 'success' => true,
@@ -103,7 +122,7 @@ class YoloAccidentController extends BaseApiController
                 return $this->sendError('Invalid snapshot', null, 400);
             }
 
-            $result = $this->ProcessImage($request->file('snapshot'));
+            $result = $this->ProcessImage($request->file('snapshot'), $request);
 
             return $this->sendResponse($result, 'Accident detected and saved successfully', 200);
 

@@ -60,12 +60,8 @@ class ReportController extends Controller
                 'user' => null, // Accidents don't have users (YOLO detected)
                 'acknowledgedBy' => null,
                 'media' => $accident->media->map(function ($media) {
-                    return [
-                        'id' => $media->id,
-                        'original_path' => $media->original_path,
-                        'media_type' => $media->media_type,
-                    ];
-                }),
+                    return $media->original_path;
+                })->toArray(),
             ];
         });
 

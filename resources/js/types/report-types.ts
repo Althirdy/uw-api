@@ -15,11 +15,7 @@ export type reports_T = {
     status: string;
     created_at: string;
     updated_at: string;
-    media?: {
-        id: number;
-        original_path: string;
-        media_type: string;
-    }[];
+    media?: string[]; // Array of image URLs
 };
 
 export type ReportsProps = {
@@ -27,6 +23,8 @@ export type ReportsProps = {
         data: reports_T[];
         links: any[];
         meta: any;
+        prev_page_url: string | null;
+        next_page_url: string | null;
     };
     filters: {
         search?: string;
