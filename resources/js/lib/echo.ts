@@ -5,6 +5,9 @@ import Pusher from 'pusher-js';
 (window as any).Pusher = Pusher;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ad144c5 (feat: Refactor Laravel Echo initialization to support dynamic broadcaster selection)
 // Determine broadcaster based on environment
 const broadcaster = import.meta.env.VITE_PUSHER_APP_KEY ? 'pusher' : 'reverb';
 
@@ -27,6 +30,7 @@ const echo = new Echo(
               enabledTransports: ['ws', 'wss'],
           }
 );
+<<<<<<< HEAD
 =======
 // Initialize Laravel Echo with Reverb
 const echo = new Echo({
@@ -39,5 +43,7 @@ const echo = new Echo({
     enabledTransports: ['ws', 'wss'],
 });
 >>>>>>> ed05b14 (feat: Add Laravel Reverb real-time updates for YOLO accident detection)
+=======
+>>>>>>> ad144c5 (feat: Refactor Laravel Echo initialization to support dynamic broadcaster selection)
 
 export default echo;
