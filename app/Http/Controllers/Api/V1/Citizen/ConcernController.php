@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\Citizen\Concern;
+namespace App\Http\Controllers\Api\V1\Citizen;
 
 use App\Http\Controllers\Api\BaseApiController;
-use App\Http\Requests\Citizen\ConcernRequest;
-use App\Http\Requests\Citizen\UpdateConcernRequest;
+use App\Http\Requests\Api\V1\Citizen\StoreConcernRequest;
+use App\Http\Requests\Api\V1\Citizen\UpdateConcernRequest;
+use App\Http\Resources\Api\V1\ConcernResource;
 use App\Models\Citizen\Concern;
 use App\Models\IncidentMedia;
 use App\Models\ConcernDistribution;
@@ -15,7 +16,7 @@ use Illuminate\Http\Request;
 use App\Services\FileUploadService;
 
 
-class ManualConcernController extends BaseApiController
+class ConcernController extends BaseApiController
 {
 
     protected $fileUploadService;
@@ -42,23 +43,8 @@ class ManualConcernController extends BaseApiController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $formattedConcerns = $concerns->map(function ($concern) {
-                return [
-                    'id' => $concern->id,
-                    'title' => $concern->title,
-                    'description' => $concern->description,
-                    'category' => $concern->category,
-                    'severity' => $concern->severity,
-                    'latitude' => $concern->latitude,
-                    'longitude' => $concern->longitude,
-                    'status' => $concern->status,
-                    'created_at' => $concern->created_at,
-                    'images' => $concern->media->pluck('original_path')->toArray()
-                ];
-            });
-
             return $this->sendResponse([
-                'concerns' => $formattedConcerns
+                'concerns' => ConcernResource::collection($concerns)
             ], 'Manual concerns retrieved successfully');
 
         } catch (\Exception $e) {
@@ -74,7 +60,7 @@ class ManualConcernController extends BaseApiController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ConcernRequest $request)
+    public function store(StoreConcernRequest $request)
     {
         $validated = $request->validated();
 
@@ -144,19 +130,13 @@ class ManualConcernController extends BaseApiController
 
             DB::commit();
 
+            // Load relationships for resource
+            $concern->load('media');
+
             // 🟢 Step 6: Return successful response
             return $this->sendResponse([
-                'concern' => [
-                    'id' => $concern->id,
-                    'title' => $concern->title,
-                    'description' => $concern->description,
-                    'category' => $concern->category,
-                    'severity' => $concern->severity,
-                    'status' => $concern->status,
-                    'created_at' => $concern->created_at,
-                    'images' => $uploadedMedia,
-                ],
-            ], 'Concern submitted successfully!');
+                'concern' => new ConcernResource($concern),
+            ], 'Concern submitted successfully!', 201);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -190,21 +170,8 @@ class ManualConcernController extends BaseApiController
                 return $this->sendError('Manual concern not found or you do not have permission to view it', [], 404);
             }
 
-            $formattedConcern = [
-                'id' => $concern->id,
-                'title' => $concern->title,
-                'description' => $concern->description,
-                'category' => $concern->category,
-                'severity' => $concern->severity,
-                'status' => $concern->status,
-                'latitude' => $concern->latitude,
-                'longitude' => $concern->longitude,
-                'created_at' => $concern->created_at,
-                'images' => $concern->media->pluck('original_path')->toArray()
-            ];
-
             return $this->sendResponse([
-                'concern' => $formattedConcern
+                'concern' => new ConcernResource($concern)
             ], 'Manual concern retrieved successfully');
 
         } catch (\Exception $e) {
@@ -241,29 +208,12 @@ class ManualConcernController extends BaseApiController
             }
 
             // Update only title and description
-            $concern->update([
-                'title' => $request->title,
-                'description' => $request->description,
-            ]);
+            $concern->update($request->validated());
 
             DB::commit();
 
-            $formattedConcern = [
-                'id' => $concern->id,
-                'title' => $concern->title,
-                'description' => $concern->description,
-                'category' => $concern->category,
-                'severity' => $concern->severity,
-                'status' => $concern->status,
-                'latitude' => $concern->latitude,
-                'longitude' => $concern->longitude,
-                'created_at' => $concern->created_at,
-                'updated_at' => $concern->updated_at,
-                'images' => $concern->media->pluck('original_path')->toArray()
-            ];
-
             return $this->sendResponse([
-                'concern' => $formattedConcern
+                'concern' => new ConcernResource($concern)
             ], 'Manual concern updated successfully');
 
         } catch (\Exception $e) {
