@@ -1,317 +1,236 @@
-# API Documentation
+# 📘 API Documentation
 
-**Base URL**: `/api/v1`
+**Version:** 1.0
+**Base URL:** `/api/v1`
 
-This API uses Laravel Sanctum for authentication. All protected endpoints require a valid Bearer Token in the `Authorization` header.
+## 🚀 Introduction
 
-## Authentication & OTP
+Welcome to the API documentation. This API provides backend services for the Citizen App, Operator Dashboard, and AI integration systems.
+
+### Authentication
+The API uses **Laravel Sanctum** for authentication.
+*   **Header:** `Authorization: Bearer <your_access_token>`
+*   Most endpoints require a valid access token unless marked as **Public**.
+
+### Response Format
+All responses generally follow this standard JSON structure:
+```json
+{
+  "success": boolean,
+  "message": string,
+  "data": object | array, // Optional
+  "errors": object        // Optional, for validation errors
+}
+```
+
+---
+
+## 🔐 Authentication & User Management
+
+### 1. Register Citizen
+Registers a new citizen account in the system.
+
+*   **Endpoint:** `POST /register`
+*   **Access:** Public
+
+#### Request Body
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | Yes | Unique email address. |
+| `password` | string | Yes | Min 8 chars, must match confirmation. |
+| `password_confirmation` | string | Yes | |
+| `first_name` | string | Yes | |
+| `last_name` | string | Yes | |
+| `date_of_birth` | date | Yes | Format: `YYYY-MM-DD`. |
+| `phone_number` | string | Yes | 11-digit mobile number. |
+| `address` | string | Yes | |
+| `barangay` | string | Yes | |
+| `city` | string | Yes | |
+| `province` | string | Yes | |
+| `postal_code` | string | Yes | |
+
+#### Success Response
+```json
+{
+  "success": true,
+  "message": "Registration successful",
+  "data": {
+    "token": "1|laravel_sanctum_token...",
+    "user": { "id": 1, "email": "user@example.com", "role": "Citizen", ... }
+  }
+}
+```
+
+### 2. Login (Standard)
+Authenticates Citizens and Officials/Operators.
+
+*   **Endpoint:** `POST /login`
+*   **Access:** Public
+
+#### Request Body
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | Yes | Registered email. |
+| `password` | string | Yes | Account password. |
+
+### 3. Login (Purok Leader)
+Specialized login for Purok Leaders using a PIN code.
+
+*   **Endpoint:** `POST /login/purok-leader`
+*   **Access:** Public
+*   **Request Body:** `{ "pin": "123456" }`
+
+### 4. Get Authenticated User
+Retrieves the profile of the currently logged-in user.
+
+*   **Endpoint:** `GET /auth/user`
+*   **Access:** Authenticated
+
+### 5. Refresh Token
+Obtains a new access token using a valid refresh token.
+
+*   **Endpoint:** `POST /refresh-token`
+*   **Access:** Authenticated (requires token with `refresh-token` ability)
+
+### 6. Logout
+Invalidates the current access token.
+
+*   **Endpoint:** `POST /logout`
+*   **Access:** Authenticated
+
+---
+
+## 🛡️ Security & Recovery (OTP)
 
 ### 1. Send OTP
-Sends a One-Time Password to the specified email address.
+Initiates an OTP sequence for registration, password recovery, or verification.
 
-*   **Endpoint**: `POST /api/v1/otp/send`
-*   **Access**: Public
-*   **Request Body**:
-    ```json
-    {
-        "email": "user@example.com", // required, email
-        "type": "registration", // required, in: registration, forgot_password, email_verification
-        "name": "John Doe" // optional, string
-    }
-    ```
-*   **Response**:
-    ```json
-    {
-        "success": true,
-        "message": "OTP sent successfully",
-        "data": {
-            "email": "user@example.com",
-            "expires_in": 10
-        }
-    }
-    ```
+*   **Endpoint:** `POST /otp/send`
+*   **Access:** Public
+
+#### Request Body
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | Yes | Target email. |
+| `type` | string | Yes | One of: `registration`, `forgot_password`, `email_verification`. |
 
 ### 2. Verify OTP
-Verifies the OTP sent to the user.
+Validates the code sent to the user.
 
-*   **Endpoint**: `POST /api/v1/otp/verify`
-*   **Access**: Public
-*   **Request Body**:
-    ```json
-    {
-        "email": "user@example.com", // required, email
-        "otp": "123456", // required, string, 6 digits
-        "type": "registration" // required, in: registration, forgot_password, email_verification
-    }
-    ```
-*   **Response**:
-    ```json
-    {
-        "success": true,
-        "message": "OTP verified successfully",
-        "data": {
-            "email": "user@example.com",
-            "type": "registration"
-        }
-    }
-    ```
+*   **Endpoint:** `POST /otp/verify`
+*   **Access:** Public
 
-### 3. Register Citizen
-Registers a new citizen user.
+#### Request Body
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `email` | string | Yes | |
+| `otp` | string | Yes | 6-digit code. |
+| `type` | string | Yes | Must match the `send` type. |
 
-*   **Endpoint**: `POST /api/v1/register`
-*   **Access**: Public
-*   **Request Body**:
-    ```json
-    {
-        "email": "user@example.com", // required, unique
-        "password": "password123", // required, min: 8, confirmed
-        "password_confirmation": "password123",
-        "first_name": "John", // required
-        "middle_name": "D", // optional
-        "last_name": "Doe", // required
-        "suffix": "Jr", // optional
-        "date_of_birth": "1990-01-01", // required, date, before today
-        "phone_number": "09123456789", // required
-        "address": "123 Main St", // required
-        "barangay": "Barangay 1", // required
-        "city": "City Name", // required
-        "province": "Province Name", // required
-        "postal_code": "1234" // required
-    }
-    ```
-*   **Response**:
-    ```json
-    {
-        "success": true,
-        "message": "Registration successful",
-        "data": {
-            "token": "1|...",
-            "refreshToken": "2|...",
-            "user": {
-                "id": 1,
-                "firstName": "John",
-                "lastName": "Doe",
-                "email": "user@example.com",
-                "role": "Citizen"
-                 // ... other details
-            }
-        }
-    }
-    ```
+#### Response (Forgot Password)
+Returns a `token` in the data object required for the password reset endpoint.
 
-### 4. Login (Citizen/Official)
-Logs in a user using email and password.
+### 3. Reset Password
+Sets a new password using a verified token.
 
-*   **Endpoint**: `POST /api/v1/login`
-*   **Access**: Public
-*   **Request Body**:
-    ```json
-    {
-        "email": "user@example.com", // required, email
-        "password": "password123" // required
-    }
-    ```
-*   **Response**:
-    ```json
-    {
-        "success": true,
-        "data": {
-            "token": "1|...",
-            "refreshToken": "2|...",
-            "user": {
-                "id": 1,
-                "role": "Citizen"
-                // ... user details
-            }
-        }
-    }
-    ```
+*   **Endpoint:** `POST /password/reset`
+*   **Access:** Public
 
-### 5. Login (Purok Leader)
-Logs in a Purok Leader using a PIN.
-
-*   **Endpoint**: `POST /api/v1/login/purok-leader`
-*   **Access**: Public
-*   **Request Body**:
-    ```json
-    {
-        "pin": "123456" // required
-    }
-    ```
-
-### 6. Get Authenticated User
-Retrieves details of the currently authenticated user.
-
-*   **Endpoint**: `GET /api/v1/auth/user`
-*   **Access**: Authenticated (Sanctum)
-*   **Response**: Returns user details based on role.
-
-### 7. Refresh Token
-Refreshes the access token using a refresh token.
-
-*   **Endpoint**: `POST /api/v1/refresh-token`
-*   **Access**: Authenticated (Sanctum - requires token with 'refresh-token' ability)
-*   **Response**:
-    ```json
-    {
-        "success": true,
-        "message": "Token refreshed successfully",
-        "data": {
-            "token": "new_access_token",
-            "refreshToken": "new_refresh_token"
-        }
-    }
-    ```
-
-### 8. Logout
-Revokes the current access token.
-
-*   **Endpoint**: `POST /api/v1/logout`
-*   **Access**: Authenticated (Sanctum)
+#### Request Body
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `token` | string | Yes | Token from `/otp/verify`. |
+| `email` | string | Yes | |
+| `password` | string | Yes | New password. |
+| `password_confirmation` | string | Yes | |
 
 ---
 
-## Citizen Concerns
+## 📢 Citizen Concerns
 
 ### 1. List Concerns
-Retrieves a list of manual concerns submitted by the authenticated citizen.
+Fetches concerns submitted by the authenticated user.
 
-*   **Endpoint**: `GET /api/v1/concerns`
-*   **Access**: Authenticated (Citizen)
-*   **Response**:
-    ```json
-    {
-        "success": true,
-        "message": "Manual concerns retrieved successfully",
-        "data": {
-            "concerns": [
-                {
-                    "id": 1,
-                    "title": "Pothole",
-                    "description": "Big pothole on Main St",
-                    "category": "infrastructure",
-                    "status": "pending",
-                    "images": ["url1", "url2"],
-                    "distribution": { ... }
-                }
-            ]
-        }
-    }
-    ```
+*   **Endpoint:** `GET /concerns`
+*   **Access:** Authenticated (Citizen)
 
 ### 2. Submit Concern
-Submits a new manual concern.
+Uploads a new issue report with optional media.
 
-*   **Endpoint**: `POST /api/v1/concerns`
-*   **Access**: Authenticated (Citizen)
-*   **Request Body** (Multipart/Form-Data):
-    *   `title` (string, required, max: 100)
-    *   `description` (string, required)
-    *   `category` (string, required, in: safety, security, infrastructure, environment, noise, other)
-    *   `severity` (string, optional, in: low, medium, high)
-    *   `latitude` (numeric, optional)
-    *   `longitude` (numeric, optional)
-    *   `transcript_text` (string, optional)
-    *   `files[]` (file array, optional, max 3, images only)
-*   **Response**:
-    ```json
-    {
-        "success": true,
-        "message": "Concern submitted successfully!",
-        "data": {
-            "concern": { ... }
-        }
-    }
-    ```
+*   **Endpoint:** `POST /concerns`
+*   **Access:** Authenticated (Citizen)
+*   **Content-Type:** `multipart/form-data`
+
+#### Request Parameters
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `title` | string | Yes | Max 100 chars. |
+| `description` | string | Yes | Detailed explanation. |
+| `category` | string | Yes | `safety`, `infrastructure`, `environment`, etc. |
+| `severity` | string | No | `low`, `medium`, `high`. |
+| `latitude` | numeric | No | GPS Latitude. |
+| `longitude` | numeric | No | GPS Longitude. |
+| `files[]` | file | No | Array of images (max 3). |
 
 ### 3. Update Concern
-Updates an existing concern (only title and description).
+Modifies the text content of a concern.
 
-*   **Endpoint**: `PUT/PATCH /api/v1/concerns/{id}`
-*   **Access**: Authenticated (Citizen - Owner only)
-*   **Request Body**:
-    *   `title` (string, required)
-    *   `description` (string, required)
+*   **Endpoint:** `PUT /concerns/{id}`
+*   **Access:** Authenticated (Owner)
 
 ---
 
-## Operator & Contacts
+## 🚑 Operator & Emergency Management
 
 ### 1. List Contacts
-Retrieves a paginated list of emergency contacts.
+Retrieves emergency responders.
 
-*   **Endpoint**: `GET /api/v1/contacts`
-*   **Access**: Authenticated
-*   **Query Parameters**:
-    *   `search` (string)
-    *   `responder_type` (string)
-    *   `active` (boolean)
+*   **Endpoint:** `GET /contacts`
+*   **Access:** Authenticated
+*   **Query Params:** `search`, `responder_type`, `active`
 
 ### 2. Create Contact
-Creates a new emergency contact.
+Adds a new responder unit to the system.
 
-*   **Endpoint**: `POST /api/v1/contacts`
-*   **Access**: Authenticated
-*   **Request Body**:
-    ```json
-    {
-        "branch_unit_name": "BDRRM", // required, enum
-        "responder_type": "Emergency", // required, enum
-        "location": "Location String", // required
-        "primary_mobile": "09123456789", // required, 11 digits
-        "latitude": 14.123, // required
-        "longitude": 121.123, // required
-        "active": true // boolean
-    }
-    ```
+*   **Endpoint:** `POST /contacts`
+*   **Access:** Authenticated (Operator/Admin)
 
-### 3. Heatmap Contacts
-Retrieves all active contacts for heatmap display.
+### 3. List Accidents
+Retrieves reported accidents for the operator dashboard.
 
-*   **Endpoint**: `GET /api/v1/contacts/heatmap`
-*   **Access**: Authenticated
+*   **Endpoint:** `GET /accidents`
+*   **Access:** Authenticated (Operator)
+*   **Query Params:** `search`, `accident_type`, `status`
 
----
+### 4. Update Accident Status
+Changes the workflow state of an accident record.
 
-## Accidents & Reports (Operator)
+*   **Endpoint:** `PATCH /accidents/{id}/status`
+*   **Access:** Authenticated (Operator)
 
-### 1. List Accidents
-Retrieves a paginated list of accidents/reports.
-
-*   **Endpoint**: `GET /api/v1/accidents`
-*   **Access**: Authenticated
-*   **Query Parameters**:
-    *   `search` (string)
-    *   `accident_type` (string)
-    *   `status` (string)
-
-### 2. Update Accident Status
-Updates the status of an accident.
-
-*   **Endpoint**: `PATCH /api/v1/accidents/{id}/status`
-*   **Access**: Authenticated
-*   **Request Body**:
-    ```json
-    {
-        "status": "resolved" // required, in: pending, ongoing, resolved, archived
-    }
-    ```
+#### Request Body
+```json
+{
+  "status": "resolved" // pending, ongoing, resolved, archived
+}
+```
 
 ---
 
-## YOLO Detection
+## 🤖 AI Integrations (YOLO)
 
 ### 1. Process Snapshot
-Endpoint for the YOLO system to upload accident snapshots.
+Ingests data from the CCTV YOLO detection system.
 
-*   **Endpoint**: `POST /api/v1/yolo/accidents/snapshot`
-*   **Access**: Public (Intended for YOLO script)
-*   **Request Body** (Multipart/Form-Data):
-    *   `snapshot` (file, required)
-    *   `accident_type` (string)
-    *   `severity` (string)
-    *   `title` (string)
-    *   `description` (string)
-    *   `latitude` (numeric)
-    *   `longitude` (numeric)
+*   **Endpoint:** `POST /yolo/accidents/snapshot`
+*   **Access:** Public (API Key recommended for production)
+*   **Content-Type:** `multipart/form-data`
+
+#### Request Parameters
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `snapshot` | file | Yes | Image file of the event. |
+| `accident_type` | string | No | Classification of accident. |
+| `severity` | string | No | Estimated severity. |
+| `latitude` | numeric | No | |
+| `longitude` | numeric | No | |

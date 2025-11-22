@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\OtpController;
+use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 //========OTP Routes========//
@@ -13,6 +14,7 @@ Route::prefix('otp')->group(function () {
 });
 
 //========Auth Routes========//
+Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login/purok-leader', [AuthController::class, 'loginPurokLeader']);

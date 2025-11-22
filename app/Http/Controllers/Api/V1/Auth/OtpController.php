@@ -174,13 +174,30 @@ class OtpController extends Controller
         // Clear rate limiting on successful verification
         RateLimiter::clear($key);
 
+        $responseData = [
+            'email' => $request->email,
+            'type' => $request->type,
+        ];
+
+        // If forgot password, generate and return a reset token
+        if ($request->type === 'forgot_password') {
+            $token = \Illuminate\Support\Str::random(60);
+            
+            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $request->email],
+                [
+                    'token' => \Illuminate\Support\Facades\Hash::make($token),
+                    'created_at' => now()
+                ]
+            );
+
+            $responseData['token'] = $token;
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'OTP verified successfully',
-            'data' => [
-                'email' => $request->email,
-                'type' => $request->type,
-            ]
+            'data' => $responseData
         ]);
     }
 
