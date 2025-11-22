@@ -122,7 +122,7 @@ Finalizes the process by setting the new password. This requires the secure toke
 | :--- | :--- | :--- | :--- |
 | `email` | `string` | Yes | The user's email address. |
 | `token` | `string` | Yes | The secure token received from the `/otp/verify` endpoint. |
-| `password` | `string` | Yes | The new password (min. 8 characters). |
+| `password` | `string` | Yes | The new password (min. 8 characters, strong password recommended). |
 | `password_confirmation` | `string` | Yes | Must match the `password` field. |
 
 #### Example Request

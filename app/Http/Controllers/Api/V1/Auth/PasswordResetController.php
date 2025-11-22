@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class PasswordResetController extends Controller
 {
@@ -43,6 +44,7 @@ class PasswordResetController extends Controller
         
         $user->forceFill([
             'password' => Hash::make($request->password),
+            'remember_token' => Str::random(60),
         ])->save();
         
         // Delete the used token
