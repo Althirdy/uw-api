@@ -8,6 +8,6 @@ Route::middleware(['auth:sanctum', 'ability.access'])->group(function () {
     // Get contacts for heatmap (public access)
     Route::get('contacts/heatmap', [ContactController::class, 'heatmap']);
     
-    // CRUD operations for contacts
-    Route::apiResource('contacts', ContactController::class);
+    // // CRUD operations for contacts
+    // Route::apiResource('contacts', ContactController::class);
 });
