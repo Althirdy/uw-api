@@ -19,15 +19,17 @@ class ConcernAssigned implements ShouldBroadcast
     public $concern;
     public $distribution;
     public $images;
+    public $audioUrl;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(Concern $concern, ConcernDistribution $distribution, array $images = [])
+    public function __construct(Concern $concern, ConcernDistribution $distribution, array $images = [], ?string $audioUrl = null)
     {
         $this->concern = $concern;
         $this->distribution = $distribution;
         $this->images = $images;
+        $this->audioUrl = $audioUrl;
     }
 
     /**
@@ -67,6 +69,9 @@ class ConcernAssigned implements ShouldBroadcast
                 'longitude' => $this->concern->longitude,
                 'created_at' => $this->concern->created_at,
                 'images' => $this->images,
+                'audio' => $this->audioUrl,
+                'summary' => $this->concern->summary,
+                'transcript' => $this->concern->transcript_text,
             ],
             'distribution' => [
                 'id' => $this->distribution->id,
