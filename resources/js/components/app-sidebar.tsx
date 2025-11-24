@@ -10,6 +10,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import {
+    contacts,
     dashboard,
     devices,
     locations,
@@ -23,7 +24,6 @@ import {
     File,
     FlagTriangleRight,
     Folder,
-    LayoutGrid,
     MapPin,
     User,
     Users,
@@ -32,29 +32,24 @@ import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
         title: 'Users',
-        href: users(),
+        href: users().url,
         icon: User,
     },
 
     {
         title: 'Public Posts',
-        href: publicPosts(),
+        href: publicPosts().url,
         icon: FlagTriangleRight,
     },
     {
         title: 'Reports',
-        href: reports(),
+        href: reports().url,
         icon: File,
     },
     {
         title: 'Locations',
-        href: locations(),
+        href: locations().url,
         icon: MapPin,
     },
     {
@@ -64,7 +59,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Contacts',
-        href: '/contacts',
+        href: contacts().url,
         icon: Users,
     },
 ];

@@ -30,16 +30,16 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { PublicPost_T } from '@/types/public-post-types';
-import { columns } from './public-post-table-columns';
+import { Contact } from '@/types/contacts-types';
+import { columns } from './contacts-table-columns';
 
-function PublicPostsTable({
-    posts,
+const ContactTable = ({
+    contacts,
     isLoading = false,
 }: {
-    posts: PublicPost_T[];
+    contacts: Contact[];
     isLoading?: boolean;
-}) {
+}) => {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -47,7 +47,7 @@ function PublicPostsTable({
         React.useState<VisibilityState>({});
 
     const table = useReactTable({
-        data: posts,
+        data: contacts,
         columns: columns(),
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -93,7 +93,7 @@ function PublicPostsTable({
                         {isLoading ? (
                             Array.from({ length: 5 }).map((_, index) => (
                                 <TableRow key={index}>
-                                    {Array.from({ length: 7 }).map(
+                                    {Array.from({ length: 6 }).map(
                                         (_, cellIndex) => (
                                             <TableCell
                                                 key={cellIndex}
@@ -109,6 +109,7 @@ function PublicPostsTable({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
+                                    className="hover:bg-muted/50"
                                     data-state={
                                         row.getIsSelected() && 'selected'
                                     }
@@ -132,7 +133,7 @@ function PublicPostsTable({
                                     colSpan={columns().length}
                                     className="h-24 text-center text-muted-foreground"
                                 >
-                                    No posts found.
+                                    No contacts found.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -141,7 +142,8 @@ function PublicPostsTable({
             </div>
             <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="text-sm text-muted-foreground">
-                    Showing {table.getFilteredRowModel().rows.length} post(s).
+                    Showing {table.getFilteredRowModel().rows.length}{' '}
+                    contact(s).
                 </div>
                 <div className="flex items-center space-x-6 lg:space-x-8">
                     <div className="flex items-center space-x-2">
@@ -201,6 +203,6 @@ function PublicPostsTable({
             </div>
         </div>
     );
-}
+};
 
-export default PublicPostsTable;
+export default ContactTable;

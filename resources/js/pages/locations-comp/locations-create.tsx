@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils'
-import { LocationCategory_T } from '../locations'
+import { LocationCategory_T } from '@/types/location-types'
 import { MapModal } from "@/components/map-modal"
 import { toast } from "@/components/use-toast"
 

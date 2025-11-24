@@ -30,16 +30,18 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { PublicPost_T } from '@/types/public-post-types';
-import { columns } from './public-post-table-columns';
+import { location_T, LocationCategory_T } from '@/types/location-types';
+import { columns } from './locations-table-columns';
 
-function PublicPostsTable({
-    posts,
+const LocationsTable = ({
+    locations,
+    locationCategory,
     isLoading = false,
 }: {
-    posts: PublicPost_T[];
+    locations: location_T[];
+    locationCategory: LocationCategory_T[];
     isLoading?: boolean;
-}) {
+}) => {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -47,8 +49,8 @@ function PublicPostsTable({
         React.useState<VisibilityState>({});
 
     const table = useReactTable({
-        data: posts,
-        columns: columns(),
+        data: locations,
+        columns: columns(locationCategory),
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
@@ -109,6 +111,7 @@ function PublicPostsTable({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
+                                    className="cursor-pointer hover:bg-muted/50"
                                     data-state={
                                         row.getIsSelected() && 'selected'
                                     }
@@ -129,10 +132,10 @@ function PublicPostsTable({
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns().length}
-                                    className="h-24 text-center text-muted-foreground"
+                                    colSpan={columns(locationCategory).length}
+                                    className="h-24 text-center"
                                 >
-                                    No posts found.
+                                    No locations found.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -141,7 +144,8 @@ function PublicPostsTable({
             </div>
             <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="text-sm text-muted-foreground">
-                    Showing {table.getFilteredRowModel().rows.length} post(s).
+                    Showing {table.getFilteredRowModel().rows.length}{' '}
+                    location(s).
                 </div>
                 <div className="flex items-center space-x-6 lg:space-x-8">
                     <div className="flex items-center space-x-2">
@@ -201,6 +205,6 @@ function PublicPostsTable({
             </div>
         </div>
     );
-}
+};
 
-export default PublicPostsTable;
+export default LocationsTable;

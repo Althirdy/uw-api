@@ -66,11 +66,15 @@ class DatabaseSeeder extends Seeder
             Roles::firstOrCreate(['name' => $role['name']], $role);
         }
 
-        $this->call(UserSeeder::class);
-            // $this->call(ReportSeeder::class);
-        $this->call(PublicPostSeeder::class);
-        $this->call(ContactSeeder::class);
-        $this->call(CctvDeviceSeeder::class);
-        $this->call(UwDeviceSeeder::class);
+        $this->call([
+            UserSeeder::class,
+            LocationSeeder::class,
+            CctvDeviceSeeder::class,
+            ReportSeeder::class,
+            PublicPostSeeder::class,
+            ContactSeeder::class,
+            UwDeviceSeeder::class,
+        ]);
+
     }
 }

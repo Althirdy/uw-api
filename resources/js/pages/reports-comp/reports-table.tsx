@@ -1,161 +1,211 @@
+import {
+    ColumnFiltersState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    SortingState,
+    useReactTable,
+    VisibilityState,
+} from '@tanstack/react-table';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import * as React from 'react';
+
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Archive, ExternalLink as Open, SquarePen } from 'lucide-react';
 
-import { formatDateTime } from '@/lib/utils';
 import { reports_T } from '@/types/report-types';
-import ArchiveReport from './reports-archive';
-import EditReport from './reports-edit';
-import ViewReportDetails from './reports-view';
+import { columns } from './reports-table-columns';
 
 type ReportsTableProps = {
     reports: reports_T[];
     reportTypes: string[];
+    isLoading?: boolean;
 };
 
-const ReportsTable = ({ reports, reportTypes }: ReportsTableProps) => {
+const ReportsTable = ({
+    reports,
+    reportTypes,
+    isLoading = false,
+}: ReportsTableProps) => {
+    const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
+
+    const table = useReactTable({
+        data: reports,
+        columns: columns(reportTypes),
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+        },
+        meta: {
+            reportTypes,
+        },
+    });
+
     return (
-        <div className="overflow-hidden rounded-[var(--radius)] bg-[var(--sidebar)]">
-            <Table className="m-0 border">
-                <TableCaption className="m-0 border-t py-4">
-                    Showing {reports.length} Reports
-                </TableCaption>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Report ID
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Report Type
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Report
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Location
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Date and Time
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Status
-                        </TableHead>
-                        <TableHead className="py-4 text-center font-semibold">
-                            Actions
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {reports.map((report) => (
-                        <TableRow
-                            key={report.id}
-                            className="text-center text-muted-foreground"
-                        >
-                            <TableCell className="py-3">#{report.id}</TableCell>
-                            <TableCell className="py-3">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    report.report_type === 'CCTV' ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
-                                    report.report_type === 'Citizen Concern' ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400' :
-                                    report.report_type === 'Emergency' ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400' :
-                                    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                                }`}>
-                                    {report.report_type}
-                                </span>
-                            </TableCell>
-                            <TableCell className="py-3">
-                                {report.transcript}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                {Number(report.latitute).toFixed(2)}, {Number(report.longtitude).toFixed(2)}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                {formatDateTime(report.created_at)}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    report.status === 'Ongoing' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                                    report.status === 'Pending' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
-                                    report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                                }`}>
-                                    {report.status}
-                                </span>
-                            </TableCell>
-                            <TableCell className="py-3">
-                                <div className="flex justify-center gap-2">
-                                    <Tooltip>
-                                        <ViewReportDetails report={report}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Open className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </ViewReportDetails>
-                                        <TooltipContent>
-                                            <p>View Details</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <Tooltip>
-                                        <EditReport
-                                            report={report}
-                                            reportTypes={reportTypes}
+        <div className="w-full">
+            <div className="overflow-hidden rounded-[var(--radius)] border">
+                <Table>
+                    <TableHeader className="bg-muted">
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => {
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            className="border-r px-2 py-2 text-center font-semibold last:border-r-0"
                                         >
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <SquarePen className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </EditReport>
-
-                                        <TooltipContent>
-                                            <p>Edit Report</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                        <ArchiveReport report={report}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Archive className="h-4 w-4 text-[var(--destructive)]" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </ArchiveReport>
-
-                                        <TooltipContent>
-                                            <p>Archive Report</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext(),
+                                                  )}
+                                        </TableHead>
+                                    );
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array.from({ length: 5 }).map((_, index) => (
+                                <TableRow key={index}>
+                                    {Array.from({ length: 7 }).map(
+                                        (_, cellIndex) => (
+                                            <TableCell
+                                                key={cellIndex}
+                                                className="text-center"
+                                            >
+                                                <Skeleton className="h-8 w-full" />
+                                            </TableCell>
+                                        ),
+                                    )}
+                                </TableRow>
+                            ))
+                        ) : table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            className="text-center"
+                                        >
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns(reportTypes).length}
+                                    className="h-24 text-center"
+                                >
+                                    No reports found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            <div className="flex items-center justify-between space-x-2 py-4">
+                <div className="text-sm text-muted-foreground">
+                    Showing {table.getFilteredRowModel().rows.length} report(s).
+                </div>
+                <div className="flex items-center space-x-6 lg:space-x-8">
+                    <div className="flex items-center space-x-2">
+                        <p className="text-sm text-muted-foreground">
+                            Rows per page:
+                        </p>
+                        <Select
+                            value={`${table.getState().pagination.pageSize}`}
+                            onValueChange={(value) => {
+                                table.setPageSize(Number(value));
+                            }}
+                        >
+                            <SelectTrigger className="h-8 w-[70px]">
+                                <SelectValue
+                                    placeholder={
+                                        table.getState().pagination.pageSize
+                                    }
+                                />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                                    <SelectItem
+                                        key={pageSize}
+                                        value={`${pageSize}`}
+                                    >
+                                        {pageSize}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex w-fit items-center justify-center text-sm font-medium text-muted-foreground">
+                        Page {table.getState().pagination.pageIndex + 1} of{' '}
+                        {table.getPageCount()}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                        >
+                            <span className="sr-only">Go to previous page</span>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                        >
+                            <span className="sr-only">Go to next page</span>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
