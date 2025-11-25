@@ -19,6 +19,10 @@
   - [1. List Concerns](#1-list-concerns)
   - [2. Submit Concern (Manual or Voice)](#2-submit-concern-manual-or-voice)
   - [3. Update Concern](#3-update-concern)
+- [👔 Purok Leader Management](#-purok-leader-management)
+  - [1. List Assigned Concerns](#1-list-assigned-concerns)
+  - [2. Get Concern Details](#2-get-concern-details)
+  - [3. Update Concern Status](#3-update-concern-status)
 - [🚑 Operator & Emergency Management](#-operator--emergency-management)
   - [1. List Contacts](#1-list-contacts)
   - [2. Create Contact](#2-create-contact)
@@ -412,6 +416,138 @@ Modifies the text content of a concern.
       "description": "Updated description...",
       "updated_at": "2025-11-24T09:00:00.000000Z"
     }
+  }
+}
+```
+
+### 4. Delete Concern
+Soft deletes a concern record. The user can only delete their own concerns.
+
+*   **Endpoint:** `https://urbanwatch.me/api/v1/concerns/{id}`
+*   **Method:** `DELETE`
+*   **Access:** Authenticated (Owner)
+*   **Header:** `Authorization: Bearer <token>`
+
+#### JSON Response
+```json
+{
+  "success": true,
+  "message": "Manual concern deleted successfully",
+  "data": {
+    "concern_id": "102"
+  }
+}
+```
+
+---
+
+## 👔 Purok Leader Management
+
+### 1. List Assigned Concerns
+Fetches concerns explicitly assigned to the authenticated Purok Leader.
+
+*   **Endpoint:** `https://urbanwatch.me/api/v1/purok-leader/concerns`
+*   **Method:** `GET`
+*   **Access:** Authenticated (Purok Leader Role ID: 2)
+*   **Header:** `Authorization: Bearer <token>`
+
+#### JSON Response
+```json
+{
+  "success": true,
+  "message": "Assigned concerns retrieved successfully",
+  "data": {
+    "concerns": [
+      {
+        "id": 101,
+        "distribution_id": 55,
+        "title": "Voice Concern - Nov 24, 08:30",
+        "description": "Audio recording received...",
+        "category": "safety",
+        "severity": "low",
+        "status": "pending",
+        "distribution_status": "assigned",
+        "latitude": "14.123",
+        "longitude": "121.987",
+        "created_at": "2025-11-24T08:30:00.000000Z",
+        "updated_at": "2025-11-24T08:30:00.000000Z",
+        "images": [],
+        "audio": "https://r2.cloudflarestorage.com/bucket/concerns/audio/12345.mp3",
+        "summary": null,
+        "transcript": null,
+        "citizen": {
+          "id": 5,
+          "name": "Juan Dela Cruz",
+          "phone_number": "09171234567"
+        }
+      }
+    ]
+  }
+}
+```
+
+### 2. Get Concern Details
+Retrieves detailed information about a specific assigned concern.
+
+*   **Endpoint:** `https://urbanwatch.me/api/v1/purok-leader/concerns/{id}`
+*   **Method:** `GET`
+*   **Access:** Authenticated (Purok Leader Role ID: 2)
+*   **Header:** `Authorization: Bearer <token>`
+
+#### JSON Response
+```json
+{
+  "success": true,
+  "message": "Concern details retrieved successfully",
+  "data": {
+    "concern": {
+      "id": 101,
+      "distribution_id": 55,
+      "title": "Voice Concern - Nov 24, 08:30",
+      "description": "Audio recording received...",
+      "category": "safety",
+      "severity": "low",
+      "status": "pending",
+      "distribution_status": "assigned",
+      "latitude": "14.123",
+      "longitude": "121.987",
+      "created_at": "2025-11-24T08:30:00.000000Z",
+      "updated_at": "2025-11-24T08:30:00.000000Z",
+      "images": [],
+      "audio": "https://r2.cloudflarestorage.com/bucket/concerns/audio/12345.mp3",
+      "summary": null,
+      "transcript": null,
+      "citizen": {
+        "id": 5,
+        "name": "Juan Dela Cruz",
+        "phone_number": "09171234567"
+      }
+    }
+  }
+}
+```
+
+### 3. Update Concern Status
+Updates the status of an assigned concern.
+
+*   **Endpoint:** `https://urbanwatch.me/api/v1/purok-leader/concerns/{id}/status`
+*   **Method:** `PUT`
+*   **Access:** Authenticated (Purok Leader Role ID: 2)
+*   **Header:** `Content-Type: application/json`
+
+#### Request Parameters
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `status` | enum | Yes | `pending`, `ongoing`, `escalated`, `resolved`. |
+
+#### JSON Response
+```json
+{
+  "success": true,
+  "message": "Concern status updated successfully",
+  "data": {
+    "concern_id": "101",
+    "new_status": "in_progress"
   }
 }
 ```

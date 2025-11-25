@@ -9,10 +9,12 @@ use App\Http\Resources\Api\V1\ConcernResource;
 use App\Models\Citizen\Concern;
 use App\Models\IncidentMedia;
 use App\Models\ConcernDistribution;
+use App\Models\ConcernHistory;
 use App\Events\ConcernAssigned;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Services\FileUploadService;
 
 
@@ -33,12 +35,13 @@ class ConcernController extends BaseApiController
     {
         try {
             // Get only concerns belonging to the authenticated user
-            $concerns = Concern::where('type', 'manual')
-                ->where('citizen_id', auth()->id())
+            $concerns = Concern::where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
-                    }
+                    },
+                    'distribution.purokLeader.officialDetails',
+                    'histories.actor.officialDetails'
                 ])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -67,18 +70,35 @@ class ConcernController extends BaseApiController
         DB::beginTransaction();
 
         try {
+            // 🔍 Step 0: Determine Concern Type & Prepare Data
+            $concernType = $validated['type'];
+            
+            if ($concernType === 'voice') {
+                $title = $validated['title'] ?? 'Voice Concern - ' . now()->format('M d, Y H:i');
+                $description = $validated['description'] ?? 'Audio recording received. Transcription pending...';
+            } else {
+                $title = $validated['title'];
+                $description = $validated['description'];
+            }
+
+            // Generate Tracking Code: CN-YYYYMMDD-XXXX
+            $datePart = now()->format('Ymd');
+            $randomPart = Str::upper(Str::random(4));
+            $trackingCode = "CN-{$datePart}-{$randomPart}";
+
             // 🟢 Step 1: Create the Concern record
             $concern = Concern::create([
-                'type' => 'manual',
+                'type' => $concernType,
                 'citizen_id' => auth()->id(), // Use authenticated user's ID
-                'title' => $validated['title'],
-                'description' => $validated['description'],
+                'title' => $title,
+                'description' => $description,
                 'status' => 'pending',
                 'category' => $validated['category'],
                 'severity' => 'low',
                 'transcript_text' => $validated['transcript_text'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
                 'latitude' => $validated['latitude'] ?? null,
+                'tracking_code' => $trackingCode,
             ]);
 
             $uploadedMedia = [];
@@ -125,13 +145,21 @@ class ConcernController extends BaseApiController
                 'assigned_at' => now(),
             ]);
 
+            // 🟠 Step 4.5: Create Initial History (Audit Log)
+            ConcernHistory::create([
+                'concern_id' => $concern->id,
+                'acted_by' => null, // System action
+                'status' => 'pending',
+                'remarks' => 'Concern submitted and automatically distributed to Purok Leader.',
+            ]);
+
             // 🟣 Step 5: Broadcast real-time notification to purok leader
             event(new ConcernAssigned($concern, $distribution, $uploadedMedia));
 
             DB::commit();
 
             // Load relationships for resource
-            $concern->load('media');
+            $concern->load(['media', 'distribution.purokLeader.officialDetails', 'histories.actor.officialDetails']);
 
             // 🟢 Step 6: Return successful response
             return $this->sendResponse([
@@ -156,13 +184,14 @@ class ConcernController extends BaseApiController
     {
         try {
             // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('type', 'manual')
-                ->where('id', $id)
+            $concern = Concern::where('id', $id)
                 ->where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
-                    }
+                    },
+                    'distribution.purokLeader.officialDetails',
+                    'histories.actor.officialDetails'
                 ])
                 ->first();
 
@@ -193,8 +222,7 @@ class ConcernController extends BaseApiController
 
         try {
             // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('type', 'manual')
-                ->where('id', $id)
+            $concern = Concern::where('id', $id)
                 ->where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
@@ -238,8 +266,7 @@ class ConcernController extends BaseApiController
 
         try {
             // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('type', 'manual')
-                ->where('id', $id)
+            $concern = Concern::where('id', $id)
                 ->where('citizen_id', auth()->id())
                 ->first();
 

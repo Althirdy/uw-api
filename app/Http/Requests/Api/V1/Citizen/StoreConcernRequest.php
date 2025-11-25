@@ -22,15 +22,16 @@ class StoreConcernRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:100',
-            'description' => 'required|string',
+            'type' => 'required|string|in:manual,voice',
+            'title' => 'required_if:type,manual|nullable|string|max:100',
+            'description' => 'required_if:type,manual|nullable|string',
             'category' => 'required|string|in:safety,security,infrastructure,environment,noise,other',
             'severity' => 'nullable|string|in:low,medium,high',
             'transcript_text' => 'nullable|string',
             'longitude' => 'nullable|numeric|between:-180,180',
             'latitude' => 'nullable|numeric|between:-90,90',
             'files' => 'nullable|array|min:1|max:3',
-            'files.*' => 'file|mimes:jpeg,jpg,png,gif|max:3072',
+            'files.*' => 'file|mimes:jpeg,jpg,png,gif,mp3,wav,m4a,ogg,aac|max:10240', // Increased max size for audio
         ];
     }
 
@@ -59,8 +60,8 @@ class StoreConcernRequest extends FormRequest
             'files.min' => 'At least 1 file must be uploaded.',
             'files.max' => 'Maximum 3 files can be uploaded.',
             'files.*.file' => 'Each file must be a valid file.',
-            'files.*.mimes' => 'Each file must be an image (jpeg, jpg, png, gif).',
-            'files.*.max' => 'Each file must not exceed 3MB.',
+            'files.*.mimes' => 'Each file must be an image (jpeg, jpg, png, gif) or audio (mp3, wav, m4a, ogg, aac).',
+            'files.*.max' => 'Each file must not exceed 10MB.',
         ];
     }
 }

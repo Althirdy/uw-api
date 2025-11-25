@@ -16,18 +16,10 @@ class MediaResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'source_type' => $this->source_type,
-            'source_id' => $this->source_id,
-            'source_category' => $this->source_category,
-            'media_type' => $this->media_type,
-            'original_path' => $this->original_path,
-            'blurred_path' => $this->blurred_path,
-            'public_id' => $this->public_id,
-            'original_filename' => $this->original_filename,
-            'file_size' => $this->file_size,
-            'mime_type' => $this->mime_type,
-            'captured_at' => $this->captured_at?->toISOString(),
-            'created_at' => $this->created_at?->toISOString(),
+            'url' => $this->original_path,
+            'type' => $this->media_type,
+            'mimeType' => $this->mime_type,
+            'filename' => $this->original_filename,
         ];
     }
 }
