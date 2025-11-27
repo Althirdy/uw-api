@@ -15,7 +15,7 @@ import UserActionTab from './users-comp/users-tab';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'User Management',
+        title: 'Users',
         href: users().url,
     },
 ];

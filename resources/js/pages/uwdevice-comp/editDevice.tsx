@@ -34,12 +34,14 @@ interface EditUWDeviceProps {
     location: location_T[];
     device: uwDevice_T;
     cctvDevices?: cctv_T[]; // Add cctvDevices prop
+    children?: React.ReactNode;
 }
 
 function EditUWDevice({
     location,
     device,
     cctvDevices,
+    children,
 }: EditUWDeviceProps): React.JSX.Element {
     // Sheet control state
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -183,9 +185,11 @@ function EditUWDevice({
     return (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-                <div className="cursor-pointer rounded-full p-2 hover:bg-primary/20">
-                    <SquarePen size={20} />
-                </div>
+                {children || (
+                    <div className="cursor-pointer rounded-full p-2 hover:bg-primary/20">
+                        <SquarePen size={20} />
+                    </div>
+                )}
             </SheetTrigger>
             <SheetContent className="flex h-full flex-col">
                 <form onSubmit={onSubmit} className="flex h-full flex-col">

@@ -88,8 +88,8 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader>
+            <SheetContent className="max-w-none overflow-y-auto p-4 sm:max-w-lg [&>button]:hidden">
+                <SheetHeader className="sticky top-0 z-10 bg-background">
                     <SheetTitle>Public Post Details</SheetTitle>
                     <SheetDescription className="flex flex-col gap-1">
                         <span>Post ID: #{post.id}</span>
@@ -177,7 +177,7 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                         ])}
                     </div>
                 </div>
-                <SheetFooter>
+                <SheetFooter className="sticky bottom-0 z-10 bg-background">
                     <SheetClose asChild>
                         <div className="flex w-full flex-col items-end justify-end gap-2">
                             {!post.published_at ? (

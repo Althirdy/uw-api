@@ -46,11 +46,11 @@ export default function Devices({
                         <TabsTrigger value="cctv">CCTV</TabsTrigger>
                         <TabsTrigger value="uwDevice">UW Device</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="cctv" className="space-y-6">
+                    <TabsContent value="cctv" className="space-y-4">
                         <AddCCTVDevice location={locations} />
                         <CCTVDisplay devices={devices} locations={locations} />
                     </TabsContent>
-                    <TabsContent value="uwDevice" className="space-y-6">
+                    <TabsContent value="uwDevice" className="space-y-4">
                         <AddUWDevice
                             location={locations}
                             cctvDevices={cctvDevices}

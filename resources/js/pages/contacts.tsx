@@ -6,7 +6,7 @@ import { Contact, ContactsPageProps } from '@/types/contacts-types';
 import { Head } from '@inertiajs/react';
 import { List, Table } from 'lucide-react';
 import { useState } from 'react';
-import AddContacts from './contacts-comp/contacts-add';
+import AddContacts from './contacts-comp/contacts-create';
 import ContactCard from './contacts-comp/contacts-card';
 import ContactActionTab from './contacts-comp/contacts-tab';
 import ContactTable from './contacts-comp/contacts-table';

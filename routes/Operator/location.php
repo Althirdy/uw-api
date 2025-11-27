@@ -19,9 +19,9 @@ Route::middleware('auth')->group(function () {
             'cctvDevices:id,location_id' // Load the devices to count them
         ])
             ->select('id', 'location_category', 'location_name', 'landmark', 'barangay', 'latitude', 'longitude', 'description')
-            ->paginate(10);
+            ->get();
 
-        $locations->getCollection()->transform(function ($location) {
+        $locations->transform(function ($location) {
             $location->cctv_count = $location->cctvDevices->count(); // Manual count
             unset($location->cctvDevices); // Remove the actual devices array to keep only the count
             return $location;

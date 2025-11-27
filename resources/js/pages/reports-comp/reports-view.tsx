@@ -67,7 +67,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader>
+                <SheetHeader className="sticky top-0 z-10 bg-background">
                     <SheetTitle>Incident Details</SheetTitle>
                     <SheetDescription className="flex flex-col gap-2">
                         <span className="text-base font-semibold">
@@ -175,7 +175,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         ])}
                     </div>
                 </div>
-                <SheetFooter className="flex-shrink-0 border-t bg-background px-4 py-4">
+                <SheetFooter className="sticky bottom-0 z-10 flex-shrink-0 border-t bg-background px-4 py-4">
                     <div className="flex w-full gap-2">
                         {!report.is_acknowledge && (
                             <Button

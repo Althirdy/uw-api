@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, SquarePen, Trash2, ExternalLink } from 'lucide-react';
+import { ArrowUpDown, ExternalLink, SquarePen, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import ViewContacts from './contacts-view';
 const responderTypeColors: Record<string, string> = {
     Fire: 'bg-red-600 text-white',
     Emergency: 'bg-yellow-500 text-black',
-    Crime: 'bg-zinc-800 text-white',
+    Crime: 'bg-zinc-700 text-white',
     Traffic: 'bg-orange-500 text-black',
     Barangay: 'bg-blue-500 text-white',
     Others: 'bg-gray-600 text-white',

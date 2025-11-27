@@ -2,7 +2,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { locations } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { paginated_T } from '@/types/cctv-location-types';
 import { location_T, LocationCategory_T } from '@/types/location-types';
 import { Head } from '@inertiajs/react';
 import { List, Table } from 'lucide-react';
@@ -14,12 +13,10 @@ import LocationsTable from './locations-comp/locations-table';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Location Management',
+        title: 'Locations',
         href: locations().url,
     },
 ];
-
-type location_paginated_T = paginated_T<location_T>;
 
 const locationCategory: LocationCategory_T[] = [
     { id: 1, name: 'School' },
@@ -31,13 +28,13 @@ const locationCategory: LocationCategory_T[] = [
 
 export default function Locations({
     locationCategories = [],
-    locations,
+    locations = [],
 }: {
     locationCategories?: LocationCategory_T[];
-    locations?: location_paginated_T;
+    locations?: location_T[];
 }) {
     const [filteredLocations, setFilteredLocations] = useState<location_T[]>(
-        locations?.data || [],
+        locations || [],
     );
 
     return (
@@ -91,8 +88,12 @@ export default function Locations({
                     </TabsContent>
                     <TabsContent value="card" className="w-full">
                         <LocationCardView
-                            location={locations}
-                            locationCategory={locationCategories}
+                            locations={filteredLocations}
+                            locationCategory={
+                                locationCategories.length > 0
+                                    ? locationCategories
+                                    : locationCategory
+                            }
                         />
                     </TabsContent>
                 </Tabs>

@@ -35,9 +35,10 @@ import { cctv_T, location_T } from '../../types/cctv-location-types';
 interface EditCCTVDevice {
     location: location_T[];
     cctv: cctv_T;
+    children?: React.ReactNode;
 }
 
-function EditCCTVDevice({ location, cctv }: EditCCTVDevice) {
+function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
     // Sheet control state
     const [sheetOpen, setSheetOpen] = useState(false);
     const { data, setData, put, processing, errors, reset } = useForm({
@@ -92,9 +93,11 @@ function EditCCTVDevice({ location, cctv }: EditCCTVDevice) {
     return (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-                <div className="cursor-pointer rounded-full p-2 hover:bg-primary/20">
-                    <SquarePen size={20} />
-                </div>
+                {children || (
+                    <div className="cursor-pointer rounded-full p-2 hover:bg-primary/20">
+                        <SquarePen size={20} />
+                    </div>
+                )}
             </SheetTrigger>
             <SheetContent className="flex h-full flex-col">
                 <form onSubmit={onSubmit} className="flex h-full flex-col">

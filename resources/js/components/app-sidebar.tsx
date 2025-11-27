@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/sidebar';
 import {
     contacts,
-    dashboard,
     devices,
     locations,
     publicPosts,
@@ -79,12 +78,12 @@ const mainNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="inset" className="py-4">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href={users()} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

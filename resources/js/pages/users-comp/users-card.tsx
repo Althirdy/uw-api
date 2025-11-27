@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -24,9 +25,13 @@ const UserCard = ({ users, roles }: { users: users_T[]; roles: roles_T[] }) => {
     return (
         <div className="grid auto-rows-min gap-4 md:grid-cols-4">
             {users.length === 0 && (
-                <div className="py-8 text-center text-gray-500">
-                    No users found matching your selection.
-                </div>
+                <Card className="col-span-full rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border">
+                    <CardContent className="flex items-center justify-center py-12">
+                        <p className="text-muted-foreground">
+                            No users found matching your selection.
+                        </p>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Use filtered_roles for displaying cards */}
@@ -40,21 +45,26 @@ const UserCard = ({ users, roles }: { users: users_T[]; roles: roles_T[] }) => {
                         <CardDescription>{user.email}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium">
-                                Role & Location
-                            </p>
+                        <div className="flex flex-col gap-2 text-sm">
+                            <p className="font-medium">Role & Location</p>
                             <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    user.role?.name === 'Operator' ? 'bg-blue-100 text-blue-800' :
-                                    user.role?.name === 'Citizen' ? 'bg-purple-100 text-purple-800' :
-                                    user.role?.name === 'Purok Leader' ? 'bg-green-100 text-green-800' :
-                                    user.role?.name === 'Admin' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                                }`}>
+                                <Badge
+                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${
+                                        user.role?.name === 'Operator'
+                                            ? 'bg-green-800'
+                                            : user.role?.name === 'Citizen'
+                                              ? 'bg-orange-500'
+                                              : user.role?.name ===
+                                                  'Purok Leader'
+                                                ? 'bg-blue-500'
+                                                : user.role?.name === 'Admin'
+                                                  ? 'bg-red-500'
+                                                  : 'bg-gray-500'
+                                    }`}
+                                >
                                     {user.role ? user.role.name : 'N/A'}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
+                                </Badge>
+                                <span className="text-muted-foreground">
                                     at{' '}
                                     {user.citizen_details?.barangay ||
                                         user.official_details?.assigned_brgy ||

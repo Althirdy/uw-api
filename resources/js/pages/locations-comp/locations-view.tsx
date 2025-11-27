@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { location_T } from '@/types/location-types';
-import { MapPin, MoveLeft } from 'lucide-react';
+import { Cctv, MoveLeft } from 'lucide-react';
 
 type ViewLocationProps = {
     location: location_T;
@@ -51,27 +51,84 @@ function ViewLocation({ location, children }: ViewLocationProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5" />
-                        Location Details
+            <SheetContent className="max-w-none overflow-y-auto p-4 sm:max-w-lg [&>button]:hidden">
+                <SheetHeader className="sticky top-0 z-10 bg-background">
+                    <SheetTitle className="flex flex-row items-center gap-2 text-xl">
+                        {location.location_name}
                     </SheetTitle>
-                    <SheetDescription>
-                        View detailed information about this location.
+                    <SheetDescription className="flex flex-row gap-4">
+                        <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-sm font-medium ${getCategoryColor(location.location_category?.name || 'Uncategorized')}`}
+                        >
+                            {location.location_category
+                                ? location.location_category.name
+                                : 'Uncategorized'}
+                        </span>
+
+                        <span className="flex flex-row items-center gap-2 text-lg">
+                            <Cctv className="h-auto w-4.5 text-muted-foreground" />
+                            {location.cctv_count || 0}
+                        </span>
                     </SheetDescription>
                 </SheetHeader>
                 <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
                     <div className="grid auto-rows-min gap-6">
                         <div className="grid gap-3">
-                            <Label htmlFor="location-name">Location Name</Label>
-                            <Input
-                                id="location-name"
-                                value={location.location_name}
-                                readOnly
-                                tabIndex={-1}
-                                className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                            />
+                            <Label>Location Map</Label>
+                            <div className="h-64 w-full overflow-hidden rounded-[var(--radius)] border">
+                                <iframe
+                                    width="100%"
+                                    height="100%"
+                                    frameBorder="0"
+                                    style={{ border: 0 }}
+                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(location.longitude) - 0.01},${Number(location.latitude) - 0.01},${Number(location.longitude) + 0.01},${Number(location.latitude) + 0.01}&layer=mapnik&marker=${location.latitude},${location.longitude}`}
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                ></iframe>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col">
+                            <span className="text-sm text-white">
+                                GPS Coordinates{' '}
+                            </span>
+                            <div className="flex w-full flex-row justify-between gap-3">
+                                <div className="w-full space-y-2">
+                                    <Label
+                                        htmlFor="latitude"
+                                        className="text-muted-foreground"
+                                    >
+                                        Latitude
+                                    </Label>
+                                    <Input
+                                        id="latitude"
+                                        value={Number(
+                                            location.latitude,
+                                        ).toFixed(2)}
+                                        readOnly
+                                        tabIndex={-1}
+                                        className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                    />
+                                </div>
+                                <div className="w-full space-y-2">
+                                    <Label
+                                        htmlFor="longitude"
+                                        className="text-muted-foreground"
+                                    >
+                                        Longitude
+                                    </Label>
+
+                                    <Input
+                                        id="longitude"
+                                        value={Number(
+                                            location.longitude,
+                                        ).toFixed(2)}
+                                        readOnly
+                                        tabIndex={-1}
+                                        className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <div className="grid gap-3">
@@ -97,56 +154,6 @@ function ViewLocation({ location, children }: ViewLocationProps) {
                         </div>
 
                         <div className="grid gap-3">
-                            <Label htmlFor="category">Category</Label>
-                            <div className="p-2">
-                                <span
-                                    className={`inline-flex items-center rounded-full px-2 py-1 text-sm font-medium ${getCategoryColor(location.location_category?.name || 'Uncategorized')}`}
-                                >
-                                    {location.location_category
-                                        ? location.location_category.name
-                                        : 'Uncategorized'}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                                <Label htmlFor="latitude">Latitude</Label>
-                                <Input
-                                    id="latitude"
-                                    value={Number(location.latitude).toFixed(2)}
-                                    readOnly
-                                    tabIndex={-1}
-                                    className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="longitude">Longitude</Label>
-                                <Input
-                                    id="longitude"
-                                    value={Number(location.longitude).toFixed(
-                                        2,
-                                    )}
-                                    readOnly
-                                    tabIndex={-1}
-                                    className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid gap-3">
-                            <Label htmlFor="cameras">Available Cameras</Label>
-                            <div className="p-2">
-                                <span className="text-2xl font-bold text-primary">
-                                    {location.cctv_count || 0}
-                                </span>
-                                <span className="ml-2 text-sm text-muted-foreground">
-                                    cameras
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="grid gap-3">
                             <Label htmlFor="description">Description</Label>
                             <Textarea
                                 id="description"
@@ -162,10 +169,10 @@ function ViewLocation({ location, children }: ViewLocationProps) {
                         </div>
                     </div>
                 </div>
-                <SheetFooter className="px-4">
+                <SheetFooter className="sticky bottom-0 z-10 bg-background">
                     <SheetClose asChild>
                         <Button variant="outline">
-                            <MoveLeft className="mr-2 h-6 w-6" />
+                            <MoveLeft className="h-6 w-6" />
                             Return
                         </Button>
                     </SheetClose>

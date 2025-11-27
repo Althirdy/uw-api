@@ -19,11 +19,13 @@ import { uwDevice_T } from '../../types/cctv-location-types';
 interface ArchiveUWDeviceProps {
     device: uwDevice_T;
     onArchiveSuccess?: () => void;
+    children?: React.ReactNode;
 }
 
 function ArchiveUWDevice({
     device,
     onArchiveSuccess,
+    children,
 }: ArchiveUWDeviceProps): React.JSX.Element {
     const [open, setOpen] = useState(false);
     const [confirmationText, setConfirmationText] = useState('');
@@ -101,9 +103,11 @@ function ArchiveUWDevice({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <div className="cursor-pointer rounded-full p-2 hover:bg-destructive/20">
-                    <Archive className="text-destructive" size={20} />
-                </div>
+                {children || (
+                    <div className="cursor-pointer rounded-full p-2 hover:bg-destructive/20">
+                        <Archive className="text-destructive" size={20} />
+                    </div>
+                )}
             </DialogTrigger>
             <DialogContent className="border-gray-700 bg-gray-900 text-white sm:max-w-[500px]">
                 <DialogHeader className="space-y-3">

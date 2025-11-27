@@ -20,7 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
@@ -45,6 +45,7 @@ function PublicPostsTable({
         React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
+    const [isPageChanging, setIsPageChanging] = React.useState(false);
 
     const table = useReactTable({
         data: posts,
@@ -62,6 +63,24 @@ function PublicPostsTable({
             columnVisibility,
         },
     });
+
+    const handlePageSizeChange = (value: string) => {
+        setIsPageChanging(true);
+        table.setPageSize(Number(value));
+        setTimeout(() => setIsPageChanging(false), 200);
+    };
+
+    const handlePageChange = (direction: 'next' | 'prev') => {
+        setIsPageChanging(true);
+        if (direction === 'next') {
+            table.nextPage();
+        } else {
+            table.previousPage();
+        }
+        setTimeout(() => setIsPageChanging(false), 300);
+    };
+
+    const showLoading = isLoading || isPageChanging;
 
     return (
         <div className="w-full">
@@ -90,21 +109,18 @@ function PublicPostsTable({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {isLoading ? (
-                            Array.from({ length: 5 }).map((_, index) => (
-                                <TableRow key={index}>
-                                    {Array.from({ length: 7 }).map(
-                                        (_, cellIndex) => (
-                                            <TableCell
-                                                key={cellIndex}
-                                                className="text-center"
-                                            >
-                                                <Skeleton className="h-8 w-full" />
-                                            </TableCell>
-                                        ),
-                                    )}
-                                </TableRow>
-                            ))
+                        {showLoading ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns().length}
+                                    className="h-48 text-center"
+                                >
+                                    <div className="text-md flex items-center justify-center gap-2 text-muted-foreground">
+                                        <Spinner className="h-6 w-6" />
+                                        <span>Processing...</span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
                         ) : table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
@@ -150,9 +166,7 @@ function PublicPostsTable({
                         </p>
                         <Select
                             value={`${table.getState().pagination.pageSize}`}
-                            onValueChange={(value) => {
-                                table.setPageSize(Number(value));
-                            }}
+                            onValueChange={handlePageSizeChange}
                         >
                             <SelectTrigger className="h-8 w-[70px]">
                                 <SelectValue
@@ -181,8 +195,10 @@ function PublicPostsTable({
                         <Button
                             variant="outline"
                             className="h-8 w-8 p-0"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
+                            onClick={() => handlePageChange('prev')}
+                            disabled={
+                                !table.getCanPreviousPage() || isPageChanging
+                            }
                         >
                             <span className="sr-only">Go to previous page</span>
                             <ChevronLeft className="h-4 w-4" />
@@ -190,8 +206,8 @@ function PublicPostsTable({
                         <Button
                             variant="outline"
                             className="h-8 w-8 p-0"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
+                            onClick={() => handlePageChange('next')}
+                            disabled={!table.getCanNextPage() || isPageChanging}
                         >
                             <span className="sr-only">Go to next page</span>
                             <ChevronRight className="h-4 w-4" />

@@ -19,13 +19,26 @@ import DeleteContacts from './contacts-delete';
 import EditContacts from './contacts-edit';
 import ViewContacts from './contacts-view';
 
+const responderTypeColors: Record<string, string> = {
+    Fire: 'bg-red-600 text-white',
+    Emergency: 'bg-yellow-500 text-black',
+    Crime: 'bg-zinc-700 text-white',
+    Traffic: 'bg-orange-500 text-black',
+    Barangay: 'bg-blue-500 text-white',
+    Others: 'bg-gray-600 text-white',
+};
+
 const ContactCard = ({ contacts }: { contacts: Contact[] }) => {
     return (
         <div className="grid auto-rows-min gap-4 md:grid-cols-4">
             {contacts.length === 0 && (
-                <div className="py-8 text-center text-gray-500">
-                    No contacts found matching your selection.
-                </div>
+                <Card className="col-span-full rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border">
+                    <CardContent className="flex items-center justify-center py-12">
+                        <p className="text-muted-foreground">
+                            No contacts found matching your selection.
+                        </p>
+                    </CardContent>
+                </Card>
             )}
 
             {contacts.map((contact) => (
@@ -34,71 +47,55 @@ const ContactCard = ({ contacts }: { contacts: Contact[] }) => {
                     className="relative overflow-hidden rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border"
                 >
                     <CardHeader>
-                        <CardTitle>{contact.branch_unit_name}</CardTitle>
-                        <CardDescription>
-                            {contact.contact_person || contact.primary_mobile}
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col gap-3">
-                            <div>
-                                <p className="text-xs font-medium text-muted-foreground">
-                                    Responder Type
-                                </p>
+                        <CardTitle>
+                            <div className="flex w-full flex-row justify-between">
+                                <span> Branch: {contact.branch_unit_name}</span>
                                 <span
-                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                        contact.responder_type === 'Fire'
-                                            ? 'bg-red-100 text-red-800'
-                                            : contact.responder_type ===
-                                                'Emergency'
-                                              ? 'bg-orange-100 text-orange-800'
-                                              : contact.responder_type ===
-                                                  'Crime'
-                                                ? 'bg-purple-100 text-purple-800'
-                                                : contact.responder_type ===
-                                                    'Traffic'
-                                                  ? 'bg-yellow-100 text-yellow-800'
-                                                  : contact.responder_type ===
-                                                      'Barangay'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : contact.responder_type ===
-                                                        'Others'
-                                                      ? 'bg-gray-100 text-gray-800'
-                                                      : 'bg-blue-100 text-blue-800'
+                                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                                        responderTypeColors[
+                                            contact.responder_type
+                                        ] || 'bg-blue-100 text-blue-800'
                                     }`}
                                 >
                                     {contact.responder_type}
                                 </span>
                             </div>
+                        </CardTitle>
+                        <CardDescription>
+                            <div className="flex w-full flex-row items-center justify-between">
+                                <span className="text-md">
+                                    Name: {contact.contact_person}
+                                </span>
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium text-white ${
+                                        contact.active
+                                            ? 'bg-green-800'
+                                            : 'bg-gray-800'
+                                    }`}
+                                >
+                                    {contact.active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col gap-3 text-sm">
                             <div>
-                                <p className="text-xs font-medium text-muted-foreground">
+                                <p className="font-medium text-muted-foreground">
                                     Location
                                 </p>
-                                <p className="text-sm">{contact.location}</p>
+                                <p className="">{contact.location}</p>
                             </div>
                             <div>
-                                <p className="text-xs font-medium text-muted-foreground">
+                                <p className="font-medium text-muted-foreground">
                                     Contact Numbers
                                 </p>
-                                <p className="text-sm">
-                                    {contact.primary_mobile}
-                                </p>
+                                <p className="">{contact.primary_mobile}</p>
                                 {contact.backup_mobile && (
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="font-medium text-muted-foreground">
                                         Backup: {contact.backup_mobile}
                                     </p>
                                 )}
-                            </div>
-                            <div>
-                                <span
-                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                        contact.active
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-gray-100 text-gray-800'
-                                    }`}
-                                >
-                                    ● {contact.active ? 'Active' : 'Inactive'}
-                                </span>
                             </div>
                         </div>
                     </CardContent>

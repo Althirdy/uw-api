@@ -67,7 +67,7 @@ function ViewUser({ user, children }: ViewUserProps) {
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
             <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader>
+                <SheetHeader className="sticky top-0 z-10 bg-background">
                     <SheetTitle>User Details</SheetTitle>
                     <SheetDescription>
                         View detailed information about this user account.
@@ -177,10 +177,10 @@ function ViewUser({ user, children }: ViewUserProps) {
                     </div>
                 </div>
 
-                <SheetFooter className="px-4">
+                <SheetFooter className="sticky bottom-0 z-10 bg-background px-4">
                     <SheetClose asChild>
                         <Button variant="outline">
-                            <MoveLeft className="mr-2 h-6 w-6" />
+                            <MoveLeft className="h-6 w-6" />
                             Return
                         </Button>
                     </SheetClose>

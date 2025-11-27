@@ -9,50 +9,42 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { cctv_T, uwDevice_T } from '@/types/cctv-location-types';
-import { Activity, Camera, Cpu, ExternalLink, MapPin, Zap } from 'lucide-react';
+import { Camera, Cpu, ExternalLink, MapPin, Zap } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface ViewUWDeviceProps {
     device: uwDevice_T;
+    children?: React.ReactNode;
 }
 
-function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
+function ViewUWDevice({
+    device,
+    children,
+}: ViewUWDeviceProps): React.JSX.Element {
     const [sheetOpen, setSheetOpen] = useState(false);
 
     // Get status badge variant - matching CCTV pattern
-    const getStatusVariant = (status: string) => {
-        switch (status) {
-            case 'active':
-                return 'default';
-            case 'inactive':
-                return 'secondary';
-            case 'maintenance':
-                return 'destructive';
+    const getStatusStyles = (status: string) => {
+        switch (status.toLocaleUpperCase()) {
+            case 'ACTIVE':
+                return 'bg-green-700 rounded-full  dark:bg-green-800 dark:';
+            case 'MAINTENANCE':
+                return 'bg-orange-100 rounded-full dark:bg-orange-700 ';
+            case 'INACTIVE':
+                return 'bg-gray-100 rounded-full  dark:bg-zinc-600 ';
             default:
-                return 'outline';
-        }
-    };
-
-    // Get status icon - matching CCTV pattern
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'active':
-                return <Activity className="h-3 w-3" />;
-            case 'inactive':
-                return <Activity className="h-3 w-3 opacity-50" />;
-            case 'maintenance':
-                return <Zap className="h-3 w-3" />;
-            default:
-                return <Activity className="h-3 w-3 opacity-50" />;
+                return 'bg-gray-100 rounded-full  dark:bg-zinc-600 ';
         }
     };
 
     return (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-                <div className="cursor-pointer rounded-full p-2 hover:bg-secondary/20">
-                    <ExternalLink size={20} />
-                </div>
+                {children || (
+                    <div className="cursor-pointer rounded-full p-2 hover:bg-secondary/20">
+                        <ExternalLink size={20} />
+                    </div>
+                )}
             </SheetTrigger>
             <SheetContent className="flex h-full flex-col">
                 {/* Fixed Header */}
@@ -88,15 +80,12 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
                             </Label>
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    variant={getStatusVariant(device.status)}
-                                    className="gap-1 capitalize"
+                                    className={`capitalize ${getStatusStyles(device.status)}`}
                                 >
-                                    {getStatusIcon(device.status)}
                                     {device.status}
                                 </Badge>
                             </div>
                         </div>
-
                         {/* Location Assignment Section */}
                         <div className="space-y-3">
                             <Label className="text-sm font-medium text-muted-foreground">
@@ -232,10 +221,7 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
                                                         </div>
                                                     </div>
                                                     <Badge
-                                                        variant={getStatusVariant(
-                                                            camera.status,
-                                                        )}
-                                                        className="capitalize"
+                                                        className={`capitalize ${getStatusStyles(device.status)}`}
                                                     >
                                                         {camera.status}
                                                     </Badge>

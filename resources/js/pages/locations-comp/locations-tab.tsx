@@ -17,17 +17,14 @@ import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { paginated_T } from '@/types/cctv-location-types';
 import { location_T, LocationCategory_T } from '@/types/location-types';
-
-type location_paginated_T = paginated_T<location_T>;
 
 const LocationActionTab = ({
     locations,
     locationCategory,
     setFilteredLocations,
 }: {
-    locations: location_paginated_T;
+    locations: location_T[];
     locationCategory: LocationCategory_T[];
     setFilteredLocations: (locations: location_T[]) => void;
 }) => {
@@ -42,7 +39,7 @@ const LocationActionTab = ({
 
     // Extract unique barangays from locations data
     useEffect(() => {
-        const barangays = locations.data
+        const barangays = locations
             .map((location: location_T) => location.barangay)
             .filter((barangay): barangay is string => Boolean(barangay))
             .filter(
@@ -50,11 +47,11 @@ const LocationActionTab = ({
                     self.indexOf(value) === index,
             );
         setSearchableBarangays(barangays);
-    }, [locations.data]);
+    }, [locations]);
 
     // Filter displayed locations based on selected category, barangay and search query
     useEffect(() => {
-        let filteredResults = locations.data;
+        let filteredResults = locations;
 
         // Filter by category if selected
         if (categoryValue) {
@@ -88,7 +85,7 @@ const LocationActionTab = ({
         categoryValue,
         barangayValue,
         searchQuery,
-        locations.data,
+        locations,
         setFilteredLocations,
     ]);
 

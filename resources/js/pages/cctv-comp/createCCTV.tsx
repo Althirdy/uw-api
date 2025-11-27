@@ -85,13 +85,12 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
                 <Button>
-                    <Plus className="mr-2 h-4 w-4" /> Add CCTV
+                    <Plus className="h-4 w-4" /> Add CCTV
                 </Button>
             </SheetTrigger>
-            <SheetContent className="flex h-full flex-col">
+            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
                 <form onSubmit={onSubmit} className="flex h-full flex-col">
-                    {/* Fixed Header */}
-                    <SheetHeader className="flex-shrink-0 border-b px-6 py-6">
+                    <SheetHeader className="flex-shrink-0 pb-4">
                         <SheetTitle>Add New CCTV Device</SheetTitle>
                         <SheetDescription>
                             Add a new CCTV camera device with its configuration
@@ -100,7 +99,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                     </SheetHeader>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
                         <div className="space-y-4">
                             <div className="flex flex-col gap-2">
                                 <Label htmlFor="camera-name">Camera Name</Label>
@@ -372,8 +371,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                         </div>
                     </div>
 
-                    {/* Fixed Footer */}
-                    <SheetFooter className="flex-shrink-0 border-t bg-background px-6 py-4">
+                    <SheetFooter className="flex-shrink-0 bg-background px-4 py-4">
                         <div className="flex w-full gap-2">
                             <Button
                                 type="submit"

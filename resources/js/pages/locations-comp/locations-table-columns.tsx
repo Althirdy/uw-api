@@ -1,3 +1,8 @@
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ColumnDef } from '@tanstack/react-table';
 import {
     ArrowUpDown,
@@ -14,6 +19,31 @@ import { location_T, LocationCategory_T } from '@/types/location-types';
 import DeleteLocation from './locations-archive';
 import EditLocation from './locations-edit';
 import ViewLocation from './locations-view';
+
+const getCategoryColor = (categoryName: string) => {
+    const colorMap: { [key: string]: string } = {
+        School: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        Hospital: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        Market: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        Park: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+        'Government Office':
+            'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+        Historic:
+            'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+        Religious:
+            'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+        Commercial:
+            'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+        Residential:
+            'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200',
+        Transportation:
+            'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+    };
+    return (
+        colorMap[categoryName] ||
+        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+    );
+};
 
 export const columns = (
     locationCategory: LocationCategory_T[],
@@ -78,8 +108,8 @@ export const columns = (
 
             return (
                 <Badge
-                    variant="secondary"
-                    className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                    variant="default"
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getCategoryColor(categoryName)}`}
                 >
                     {categoryName}
                 </Badge>
@@ -99,24 +129,12 @@ export const columns = (
             return (
                 <div className="flex items-center justify-center gap-2">
                     <Cctv className="h-4 w-4 text-muted-foreground" />
-                    <span>{location.cctv_count || 0}</span>
+                    <span>{location.cctv_count || 0} camera/s</span>
                 </div>
             );
         },
     },
-    {
-        id: 'coordinates',
-        header: 'Coordinates',
-        cell: ({ row }) => {
-            const location = row.original;
-            return (
-                <div className="text-xs">
-                    {Number(location.latitude).toFixed(4)},{' '}
-                    {Number(location.longitude).toFixed(4)}
-                </div>
-            );
-        },
-    },
+
     {
         id: 'actions',
         header: 'Actions',
@@ -126,39 +144,60 @@ export const columns = (
 
             return (
                 <div className="flex justify-center gap-2">
-                    <ViewLocation location={location}>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="cursor-pointer"
-                            onClick={(e) => e.stopPropagation()}
+                    <Tooltip>
+                        <ViewLocation location={location}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                        </ViewLocation>
+                        <TooltipContent>
+                            <p>View Details</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <EditLocation
+                            location={location}
+                            locationCategory={locationCategory}
                         >
-                            <ExternalLink className="h-4 w-4" />
-                        </Button>
-                    </ViewLocation>
-                    <EditLocation
-                        location={location}
-                        locationCategory={locationCategory}
-                    >
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="cursor-pointer"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <SquarePen className="h-4 w-4" />
-                        </Button>
-                    </EditLocation>
-                    <DeleteLocation location={location}>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="cursor-pointer"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
-                        </Button>
-                    </DeleteLocation>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <SquarePen className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                        </EditLocation>
+                        <TooltipContent>
+                            <p>Edit Location</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <DeleteLocation location={location}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+                                </Button>
+                            </TooltipTrigger>
+                        </DeleteLocation>
+                        <TooltipContent>
+                            <p>Delete Location</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             );
         },

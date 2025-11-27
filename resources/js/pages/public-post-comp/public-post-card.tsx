@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -29,7 +28,10 @@ function getStatusInfo(publishedAt: string | null) {
     const now = new Date();
 
     if (publishDate > now) {
-        return { label: 'Scheduled', className: 'bg-yellow-100 text-yellow-800' };
+        return {
+            label: 'Scheduled',
+            className: 'bg-yellow-100 text-yellow-800',
+        };
     }
 
     return { label: 'Published', className: 'bg-green-100 text-green-800' };
@@ -39,9 +41,13 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
     return (
         <div className="grid auto-rows-min gap-4 md:grid-cols-4">
             {posts.length === 0 && (
-                <div className="py-8 text-center text-gray-500">
-                    No posts found matching your selection.
-                </div>
+                <Card className="col-span-full rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border">
+                    <CardContent className="flex items-center justify-center py-12">
+                        <p className="text-muted-foreground">
+                            No posts found matching your selection.
+                        </p>
+                    </CardContent>
+                </Card>
             )}
 
             {posts.map((post) => {
@@ -55,7 +61,9 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                         <CardHeader>
                             <CardTitle> Post ID: #{post.id}</CardTitle>
                             <CardDescription>
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.className}`}>
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}
+                                >
                                     {statusInfo.label}
                                 </span>
                             </CardDescription>
@@ -66,12 +74,19 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                                     Report Content
                                 </p>
                                 <div className="rounded-lg border bg-muted/30 p-3">
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mb-2 ${
-                                        post.report?.report_type === 'CCTV' ? 'bg-blue-100 text-blue-800' :
-                                        post.report?.report_type === 'Citizen Concern' ? 'bg-purple-100 text-purple-800' :
-                                        post.report?.report_type === 'Emergency' ? 'bg-red-100 text-red-800' :
-                                        'bg-gray-100 text-gray-800'
-                                    }`}>
+                                    <span
+                                        className={`mb-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                            post.report?.report_type === 'CCTV'
+                                                ? 'bg-blue-100 text-blue-800'
+                                                : post.report?.report_type ===
+                                                    'Citizen Concern'
+                                                  ? 'bg-purple-100 text-purple-800'
+                                                  : post.report?.report_type ===
+                                                      'Emergency'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-gray-100 text-gray-800'
+                                        }`}
+                                    >
                                         {post.report?.report_type}
                                     </span>
                                     <p className="mb-2 text-sm text-muted-foreground">

@@ -30,7 +30,7 @@ import { toast } from '@/components/use-toast';
 import { cn } from '@/lib/utils';
 import { LocationCategory_T, location_T } from '@/types/location-types';
 import { useForm } from '@inertiajs/react';
-import { Check, ChevronsUpDown, MapPin } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import React, { useState } from 'react';
 
 const barangay = [
@@ -213,7 +213,6 @@ function EditLocation({
                 <form onSubmit={onSubmit} className="flex h-full flex-col">
                     <SheetHeader className="sticky top-0 z-10 bg-background pb-4">
                         <SheetTitle className="flex items-center gap-2">
-                            <MapPin className="h-5 w-5" />
                             Edit Location
                         </SheetTitle>
                         <SheetDescription>
@@ -498,6 +497,28 @@ function EditLocation({
                                         onLocationSelect={handleLocationSelect}
                                         coordinates={coordinates}
                                     />
+
+                                    {/* Map Preview */}
+                                    {coordinates.latitude &&
+                                        coordinates.longitude && (
+                                            <div className="mt-3">
+                                                <Label className="mb-2 block">
+                                                    Location Preview
+                                                </Label>
+                                                <div className="h-48 w-full overflow-hidden rounded-[var(--radius)] border">
+                                                    <iframe
+                                                        width="100%"
+                                                        height="100%"
+                                                        frameBorder="0"
+                                                        style={{ border: 0 }}
+                                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${Number(coordinates.longitude) - 0.01},${Number(coordinates.latitude) - 0.01},${Number(coordinates.longitude) + 0.01},${Number(coordinates.latitude) + 0.01}&layer=mapnik&marker=${coordinates.latitude},${coordinates.longitude}`}
+                                                        loading="lazy"
+                                                        referrerPolicy="no-referrer-when-downgrade"
+                                                    ></iframe>
+                                                </div>
+                                            </div>
+                                        )}
+
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="relative">
                                             <Label htmlFor="edit-latitude">

@@ -13,6 +13,7 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { Contact } from '@/types/contacts-types';
+import { MoveLeft } from 'lucide-react';
 import React from 'react';
 
 interface ViewContactsProps {
@@ -33,8 +34,8 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader className="sticky top-0 z-10 bg-background pb-4">
+            <SheetContent className="max-w-none overflow-y-auto p-4 sm:max-w-lg [&>button]:hidden">
+                <SheetHeader className="sticky top-0 z-10 bg-background">
                     <SheetTitle className="flex items-center gap-2">
                         Contact Details
                     </SheetTitle>
@@ -42,7 +43,7 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
                         View detailed information about this contact.
                     </SheetDescription>
                 </SheetHeader>
-                <div className="flex-1 overflow-y-auto px-4 py-6 pb-20">
+                <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
                     <div className="grid auto-rows-min gap-6">
                         <div className="grid gap-3">
                             <Label htmlFor="branch-name">
@@ -185,7 +186,10 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
                 </div>
                 <SheetFooter className="sticky bottom-0 z-10 bg-background px-4 pt-4">
                     <SheetClose asChild>
-                        <Button variant="outline">Close</Button>
+                        <Button variant="outline">
+                            <MoveLeft className="h-6 w-6" />
+                            Return
+                        </Button>
                     </SheetClose>
                 </SheetFooter>
             </SheetContent>

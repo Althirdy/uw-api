@@ -28,9 +28,10 @@ import { cctv_T } from '../../types/cctv-location-types';
 interface ArchiveCCTVProps {
     cctv: cctv_T;
     onArchiveSuccess?: () => void;
+    children?: React.ReactNode;
 }
 
-function ArchiveCCTV({ cctv, onArchiveSuccess }: ArchiveCCTVProps) {
+function ArchiveCCTV({ cctv, onArchiveSuccess, children }: ArchiveCCTVProps) {
     const [open, setOpen] = useState(false);
     const [confirmationText, setConfirmationText] = useState('');
 
@@ -100,9 +101,11 @@ function ArchiveCCTV({ cctv, onArchiveSuccess }: ArchiveCCTVProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <div className="cursor-pointer rounded-full p-2 hover:bg-destructive/20">
-                    <Archive className="text-destructive" size={20} />
-                </div>
+                {children || (
+                    <div className="cursor-pointer rounded-full p-2 hover:bg-destructive/20">
+                        <Archive className="text-destructive" size={20} />
+                    </div>
+                )}
             </DialogTrigger>
             <DialogContent className="border-gray-700 bg-gray-900 text-white sm:max-w-[500px]">
                 <DialogHeader className="space-y-3">
