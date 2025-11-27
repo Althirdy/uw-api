@@ -41,7 +41,7 @@ class ConcernResource extends JsonResource
             // Media
             'images' => $this->when(
                 $this->relationLoaded('media'),
-                fn() => $this->media->pluck('original_path')->toArray()
+                fn() => $this->media->where('media_type', 'image')->pluck('original_path')->values()->toArray()
             ),
             'media' => MediaResource::collection($this->whenLoaded('media')),
             

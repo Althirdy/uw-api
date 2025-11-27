@@ -64,7 +64,7 @@ class User extends Authenticatable
         return Attribute::make(
             get: fn (string $value = null, array $attributes) => trim(
                 ($attributes['first_name'] ?? '') . ' ' .
-                ($attributes['middle_name'] ? ($attributes['middle_name'] . ' ') : '') .
+                (($attributes['middle_name'] ?? null) ? (($attributes['middle_name'] ?? '') . ' ') : '') .
                 ($attributes['last_name'] ?? '')
             ),
         );

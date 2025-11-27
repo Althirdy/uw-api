@@ -106,8 +106,24 @@ class ConcernController extends BaseApiController
             $uploadedMedia = [];
 
             // 🟡 Step 2: Handle file uploads
+            // Check for 'files' OR 'images' (fallback)
+            $fileInput = null;
             if ($request->hasFile('files')) {
-                $files = $request->file('files');
+                $fileInput = $request->file('files');
+                Log::info('Manual Concern: Found "files" input.');
+            } elseif ($request->hasFile('images')) {
+                $fileInput = $request->file('images');
+                Log::info('Manual Concern: Found "images" input (fallback used).');
+            } else {
+                 Log::warning('Manual Concern: No "files" or "images" detected in request.', [
+                    'keys' => array_keys($request->all()),
+                    'has_file_files' => $request->hasFile('files'),
+                    'has_file_images' => $request->hasFile('images'),
+                 ]);
+            }
+
+            if ($fileInput) {
+                $files = $fileInput;
                 $isMultiple = is_array($files);
 
                 // Upload (single or multiple)
