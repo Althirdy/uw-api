@@ -30,6 +30,8 @@ class StoreConcernRequest extends FormRequest
             'transcript_text' => 'nullable|string',
             'longitude' => 'nullable|numeric|between:-180,180',
             'latitude' => 'nullable|numeric|between:-90,90',
+            'address' => 'nullable|string',
+            'custom_location' => 'nullable|string',
             'files' => 'nullable|array|min:1|max:3',
             'files.*' => 'file|mimes:jpeg,jpg,png,gif,mp3,wav,m4a,ogg,aac|max:10240', // Increased max size for audio
         ];

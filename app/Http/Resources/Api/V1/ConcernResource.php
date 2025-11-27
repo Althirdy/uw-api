@@ -31,6 +31,8 @@ class ConcernResource extends JsonResource
             'status' => $this->status,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
+            'address' => $this->address, // Add address
+            'customLocation' => $this->custom_location, // Add custom_location
             'transcriptText' => $this->transcript_text,
             'citizenId' => $this->citizen_id,
             'createdAt' => $this->created_at?->toISOString(),

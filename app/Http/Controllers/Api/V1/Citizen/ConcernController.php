@@ -94,10 +94,12 @@ class ConcernController extends BaseApiController
                 'description' => $description,
                 'status' => 'pending',
                 'category' => $validated['category'],
-                'severity' => 'low',
+                'severity' => $validated['severity'] ?? 'low',
                 'transcript_text' => $validated['transcript_text'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
                 'latitude' => $validated['latitude'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'custom_location' => $validated['custom_location'] ?? null,
                 'tracking_code' => $trackingCode,
             ]);
 
@@ -115,17 +117,20 @@ class ConcernController extends BaseApiController
 
                 // 🟣 Step 3: Save uploaded files in the database
                 foreach ($uploadResults['successful'] as $upload) {
+                    $mimeType = $upload['mime_type'] ?? '';
+                    $mediaType = str_starts_with($mimeType, 'audio/') ? 'audio' : 'image';
+
                     $media = IncidentMedia::create([
                         'source_type' => \App\Models\Citizen\Concern::class,
                         'source_id' => $concern->id,
                         'source_category' => 'citizen_concern',
-                        'media_type' => 'image', // you can later detect type dynamically
+                        'media_type' => $mediaType,
                         'original_path' => $upload['public_url'] ?? null,
                         'blurred_path' => null,
                         'public_id' => $upload['storage_path'] ?? null,
                         'original_filename' => $upload['original_filename'] ?? null,
                         'file_size' => $upload['file_size'] ?? null,
-                        'mime_type' => $upload['mime_type'] ?? null,
+                        'mime_type' => $mimeType,
                         'captured_at' => now(),
                     ]);
 
