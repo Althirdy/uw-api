@@ -20,7 +20,6 @@ import {
 import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
 import { useForm } from '@inertiajs/react';
-import { MoveLeft } from 'lucide-react';
 import { FormEvent } from 'react';
 
 type EditUserProps = {
@@ -147,9 +146,9 @@ function EditUser({ user, roles, children }: EditUserProps) {
     return (
         <Sheet>
             <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="flex flex-col h-full">
-                <form onSubmit={handleSubmit} className="flex flex-col h-full">
-                    <SheetHeader className="flex-shrink-0 pb-4 border-b">
+            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
+                <form onSubmit={handleSubmit} className="flex h-full flex-col">
+                    <SheetHeader className="flex-shrink-0 pb-4">
                         <div className="flex flex-row items-center gap-4">
                             <Avatar className="h-14 w-14">
                                 <AvatarFallback className="bg-primary text-2xl font-semibold text-primary-foreground">
@@ -167,7 +166,7 @@ function EditUser({ user, roles, children }: EditUserProps) {
                         </div>
                     </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
                         {/* Basic Information */}
 
                         {/* Contact Information & Role */}
@@ -467,7 +466,7 @@ function EditUser({ user, roles, children }: EditUserProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
+                    <SheetFooter className="flex-shrink-0 bg-background px-4 py-4">
                         <div className="flex w-full gap-2">
                             <Button
                                 type="submit"

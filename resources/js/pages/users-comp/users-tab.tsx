@@ -125,7 +125,7 @@ const UserActionTab = ({
     ]);
 
     return (
-        <div className="flex max-w-4xl flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4">
             <Input
                 placeholder="Search users by name or email"
                 value={searchQuery}

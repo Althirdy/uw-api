@@ -18,10 +18,10 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { roles_T } from '@/types/role-types';
 import { useForm } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { FormEvent, useState } from 'react';
-import { roles_T } from '@/types/role-types';
 
 type CreateUserForm = {
     first_name: string;
@@ -97,11 +97,11 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
     const validatePassword = (value: string, roleId?: string) => {
         const isPurokLeader = (roleId || data.role_id) === '2';
         const fieldName = isPurokLeader ? 'PIN' : 'Password';
-        
+
         if (!value) {
             return `${fieldName} is required`;
         }
-        
+
         // Different validation for PIN (Purok Leader) vs Password
         if (isPurokLeader) {
             // PIN should only contain numbers
@@ -129,10 +129,14 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
         return '';
     };
 
-    const validatePasswordConfirmation = (value: string, password: string, roleId?: string) => {
+    const validatePasswordConfirmation = (
+        value: string,
+        password: string,
+        roleId?: string,
+    ) => {
         const isPurokLeader = (roleId || data.role_id) === '2';
         const fieldName = isPurokLeader ? 'PIN' : 'Password';
-        
+
         if (!value) {
             return `${fieldName} confirmation is required`;
         }
@@ -252,7 +256,10 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
             },
             onError: (errors) => {
                 console.log('Server validation errors:', errors);
-                console.error('Full error object:', JSON.stringify(errors, null, 2));
+                console.error(
+                    'Full error object:',
+                    JSON.stringify(errors, null, 2),
+                );
             },
         });
     };
@@ -264,16 +271,16 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                     <Plus /> Add User
                 </Button>
             </SheetTrigger>
-            <SheetContent className="flex flex-col h-full">
-                <form onSubmit={handleSubmit} className="flex flex-col h-full">
-                    <SheetHeader className="flex-shrink-0 pb-4 border-b">
+            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
+                <form onSubmit={handleSubmit} className="flex h-full flex-col">
+                    <SheetHeader className="flex-shrink-0 pb-4">
                         <SheetTitle>Add New User</SheetTitle>
                         <SheetDescription>
                             Create a new user account with their personal
                             information and role assignment.
                         </SheetDescription>
                     </SheetHeader>
-                    <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
                         <div className="grid flex-1 auto-rows-min gap-2">
                             <div className="grid gap-3">
                                 <Label htmlFor="first-name">First Name</Label>
@@ -437,20 +444,30 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                                 }));
                                                 // Revalidate password when role changes
                                                 if (data.password) {
-                                                    const passwordError = validatePassword(data.password);
+                                                    const passwordError =
+                                                        validatePassword(
+                                                            data.password,
+                                                        );
                                                     setClientErrors((prev) => ({
                                                         ...prev,
-                                                        password: passwordError || undefined,
+                                                        password:
+                                                            passwordError ||
+                                                            undefined,
                                                     }));
                                                 }
-                                                if (data.password_confirmation) {
-                                                    const confirmError = validatePasswordConfirmation(
-                                                        data.password_confirmation,
-                                                        data.password
-                                                    );
+                                                if (
+                                                    data.password_confirmation
+                                                ) {
+                                                    const confirmError =
+                                                        validatePasswordConfirmation(
+                                                            data.password_confirmation,
+                                                            data.password,
+                                                        );
                                                     setClientErrors((prev) => ({
                                                         ...prev,
-                                                        password_confirmation: confirmError || undefined,
+                                                        password_confirmation:
+                                                            confirmError ||
+                                                            undefined,
                                                     }));
                                                 }
                                             }}
@@ -467,7 +484,11 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {roles
-                                                    .filter((role) => role.name !== 'Citizen')
+                                                    .filter(
+                                                        (role) =>
+                                                            role.name !==
+                                                            'Citizen',
+                                                    )
                                                     .map((role) => (
                                                         <SelectItem
                                                             key={role.id}
@@ -578,7 +599,9 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                             </div>
                             <div className="grid gap-3">
                                 <Label htmlFor="password-confirmation">
-                                    {data.role_id === '2' ? 'Confirm PIN' : 'Confirm Password'}
+                                    {data.role_id === '2'
+                                        ? 'Confirm PIN'
+                                        : 'Confirm Password'}
                                 </Label>
                                 <div>
                                     <Input
@@ -610,7 +633,7 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                             </div>
                         </div>
                     </div>
-                    <SheetFooter className="flex-shrink-0 px-4 py-4 border-t bg-background">
+                    <SheetFooter className="flex-shrink-0 bg-background px-4 py-4">
                         <div className="flex w-full gap-2">
                             <Button
                                 type="submit"

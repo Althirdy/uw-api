@@ -1,34 +1,30 @@
-
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
-    Cpu,
-    Edit,
-    Archive,
-    MapPin,
-    Wifi,
-    Activity,
-    Settings,
-    Zap,
-    Radio,
-    Camera
-} from 'lucide-react'
-import { paginated_T, uwDevice_T, location_T, cctv_T } from '../type'
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
-import EditUWDevice from './editDevice'
-import ArchiveUWDevice from './archiveDevice'
-import ViewUWDevice from './viewDevice'
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Archive, Cpu, ExternalLink, MapPin, SquarePen } from 'lucide-react';
+import React from 'react';
+import {
+    cctv_T,
+    location_T,
+    paginated_T,
+    uwDevice_T,
+} from '../../types/cctv-location-types';
+import ArchiveUWDevice from './archiveDevice';
+import EditUWDevice from './editDevice';
+import ViewUWDevice from './viewDevice';
 
 interface UWDeviceDisplayProps {
-    onEdit?: (device: uwDevice_T) => void
-    onDelete?: (device: uwDevice_T) => void
-    onViewReports?: (device: uwDevice_T) => void
-    devices: paginated_T<uwDevice_T>
-    locations?: location_T[]
-    cctvDevices?: cctv_T[]
+    onEdit?: (device: uwDevice_T) => void;
+    onDelete?: (device: uwDevice_T) => void;
+    onViewReports?: (device: uwDevice_T) => void;
+    devices: paginated_T<uwDevice_T>;
+    locations?: location_T[];
+    cctvDevices?: cctv_T[];
 }
 
 function UWDeviceDisplay({
@@ -37,140 +33,193 @@ function UWDeviceDisplay({
     onViewReports,
     devices,
     locations = [],
-    cctvDevices = []
+    cctvDevices = [],
 }: UWDeviceDisplayProps): React.JSX.Element {
-    
     if (!devices || !devices.data) {
-        return <div className="p-4 text-center text-muted-foreground">No devices found</div>;
+        return (
+            <div className="p-4 text-center text-muted-foreground">
+                No devices found
+            </div>
+        );
     }
 
-    // Get status badge variant - matching CCTV pattern
-    const getStatusVariant = (status: string) => {
-        switch (status) {
-            case 'active': return 'default'
-            case 'inactive': return 'secondary'
-            case 'maintenance': return 'destructive'
-            default: return 'outline'
+    // Get status badge variant and colors - matching CCTV pattern
+    const getStatusStyles = (status: string) => {
+        switch (status.toLocaleUpperCase()) {
+            case 'ACTIVE':
+                return 'bg-green-700 rounded-full dark:bg-green-800';
+            case 'MAINTENANCE':
+                return 'bg-orange-100 rounded-full dark:bg-orange-700';
+            case 'INACTIVE':
+                return 'bg-gray-100 rounded-full dark:bg-zinc-600';
+            default:
+                return 'bg-gray-100 rounded-full dark:bg-zinc-600';
         }
-    }
-
-    // Get status icon - matching CCTV pattern
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'active': return <Activity className="h-3 w-3" />
-            case 'inactive': return <Wifi className="h-3 w-3" />
-            case 'maintenance': return <Settings className="h-3 w-3" />
-            default: return null
-        }
-    }
+    };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {/* UW Device Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {devices.data.map((device) => (
-                    <Card key={device.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-start gap-3">
-                                    <div className="p-2 bg-green-100 rounded-lg">
-                                        <Cpu className="h-5 w-5 text-green-600" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-semibold text-base truncate">
-                                            {device.device_name}
-                                        </h3>
-                                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                                            <MapPin className="h-3 w-3" />
-                                            <span className="truncate">
-                                                {device.location?.barangay || (device.custom_address ? 'Custom Location' : 'No location')}
-                                            </span>
-                                        </div>
+                    <Card
+                        key={device.id}
+                        className="group relative overflow-hidden rounded-[var(--radius)] transition-all duration-200 hover:shadow-md"
+                    >
+                        <CardHeader className="flex flex-row items-start justify-between pb-3">
+                            <div className="flex flex-row items-center gap-4">
+                                <div className="h-fit w-fit rounded-lg bg-zinc-500 p-2">
+                                    <Cpu className="h-5 w-auto" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <h3 className="truncate text-base font-semibold">
+                                        {device.device_name}
+                                    </h3>
+                                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                        <MapPin className="h-5 w-auto" />
+                                        <span className="truncate">
+                                            {device.location?.barangay ||
+                                                (device.custom_address
+                                                    ? 'Custom Location'
+                                                    : 'No location')}
+                                        </span>
                                     </div>
                                 </div>
-                                <Badge 
-                                    variant={getStatusVariant(device.status)}
-                                    className="gap-1 capitalize"
-                                >
-                                    {getStatusIcon(device.status)}
-                                    {device.status}
-                                </Badge>
+                            </div>
+                            <div className="items-center">
+                                {/* Status Badge */}
+                                <div>
+                                    <Badge
+                                        className={`gap-1 text-sm capitalize ${getStatusStyles(device.status)}`}
+                                    >
+                                        {device.status}
+                                    </Badge>
+                                </div>
                             </div>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
-                            {/* Basic Details */}
-                            <div className="grid grid-cols-2 gap-4 text-sm">
+                            {/* Technical Details */}
+                            <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <p className="text-muted-foreground">Status</p>
-                                    <p className="font-medium capitalize">{device.status}</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Category</p>
+                                    <p className="text-muted-foreground">
+                                        Category
+                                    </p>
                                     <p className="font-medium">
-                                        {device.location?.category_name || (device.custom_address ? 'Custom' : 'N/A')}
+                                        {device.location?.category_name ||
+                                            (device.custom_address
+                                                ? 'Custom'
+                                                : 'N/A')}
                                     </p>
                                 </div>
                             </div>
-
-                            {/* Location Details */}
-                            <div className="pt-2 border-t">
-                                <p className="text-xs text-muted-foreground mb-1">Location</p>
+                            <div>
+                                <p className="mb-1 text-muted-foreground">
+                                    Location
+                                </p>
                                 {device.location ? (
                                     <>
-                                        <p className="text-sm font-medium">{device.location.location_name}</p>
-                                        <p className="text-xs text-muted-foreground">{device.location.landmark}</p>
+                                        <p className="font-medium">
+                                            {device.location.location_name}
+                                        </p>
+                                        <p className="text-muted-foreground">
+                                            {device.location.landmark}
+                                        </p>
                                     </>
                                 ) : device.custom_address ? (
                                     <>
-                                        <div className="flex items-center gap-1 mb-1">
-                                            <p className="text-sm font-medium">{device.custom_address}</p>
-                                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                        <div className="mb-1 flex items-center gap-2">
+                                            <p className="font-medium">
+                                                {device.custom_address}
+                                            </p>
+                                            <Badge
+                                                variant="outline"
+                                                className="border-blue-200 bg-blue-50 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                                            >
                                                 Custom
                                             </Badge>
                                         </div>
-                                        {device.custom_latitude && device.custom_longitude && (
-                                            <p className="text-xs text-muted-foreground">
-                                                {Number(device.custom_latitude).toFixed(2)}, {Number(device.custom_longitude).toFixed(2)}
-                                            </p>
-                                        )}
+                                        {device.custom_latitude &&
+                                            device.custom_longitude && (
+                                                <p className="text-muted-foreground">
+                                                    {Number(
+                                                        device.custom_latitude,
+                                                    ).toFixed(4)}
+                                                    ,{' '}
+                                                    {Number(
+                                                        device.custom_longitude,
+                                                    ).toFixed(4)}
+                                                </p>
+                                            )}
                                     </>
                                 ) : (
-                                    <p className="text-sm text-muted-foreground">No location assigned</p>
+                                    <p className="text-muted-foreground">
+                                        No location assigned
+                                    </p>
                                 )}
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex items-center justify-end gap-1 pt-2">
-                                <ViewUWDevice device={device} />
-                                <EditUWDevice location={locations} device={device} cctvDevices={cctvDevices} />
-                                <ArchiveUWDevice device={device} />
+                            <div className="flex items-center justify-end gap-2">
+                                <Tooltip>
+                                    <ViewUWDevice device={device}>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="cursor-pointer"
+                                            >
+                                                <ExternalLink className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                    </ViewUWDevice>
+                                    <TooltipContent>
+                                        <p>View Device</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <EditUWDevice
+                                        location={locations}
+                                        device={device}
+                                        cctvDevices={cctvDevices}
+                                    >
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="cursor-pointer"
+                                            >
+                                                <SquarePen className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                    </EditUWDevice>
+                                    <TooltipContent>
+                                        <p>Edit Device</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <ArchiveUWDevice device={device}>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="cursor-pointer"
+                                            >
+                                                <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                    </ArchiveUWDevice>
+                                    <TooltipContent>
+                                        <p>Archive Device</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
-
-            {/* Simple Pagination */}
-            {devices.links && devices.links.length > 3 && (
-                <div className="flex justify-center gap-2">
-                    {devices.prev_page_url && (
-                        <Button variant="outline" size="sm">
-                            Previous
-                        </Button>
-                    )}
-                    <span className="text-sm text-muted-foreground self-center">
-                        {devices.data.length} devices shown
-                    </span>
-                    {devices.next_page_url && (
-                        <Button variant="outline" size="sm">
-                            Next
-                        </Button>
-                    )}
-                </div>
-            )}
         </div>
-    )
+    );
 }
 
-export default UWDeviceDisplay
+export default UWDeviceDisplay;

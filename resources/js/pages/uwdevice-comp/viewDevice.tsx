@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
     Sheet,
     SheetContent,
@@ -6,50 +7,48 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
-} from "@/components/ui/sheet"
-import { ExternalLink, MapPin, Cpu, Camera, Activity, Zap } from 'lucide-react'
-import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { uwDevice_T, cctv_T } from '@/pages/type'
+} from '@/components/ui/sheet';
+import { cctv_T, uwDevice_T } from '@/types/cctv-location-types';
+import { Camera, Cpu, ExternalLink, MapPin, Zap } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface ViewUWDeviceProps {
-    device: uwDevice_T
+    device: uwDevice_T;
+    children?: React.ReactNode;
 }
 
-function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
-    const [sheetOpen, setSheetOpen] = useState(false)
+function ViewUWDevice({
+    device,
+    children,
+}: ViewUWDeviceProps): React.JSX.Element {
+    const [sheetOpen, setSheetOpen] = useState(false);
 
     // Get status badge variant - matching CCTV pattern
-    const getStatusVariant = (status: string) => {
-        switch (status) {
-            case 'active': return 'default'
-            case 'inactive': return 'secondary'
-            case 'maintenance': return 'destructive'
-            default: return 'outline'
+    const getStatusStyles = (status: string) => {
+        switch (status.toLocaleUpperCase()) {
+            case 'ACTIVE':
+                return 'bg-green-700 rounded-full  dark:bg-green-800 dark:';
+            case 'MAINTENANCE':
+                return 'bg-orange-100 rounded-full dark:bg-orange-700 ';
+            case 'INACTIVE':
+                return 'bg-gray-100 rounded-full  dark:bg-zinc-600 ';
+            default:
+                return 'bg-gray-100 rounded-full  dark:bg-zinc-600 ';
         }
-    }
-
-    // Get status icon - matching CCTV pattern
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'active': return <Activity className="h-3 w-3" />
-            case 'inactive': return <Activity className="h-3 w-3 opacity-50" />
-            case 'maintenance': return <Zap className="h-3 w-3" />
-            default: return <Activity className="h-3 w-3 opacity-50" />
-        }
-    }
+    };
 
     return (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-                <div className='p-2 rounded-full hover:bg-secondary/20 cursor-pointer'>
-                    <ExternalLink size={20} />
-                </div>
+                {children || (
+                    <div className="cursor-pointer rounded-full p-2 hover:bg-secondary/20">
+                        <ExternalLink size={20} />
+                    </div>
+                )}
             </SheetTrigger>
-            <SheetContent className="flex flex-col h-full">
+            <SheetContent className="flex h-full flex-col">
                 {/* Fixed Header */}
-                <SheetHeader className="sticky top-0 z-10 bg-background flex-shrink-0 px-6 py-6 border-b">
+                <SheetHeader className="sticky top-0 z-10 flex-shrink-0 border-b bg-background px-6 py-6">
                     <SheetTitle className="flex items-center gap-2">
                         <Cpu className="h-5 w-5 text-green-600" />
                         Device Details
@@ -64,43 +63,64 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
                     <div className="space-y-6">
                         {/* Device Name Section */}
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium text-muted-foreground">Device Name</Label>
-                            <div className="p-3 bg-muted/50 rounded-lg">
-                                <p className="font-medium">{device.device_name}</p>
+                            <Label className="text-sm font-medium text-muted-foreground">
+                                Device Name
+                            </Label>
+                            <div className="rounded-lg bg-muted/50 p-3">
+                                <p className="font-medium">
+                                    {device.device_name}
+                                </p>
                             </div>
                         </div>
 
                         {/* Status Section */}
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium text-muted-foreground">Status</Label>
+                            <Label className="text-sm font-medium text-muted-foreground">
+                                Status
+                            </Label>
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    variant={getStatusVariant(device.status)}
-                                    className="gap-1 capitalize"
+                                    className={`capitalize ${getStatusStyles(device.status)}`}
                                 >
-                                    {getStatusIcon(device.status)}
                                     {device.status}
                                 </Badge>
                             </div>
                         </div>
-
                         {/* Location Assignment Section */}
                         <div className="space-y-3">
-                            <Label className="text-sm font-medium text-muted-foreground">Location Assignment</Label>
-                            
+                            <Label className="text-sm font-medium text-muted-foreground">
+                                Location Assignment
+                            </Label>
+
                             {/* Predefined Location */}
                             {device.location && !device.custom_address && (
-                                <div className="p-4 bg-muted/50 rounded-lg">
+                                <div className="rounded-lg bg-muted/50 p-4">
                                     <div className="flex items-start gap-3">
-                                        <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                                        <MapPin className="mt-1 h-4 w-4 text-muted-foreground" />
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <p className="font-medium">{device.location.location_name}</p>
-                                                <Badge variant="outline" className="text-xs">Predefined</Badge>
+                                                <p className="font-medium">
+                                                    {
+                                                        device.location
+                                                            .location_name
+                                                    }
+                                                </p>
+                                                <Badge
+                                                    variant="outline"
+                                                    className="text-xs"
+                                                >
+                                                    Predefined
+                                                </Badge>
                                             </div>
                                             {device.location?.category_name && (
-                                                <Badge variant="outline" className="text-xs">
-                                                    {device.location.category_name}
+                                                <Badge
+                                                    variant="outline"
+                                                    className="text-xs"
+                                                >
+                                                    {
+                                                        device.location
+                                                            .category_name
+                                                    }
                                                 </Badge>
                                             )}
                                             <p className="text-sm text-muted-foreground">
@@ -116,25 +136,44 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
 
                             {/* Custom Location */}
                             {device.custom_address && (
-                                <div className="p-4 bg-muted/50 rounded-lg">
+                                <div className="rounded-lg bg-muted/50 p-4">
                                     <div className="flex items-start gap-3">
-                                        <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
+                                        <MapPin className="mt-1 h-4 w-4 text-muted-foreground" />
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <p className="font-medium">Custom Location</p>
-                                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">Custom</Badge>
+                                                <p className="font-medium">
+                                                    Custom Location
+                                                </p>
+                                                <Badge
+                                                    variant="outline"
+                                                    className="border-blue-200 bg-blue-50 text-xs text-blue-700"
+                                                >
+                                                    Custom
+                                                </Badge>
                                             </div>
                                             <p className="text-sm text-muted-foreground">
                                                 {device.custom_address}
                                             </p>
-                                            <div className="grid grid-cols-2 gap-4 mt-2">
+                                            <div className="mt-2 grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <p className="text-xs font-medium text-muted-foreground">Latitude</p>
-                                                    <p className="text-xs">{Number(device.custom_latitude).toFixed(2)}</p>
+                                                    <p className="text-xs font-medium text-muted-foreground">
+                                                        Latitude
+                                                    </p>
+                                                    <p className="text-xs">
+                                                        {Number(
+                                                            device.custom_latitude,
+                                                        ).toFixed(2)}
+                                                    </p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs font-medium text-muted-foreground">Longitude</p>
-                                                    <p className="text-xs">{Number(device.custom_longitude).toFixed(2)}</p>
+                                                    <p className="text-xs font-medium text-muted-foreground">
+                                                        Longitude
+                                                    </p>
+                                                    <p className="text-xs">
+                                                        {Number(
+                                                            device.custom_longitude,
+                                                        ).toFixed(2)}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
@@ -144,69 +183,93 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
 
                             {/* No Location */}
                             {!device.location && !device.custom_address && (
-                                <div className="p-4 border-2 border-dashed border-muted rounded-lg text-center">
-                                    <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                                    <p className="text-sm text-muted-foreground">No location assigned</p>
+                                <div className="rounded-lg border-2 border-dashed border-muted p-4 text-center">
+                                    <MapPin className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                                    <p className="text-sm text-muted-foreground">
+                                        No location assigned
+                                    </p>
                                 </div>
                             )}
                         </div>
 
                         {/* Linked CCTV Cameras Section */}
                         <div className="space-y-3">
-                            <Label className="text-sm font-medium text-muted-foreground">Linked CCTV Cameras</Label>
-                            {device.cctv_cameras && device.cctv_cameras.length > 0 ? (
+                            <Label className="text-sm font-medium text-muted-foreground">
+                                Linked CCTV Cameras
+                            </Label>
+                            {device.cctv_cameras &&
+                            device.cctv_cameras.length > 0 ? (
                                 <div className="space-y-3">
-                                    {device.cctv_cameras.map((camera: cctv_T, index: number) => (
-                                        <div key={index} className="p-3 border rounded-lg bg-muted/20">
-                                            <div className="flex items-center gap-3">
-                                                <Camera className="h-4 w-4 text-blue-500" />
-                                                <div className="flex-1">
-                                                    <div className="font-medium text-sm">
-                                                        {camera.device_name || `Camera ${index + 1}`}
+                                    {device.cctv_cameras.map(
+                                        (camera: cctv_T, index: number) => (
+                                            <div
+                                                key={index}
+                                                className="rounded-lg border bg-muted/20 p-3"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <Camera className="h-4 w-4 text-blue-500" />
+                                                    <div className="flex-1">
+                                                        <div className="text-sm font-medium">
+                                                            {camera.device_name ||
+                                                                `Camera ${index + 1}`}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            {camera.location
+                                                                ?.location_name ||
+                                                                device.location
+                                                                    ?.location_name}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {camera.location?.location_name || device.location?.location_name}
-                                                    </div>
+                                                    <Badge
+                                                        className={`capitalize ${getStatusStyles(device.status)}`}
+                                                    >
+                                                        {camera.status}
+                                                    </Badge>
                                                 </div>
-                                                <Badge 
-                                                    variant={getStatusVariant(camera.status)}
-                                                    className="capitalize"
-                                                >
-                                                    {camera.status}
-                                                </Badge>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ),
+                                    )}
                                 </div>
                             ) : (
-                                <div className="p-4 border-2 border-dashed border-muted rounded-lg text-center">
-                                    <Camera className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                                    <p className="text-sm text-muted-foreground">No cameras linked</p>
-                                    <p className="text-xs text-muted-foreground">This device operates independently</p>
+                                <div className="rounded-lg border-2 border-dashed border-muted p-4 text-center">
+                                    <Camera className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                                    <p className="text-sm text-muted-foreground">
+                                        No cameras linked
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                        This device operates independently
+                                    </p>
                                 </div>
                             )}
                         </div>
 
                         {/* Device Information Summary */}
                         <div className="space-y-3">
-                            <Label className="text-sm font-medium text-muted-foreground">Device Summary</Label>
+                            <Label className="text-sm font-medium text-muted-foreground">
+                                Device Summary
+                            </Label>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-3 bg-muted/50 rounded-lg">
-                                    <div className="flex items-center gap-2 mb-1">
+                                <div className="rounded-lg bg-muted/50 p-3">
+                                    <div className="mb-1 flex items-center gap-2">
                                         <Zap className="h-3 w-3 text-green-500" />
-                                        <span className="text-xs font-medium">Status</span>
+                                        <span className="text-xs font-medium">
+                                            Status
+                                        </span>
                                     </div>
                                     <p className="text-sm font-medium capitalize">
                                         {device.status}
                                     </p>
                                 </div>
-                                <div className="p-3 bg-muted/50 rounded-lg">
-                                    <div className="flex items-center gap-2 mb-1">
+                                <div className="rounded-lg bg-muted/50 p-3">
+                                    <div className="mb-1 flex items-center gap-2">
                                         <Camera className="h-3 w-3 text-blue-500" />
-                                        <span className="text-xs font-medium">Cameras</span>
+                                        <span className="text-xs font-medium">
+                                            Cameras
+                                        </span>
                                     </div>
                                     <p className="text-sm font-medium">
-                                        {device.cctv_cameras?.length || 0} linked
+                                        {device.cctv_cameras?.length || 0}{' '}
+                                        linked
                                     </p>
                                 </div>
                             </div>
@@ -215,7 +278,7 @@ function ViewUWDevice({ device }: ViewUWDeviceProps): React.JSX.Element {
                 </div>
             </SheetContent>
         </Sheet>
-    )
+    );
 }
 
-export default ViewUWDevice
+export default ViewUWDevice;

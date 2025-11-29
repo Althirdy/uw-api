@@ -1,0 +1,182 @@
+import { ColumnDef } from '@tanstack/react-table';
+import { Archive, ArrowUpDown, ExternalLink, SquarePen } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+import { roles_T } from '@/types/role-types';
+import { users_T } from '@/types/user-types';
+import ArchiveUser from './users-archive';
+import EditUser from './users-edit';
+import ViewUser from './users-view';
+
+const roleColors: Record<string, string> = {
+    Operator: 'bg-green-800',
+    Citizen: 'bg-orange-500',
+    'Purok Leader': 'bg-blue-500',
+    Admin: 'bg-red-500',
+};
+
+export const columns = (roles: roles_T[]): ColumnDef<users_T>[] => [
+    {
+        accessorKey: 'id',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                    className="cursor-pointer transition-colors duration-200 ease-in-out"
+                >
+                    User ID
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            );
+        },
+        cell: ({ row }) => <div>#{row.getValue('id')}</div>,
+    },
+    {
+        accessorKey: 'name',
+        header: ({ column }) => {
+            return (
+                <Button
+                    variant="ghost"
+                    onClick={() =>
+                        column.toggleSorting(column.getIsSorted() === 'asc')
+                    }
+                    className="cursor-pointer transition-colors duration-200 ease-in-out"
+                >
+                    Name
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+            );
+        },
+        cell: ({ row }) => <div>{row.getValue('name')}</div>,
+    },
+    {
+        accessorKey: 'role.name',
+        header: 'Role',
+        cell: ({ row }) => {
+            const user = row.original;
+            const roleName = user.role?.name || 'N/A';
+            const bgColor = roleColors[roleName] || 'bg-gray-500';
+
+            return (
+                <Badge
+                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${bgColor}`}
+                >
+                    {roleName}
+                </Badge>
+            );
+        },
+    },
+    {
+        id: 'barangay',
+        header: 'Assigned Barangay',
+        cell: ({ row }) => {
+            const user = row.original;
+            return (
+                <div>
+                    {user.citizen_details?.barangay ||
+                        user.official_details?.assigned_brgy ||
+                        'N/A'}
+                </div>
+            );
+        },
+    },
+    {
+        id: 'status',
+        header: 'Status',
+        cell: ({ row }) => {
+            const user = row.original;
+            const status =
+                user.citizen_details?.status ||
+                user.official_details?.status ||
+                'Active';
+            const statusText =
+                status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+            return (
+                <Badge
+                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${
+                        statusText === 'Active'
+                            ? 'bg-green-800 dark:bg-green-900'
+                            : 'bg-gray-800'
+                    }`}
+                >
+                    {statusText}
+                </Badge>
+            );
+        },
+    },
+    {
+        id: 'actions',
+        header: 'Actions',
+        enableHiding: false,
+        cell: ({ row }) => {
+            const user = row.original;
+
+            return (
+                <div className="flex justify-center gap-2">
+                    <Tooltip>
+                        <ViewUser user={user}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                        </ViewUser>
+                        <TooltipContent>
+                            <p>View Details</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <EditUser user={user} roles={roles}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <SquarePen className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                        </EditUser>
+                        <TooltipContent>
+                            <p>Edit User</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <ArchiveUser user={user}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                </Button>
+                            </TooltipTrigger>
+                        </ArchiveUser>
+                        <TooltipContent>
+                            <p>Archive User</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            );
+        },
+    },
+];
