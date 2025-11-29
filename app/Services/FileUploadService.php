@@ -11,8 +11,21 @@ class FileUploadService
      */
     public function uploadSingle($file, $directory = 'uploads')
     {
-        $path = $file->store($directory, 's3'); // or 'r2' if you're using Cloudflare
-        $publicUrl = Storage::disk('s3')->url($path);
+        // Use default disk
+        $disk = config('filesystems.default');
+
+        // Safety Fallback: If configured for S3 but no bucket is defined, fallback to public
+        if ($disk === 's3' && empty(config('filesystems.disks.s3.bucket'))) {
+            $disk = 'public';
+        }
+
+        // If default is 'local', force 'public' for accessibility
+        if ($disk === 'local') {
+            $disk = 'public';
+        }
+
+        $path = $file->store($directory, $disk);
+        $publicUrl = Storage::disk($disk)->url($path);
 
         return [
             'public_url' => $publicUrl,

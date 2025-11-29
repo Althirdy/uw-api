@@ -9,10 +9,12 @@ use App\Http\Resources\Api\V1\ConcernResource;
 use App\Models\Citizen\Concern;
 use App\Models\IncidentMedia;
 use App\Models\ConcernDistribution;
+use App\Models\ConcernHistory;
 use App\Events\ConcernAssigned;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Services\FileUploadService;
 
 
@@ -33,12 +35,13 @@ class ConcernController extends BaseApiController
     {
         try {
             // Get only concerns belonging to the authenticated user
-            $concerns = Concern::where('type', 'manual')
-                ->where('citizen_id', auth()->id())
+            $concerns = Concern::where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
-                    }
+                    },
+                    'distribution.purokLeader.officialDetails',
+                    'histories.actor.officialDetails'
                 ])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -67,25 +70,60 @@ class ConcernController extends BaseApiController
         DB::beginTransaction();
 
         try {
+            // 🔍 Step 0: Determine Concern Type & Prepare Data
+            $concernType = $validated['type'];
+            
+            if ($concernType === 'voice') {
+                $title = $validated['title'] ?? 'Voice Concern - ' . now()->format('M d, Y H:i');
+                $description = $validated['description'] ?? 'Audio recording received. Transcription pending...';
+            } else {
+                $title = $validated['title'];
+                $description = $validated['description'];
+            }
+
+            // Generate Tracking Code: CN-YYYYMMDD-XXXX
+            $datePart = now()->format('Ymd');
+            $randomPart = Str::upper(Str::random(4));
+            $trackingCode = "CN-{$datePart}-{$randomPart}";
+
             // 🟢 Step 1: Create the Concern record
             $concern = Concern::create([
-                'type' => 'manual',
+                'type' => $concernType,
                 'citizen_id' => auth()->id(), // Use authenticated user's ID
-                'title' => $validated['title'],
-                'description' => $validated['description'],
+                'title' => $title,
+                'description' => $description,
                 'status' => 'pending',
                 'category' => $validated['category'],
-                'severity' => 'low',
+                'severity' => $validated['severity'] ?? 'low',
                 'transcript_text' => $validated['transcript_text'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
                 'latitude' => $validated['latitude'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'custom_location' => $validated['custom_location'] ?? null,
+                'tracking_code' => $trackingCode,
             ]);
 
             $uploadedMedia = [];
 
             // 🟡 Step 2: Handle file uploads
+            // Check for 'files' OR 'images' (fallback)
+            $fileInput = null;
             if ($request->hasFile('files')) {
-                $files = $request->file('files');
+                $fileInput = $request->file('files');
+                Log::info('Manual Concern: Found "files" input.');
+            } elseif ($request->hasFile('images')) {
+                $fileInput = $request->file('images');
+                Log::info('Manual Concern: Found "images" input (fallback used).');
+            } else {
+                 Log::warning('Manual Concern: No "files" or "images" detected in request.', [
+                    'keys' => array_keys($request->all()),
+                    'has_file_files' => $request->hasFile('files'),
+                    'has_file_images' => $request->hasFile('images'),
+                 ]);
+            }
+
+            if ($fileInput) {
+                $files = $fileInput;
                 $isMultiple = is_array($files);
 
                 // Upload (single or multiple)
@@ -95,17 +133,20 @@ class ConcernController extends BaseApiController
 
                 // 🟣 Step 3: Save uploaded files in the database
                 foreach ($uploadResults['successful'] as $upload) {
+                    $mimeType = $upload['mime_type'] ?? '';
+                    $mediaType = str_starts_with($mimeType, 'audio/') ? 'audio' : 'image';
+
                     $media = IncidentMedia::create([
                         'source_type' => \App\Models\Citizen\Concern::class,
                         'source_id' => $concern->id,
                         'source_category' => 'citizen_concern',
-                        'media_type' => 'image', // you can later detect type dynamically
+                        'media_type' => $mediaType,
                         'original_path' => $upload['public_url'] ?? null,
                         'blurred_path' => null,
                         'public_id' => $upload['storage_path'] ?? null,
                         'original_filename' => $upload['original_filename'] ?? null,
                         'file_size' => $upload['file_size'] ?? null,
-                        'mime_type' => $upload['mime_type'] ?? null,
+                        'mime_type' => $mimeType,
                         'captured_at' => now(),
                     ]);
 
@@ -125,13 +166,21 @@ class ConcernController extends BaseApiController
                 'assigned_at' => now(),
             ]);
 
+            // 🟠 Step 4.5: Create Initial History (Audit Log)
+            ConcernHistory::create([
+                'concern_id' => $concern->id,
+                'acted_by' => null, // System action
+                'status' => 'pending',
+                'remarks' => 'Concern submitted and automatically distributed to Purok Leader.',
+            ]);
+
             // 🟣 Step 5: Broadcast real-time notification to purok leader
             event(new ConcernAssigned($concern, $distribution, $uploadedMedia));
 
             DB::commit();
 
             // Load relationships for resource
-            $concern->load('media');
+            $concern->load(['media', 'distribution.purokLeader.officialDetails', 'histories.actor.officialDetails']);
 
             // 🟢 Step 6: Return successful response
             return $this->sendResponse([
@@ -156,13 +205,14 @@ class ConcernController extends BaseApiController
     {
         try {
             // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('type', 'manual')
-                ->where('id', $id)
+            $concern = Concern::where('id', $id)
                 ->where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
-                    }
+                    },
+                    'distribution.purokLeader.officialDetails',
+                    'histories.actor.officialDetails'
                 ])
                 ->first();
 
@@ -193,8 +243,7 @@ class ConcernController extends BaseApiController
 
         try {
             // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('type', 'manual')
-                ->where('id', $id)
+            $concern = Concern::where('id', $id)
                 ->where('citizen_id', auth()->id())
                 ->with([
                     'media' => function ($query) {
@@ -238,8 +287,7 @@ class ConcernController extends BaseApiController
 
         try {
             // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('type', 'manual')
-                ->where('id', $id)
+            $concern = Concern::where('id', $id)
                 ->where('citizen_id', auth()->id())
                 ->first();
 
