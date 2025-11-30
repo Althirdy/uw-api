@@ -16,6 +16,7 @@ Route::prefix('otp')->group(function () {
 //========Auth Routes========//
 Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/ocr-front-id', [AuthController::class, 'scanFrontId']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login/purok-leader', [AuthController::class, 'loginPurokLeader']);
 Route::post('/verify-registration-info', [AuthController::class, 'verifyRegistrationInfo']);

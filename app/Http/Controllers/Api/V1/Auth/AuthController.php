@@ -3,19 +3,27 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Api\BaseApiController;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\PurokLeaderLoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
+use App\Http\Resources\Api\V1\AuthUserResource;
 use App\Models\CitizenDetails;
 use App\Models\User;
-use Carbon\Carbon;
+use App\Services\AuthService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends BaseApiController
 {
+    protected $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     //****LOGIN METHODD */
 
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
@@ -23,71 +31,32 @@ class AuthController extends BaseApiController
         $validated = $request->validated();
 
         try {
-            $user = User::with(['role', 'officialDetails', 'citizenDetails'])
-                ->where('email', $validated['email'])
-                ->firstOrFail();
+            $authData = $this->authService->login($validated['email'], $validated['password']);
 
-            if (!$user || !Hash::check($validated['password'], $user->password)) {
+            if (!$authData) {
                 return $this->sendUnauthorized('Invalid credentials');
             }
 
-            // Create access token with 'access-api' ability
-            $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-            // Create refresh token with 'refresh-token' ability
-            $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
+            $user = $authData['user'];
 
-            if ($user['role_id'] == 2 || $user['role_id'] == 1) {
-                $officialDetails = $user->officialDetails;
-
-                if (!$officialDetails) {
-                    return $this->sendError('Official details not found for this user');
-                }
-
-                return $this->sendResponse([
-                    'token' => $access_token,
-                    'refreshToken' => $refresh_token,
-                    'user' => [
-                        'id' => $user->id,
-                        'firstName' => $officialDetails->first_name,
-                        'lastName' => $officialDetails->last_name,
-                        'middleName' => $officialDetails->middle_name,
-                        'suffix' => $officialDetails->suffix,
-                        'email' => $user->email,
-                        'role' => $user->role->name,
-                        'officeAddress' => $officialDetails->office_address,
-                        'phoneNumber' => $officialDetails->contact_number,
-                    ]
-                ]);
-            } else if ($user['role_id'] == 3) {
-                $citizenDetails = $user->citizenDetails;
-
-                if (!$citizenDetails) {
-                    return $this->sendError('Citizen details not found for this user');
-                }
-
-                return $this->sendResponse([
-                    'token' => $access_token,
-                    'refreshToken' => $refresh_token,
-                    'user' => [
-                        'id' => $user->id,
-                        'firstName' => $citizenDetails->first_name,
-                        'lastName' => $citizenDetails->last_name,
-                        'middleName' => $citizenDetails->middle_name,
-                        'suffix' => $citizenDetails->suffix,
-                        'email' => $user->email,
-                        'role' => $user->role->name,
-                        'address' => $citizenDetails->address,
-                        'phoneNumber' => $citizenDetails->phone_number,
-                        'barangay' => $citizenDetails->barangay,
-                        'city' => $citizenDetails->city,
-                        'province' => $citizenDetails->province,
-                        'postalCode' => $citizenDetails->postal_code,
-                        'isVerified' => $citizenDetails->is_verified,
-                    ]
-                ]);
+            if (($user->role_id == 1 || $user->role_id == 2) && !$user->officialDetails) {
+                return $this->sendError('Official details not found for this user');
             }
 
-            return $this->sendError('Invalid user role');
+            if ($user->role_id == 3 && !$user->citizenDetails) {
+                return $this->sendError('Citizen details not found for this user');
+            }
+
+            if (!in_array($user->role_id, [1, 2, 3])) {
+                return $this->sendError('Invalid user role');
+            }
+
+            return $this->sendResponse([
+                'token' => $authData['token'],
+                'refreshToken' => $authData['refreshToken'],
+                'user' => new AuthUserResource($user),
+            ]);
+
         } catch (\Exception $e) {
             return $this->sendError('Invalid Credentials');
         }
@@ -99,50 +68,22 @@ class AuthController extends BaseApiController
         $validated = $request->validated();
 
         try {
-            // Get all Purok Leaders (role_id = 2)
-            $purokLeaders = User::with(['role', 'officialDetails'])
-                ->where('role_id', 2)
-                ->get();
+            $authData = $this->authService->loginPurokLeader($validated['pin']);
 
-            // Find the user with matching PIN
-            $user = null;
-            foreach ($purokLeaders as $leader) {
-                if (Hash::check($validated['pin'], $leader->password)) {
-                    $user = $leader;
-                    break;
-                }
-            }
-
-            if (!$user) {
+            if (!$authData) {
                 return $this->sendUnauthorized('Invalid PIN');
             }
 
-            // Create access token with 'access-api' ability
-            $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-            
-            // Create refresh token with 'refresh-token' ability
-            $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
+            $user = $authData['user'];
 
-            $officialDetails = $user->officialDetails;
-
-            if (!$officialDetails) {
+            if (!$user->officialDetails) {
                 return $this->sendError('Official details not found for this user');
             }
 
             return $this->sendResponse([
-                'token' => $access_token,
-                'refreshToken' => $refresh_token,
-                'user' => [
-                    'id' => $user->id,
-                    'firstName' => $officialDetails->first_name,
-                    'lastName' => $officialDetails->last_name,
-                    'middleName' => $officialDetails->middle_name,
-                    'suffix' => $officialDetails->suffix,
-                    'email' => $user->email,
-                    'role' => $user->role->name,
-                    'officeAddress' => $officialDetails->office_address,
-                    'phoneNumber' => $officialDetails->contact_number,
-                ]
+                'token' => $authData['token'],
+                'refreshToken' => $authData['refreshToken'],
+                'user' => new AuthUserResource($user),
             ], 'Login successful');
         } catch (\Exception $e) {
             return $this->sendUnauthorized('Invalid PIN');
@@ -169,54 +110,21 @@ class AuthController extends BaseApiController
         try {
             $user = $request->user()->load(['role', 'officialDetails', 'citizenDetails']);
 
-            if ($user['role_id'] == 2 || $user['role_id'] == 1) {
-                $officialDetails = $user->officialDetails;
-
-                if (!$officialDetails) {
-                    return $this->sendError('Official details not found for this user');
-                }
-
-                return $this->sendResponse([
-                    'user' => [
-                        'id' => $user->id,
-                        'firstName' => $officialDetails->first_name,
-                        'lastName' => $officialDetails->last_name,
-                        'middleName' => $officialDetails->middle_name,
-                        'suffix' => $officialDetails->suffix,
-                        'email' => $user->email,
-                        'role' => $user->role->name,
-                        'officeAddress' => $officialDetails->office_address,
-                        'phoneNumber' => $officialDetails->contact_number,
-                    ]
-                ]);
-            } else if ($user['role_id'] == 3) {
-                $citizenDetails = $user->citizenDetails;
-
-                if (!$citizenDetails) {
-                    return $this->sendError('Citizen details not found for this user');
-                }
-
-                return $this->sendResponse([
-                    'user' => [
-                        'id' => $user->id,
-                        'firstName' => $citizenDetails->first_name,
-                        'lastName' => $citizenDetails->last_name,
-                        'middleName' => $citizenDetails->middle_name,
-                        'suffix' => $citizenDetails->suffix,
-                        'email' => $user->email,
-                        'role' => $user->role->name,
-                        'address' => $citizenDetails->address,
-                        'phoneNumber' => $citizenDetails->phone_number,
-                        'barangay' => $citizenDetails->barangay,
-                        'city' => $citizenDetails->city,
-                        'province' => $citizenDetails->province,
-                        'zipCode' => $citizenDetails->postal_code,
-                        'isVerified' => $citizenDetails->is_verified,
-                    ]
-                ]);
+            if (($user->role_id == 1 || $user->role_id == 2) && !$user->officialDetails) {
+                return $this->sendError('Official details not found for this user');
             }
 
-            return $this->sendError('Invalid user role');
+            if ($user->role_id == 3 && !$user->citizenDetails) {
+                return $this->sendError('Citizen details not found for this user');
+            }
+
+            if (!in_array($user->role_id, [1, 2, 3])) {
+                return $this->sendError('Invalid user role');
+            }
+
+            return $this->sendResponse([
+                'user' => new AuthUserResource($user),
+            ]);
         } catch (\Exception $e) {
             return $this->sendError('An error occurred while retrieving user details');
         }
@@ -230,21 +138,9 @@ class AuthController extends BaseApiController
                 return $this->sendUnauthorized('Invalid token type. Please use refresh token.');
             }
 
-            $user = $request->user();
+            $tokens = $this->authService->refreshToken($request->user());
 
-            // Delete ALL existing tokens (both access and refresh tokens)
-            $user->tokens()->delete();
-
-            // Create new access token with 'access-api' ability
-            $new_access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-
-            // Create new refresh token with 'refresh-token' ability
-            $new_refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
-
-            return $this->sendResponse([
-                'token' => $new_access_token,
-                'refreshToken' => $new_refresh_token,
-            ], 'Token refreshed successfully');
+            return $this->sendResponse($tokens, 'Token refreshed successfully');
         } catch (\Exception $e) {
             return $this->sendError('An error occurred while refreshing the token');
         }
@@ -316,73 +212,60 @@ class AuthController extends BaseApiController
      */
     public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
     {
-        $validated = $request->validated();
-
         try {
-            DB::beginTransaction();
+            $authData = $this->authService->register($request->validated());
 
-            // Concatenate full name
-            $fullName = trim($validated['first_name'] . ' ' .
-                ($validated['middle_name'] ?? '') . ' ' .
-                $validated['last_name'] .
-                ($validated['suffix'] ? ' ' . $validated['suffix'] : ''));
-
-            // Create user record
-            $user = User::create([
-                'name' => $fullName,
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'email_verified_at' => now(), // Set verification timestamp
-                'role_id' => 3, // Default citizen role
-            ]);
-
-            // Create citizen details record
-            $citizenDetails = CitizenDetails::create([
-                'user_id' => $user->id,
-                'first_name' => $validated['first_name'],
-                'middle_name' => $validated['middle_name'] ?? null,
-                'last_name' => $validated['last_name'],
-                'suffix' => $validated['suffix'] ?? null,
-                'date_of_birth' => $validated['date_of_birth'],
-                'phone_number' => $validated['phone_number'],
-                'address' => $validated['address'],
-                'barangay' => $validated['barangay'],
-                'city' => $validated['city'],
-                'province' => $validated['province'],
-                'postal_code' => $validated['postal_code'],
-                'is_verified' => true, // Mark as verified after OTP verification
-            ]);
-
-            DB::commit();
-
-            // Generate tokens
-            $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-            $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
-
-            // Return response with user data
             return $this->sendResponse([
-                'token' => $access_token,
-                'refreshToken' => $refresh_token,
-                'user' => [
-                    'id' => $user->id,
-                    'firstName' => $citizenDetails->first_name,
-                    'lastName' => $citizenDetails->last_name,
-                    'middleName' => $citizenDetails->middle_name,
-                    'suffix' => $citizenDetails->suffix,
-                    'email' => $user->email,
-                    'role' => 'Citizen',
-                    'address' => $citizenDetails->address,
-                    'phoneNumber' => $citizenDetails->phone_number,
-                    'barangay' => $citizenDetails->barangay,
-                    'city' => $citizenDetails->city,
-                    'province' => $citizenDetails->province,
-                    'postalCode' => $citizenDetails->postal_code,
-                    'isVerified' => $citizenDetails->is_verified,
-                ]
+                'token' => $authData['token'],
+                'refreshToken' => $authData['refreshToken'],
+                'user' => new AuthUserResource($authData['user']),
             ], 'Registration successful');
         } catch (\Exception $e) {
-            DB::rollBack();
             return $this->sendError('Registration failed: ' . $e->getMessage());
+        }
+    }
+
+    public function scanFrontId(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors(), 400);
+        }
+
+        try {
+            $flaskServiceUrl = env('FLASK_SERVICE_URL');
+            $serviceApiKey = env('SERVICE_API_KEY');
+
+            if (!$flaskServiceUrl || !$serviceApiKey) {
+                Log::error('Flask service URL or API key not configured.');
+                return $this->sendError('Service configuration error.', [], 500);
+            }
+
+            $response = Http::withHeaders([
+                'X-Service-Key' => $serviceApiKey,
+            ])->attach(
+                'image',
+                file_get_contents($request->file('image')->getRealPath()),
+                $request->file('image')->getClientOriginalName()
+            )->post("{$flaskServiceUrl}/api/v1/ocr-front-id");
+
+            if ($response->successful()) {
+                return response()->json($response->json(), $response->status());
+            } else {
+                Log::error('Flask OCR service responded with an error.', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return $this->sendError('Failed to process image with OCR service.', $response->json(), $response->status());
+            }
+        } catch (\Exception $e) {
+            Log::error('Error calling Flask OCR service: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            return $this->sendError('An internal server error occurred.', $e->getMessage(), 500);
         }
     }
 }

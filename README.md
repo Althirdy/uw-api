@@ -28,8 +28,9 @@
   - [2. Create Contact](#2-create-contact)
   - [3. List Accidents](#3-list-accidents)
   - [4. Update Accident Status](#4-update-accident-status)
-- [🤖 AI Integrations (YOLO)](#-ai-integrations-yolo)
-  - [1. Process Snapshot](#1-process-snapshot)
+- [🤖 AI Integrations](#-ai-integrations)
+  - [1. YOLO: Process Snapshot](#1-yolo-process-snapshot)
+  - [2. OCR: Scan Front ID](#2-ocr-scan-front-id)
 - [📚 Appendix A: Real-time Distribution Architecture](#-appendix-a-real-time-distribution-architecture)
 
 ---
@@ -669,9 +670,9 @@ Changes the workflow state of an accident record.
 
 ---
 
-## 🤖 AI Integrations (YOLO)
+## 🤖 AI Integrations
 
-### 1. Process Snapshot
+### 1. YOLO: Process Snapshot
 Ingests data from the CCTV YOLO detection system.
 
 *   **Endpoint:** `https://urbanwatch.me/api/v1/yolo/accidents/snapshot`
@@ -693,6 +694,34 @@ Ingests data from the CCTV YOLO detection system.
 {
   "success": true,
   "message": "Snapshot processed"
+}
+```
+
+### 2. OCR: Scan Front ID
+Extracts text data from the front side of a Philippine National ID using the internal Flask microservice.
+
+*   **Endpoint:** `https://urbanwatch.me/api/v1/ocr-front-id`
+*   **Method:** `POST`
+*   **Access:** Public (Authenticated recommended)
+*   **Header:** `Content-Type: multipart/form-data`
+
+#### Request Parameters
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `image` | file | Yes | Image of the ID (jpeg, png, jpg, gif). Max 2MB. |
+
+#### JSON Response
+```json
+{
+  "success": true,
+  "data": {
+    "pcn_number": "1234-5678-9012-3456",
+    "last_name": "DELA CRUZ",
+    "given_name": "JUAN",
+    "middle_name": "SANTOS",
+    "date_of_birth": "1990-01-01",
+    "address": "123 SAMPLE ST, BRGY SAN ISIDRO, MAKATI CITY"
+  }
 }
 ```
 
