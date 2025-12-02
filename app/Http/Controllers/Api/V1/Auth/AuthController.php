@@ -245,7 +245,7 @@ class AuthController extends BaseApiController
             }
 
             $response = Http::withHeaders([
-                'X-Service-Key' => $serviceApiKey,
+                'X-Key-Service' => $serviceApiKey,
             ])->attach(
                 'image',
                 file_get_contents($request->file('image')->getRealPath()),
