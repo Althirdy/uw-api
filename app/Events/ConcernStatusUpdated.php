@@ -70,6 +70,7 @@ class ConcernStatusUpdated implements ShouldBroadcast
     {
         // Load necessary relationships if not already loaded
         $this->concern->loadMissing(['media', 'histories.actor.officialDetails']);
+        $this->purokLeader->loadMissing(['officialDetails', 'role']);
 
         return [
             'concern' => [
