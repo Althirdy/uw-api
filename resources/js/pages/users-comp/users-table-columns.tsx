@@ -9,6 +9,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
+import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
 import ArchiveUser from './users-archive';
@@ -22,7 +23,10 @@ const roleColors: Record<string, string> = {
     Admin: 'bg-red-500',
 };
 
-export const columns = (roles: roles_T[]): ColumnDef<users_T>[] => [
+export const columns = (
+    roles: roles_T[],
+    locations: location_T[],
+): ColumnDef<users_T>[] => [
     {
         accessorKey: 'id',
         header: ({ column }) => {
@@ -77,8 +81,8 @@ export const columns = (roles: roles_T[]): ColumnDef<users_T>[] => [
         },
     },
     {
-        id: 'barangay',
-        header: 'Assigned Barangay',
+        id: 'location',
+        header: 'Assigned Location',
         cell: ({ row }) => {
             const user = row.original;
             return (
@@ -142,7 +146,11 @@ export const columns = (roles: roles_T[]): ColumnDef<users_T>[] => [
                         </TooltipContent>
                     </Tooltip>
                     <Tooltip>
-                        <EditUser user={user} roles={roles}>
+                        <EditUser
+                            user={user}
+                            roles={roles}
+                            locations={locations}
+                        >
                             <TooltipTrigger asChild>
                                 <Button
                                     variant="outline"

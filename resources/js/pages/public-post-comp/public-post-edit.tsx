@@ -3,17 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetFooter,
-    SheetHeader,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+
 import { PublicPost_T } from '@/types/public-post-types';
 import { router, useForm } from '@inertiajs/react';
-import { Calendar, Globe, MoveLeft, TriangleAlert, User } from 'lucide-react';
+import { Calendar, Globe, TriangleAlert, User } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type EditPublicPostProps = {
@@ -94,7 +87,7 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
             {
                 onSuccess: () => {
                     const closeButton = document.querySelector(
-                        '[data-sheet-close]',
+                        '[data-dialog-close]',
                     ) as HTMLButtonElement;
                     if (closeButton) closeButton.click();
                 },
@@ -108,11 +101,17 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
     };
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
                         <div className="flex flex-row items-center gap-4">
                             <div className="text-left">
                                 <h3 className="text-xl font-semibold">
@@ -126,9 +125,9 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                 </div>
                             </div>
                         </div>
-                    </SheetHeader>
+                    </DialogHeader>
 
-                    <div className="flex w-full flex-col justify-start gap-6 px-4 py-2">
+                    <div className="flex w-full flex-1 flex-col justify-start gap-6 overflow-y-auto px-6 py-4">
                         {/* Report Content - Editable */}
                         <div className="flex w-full flex-col gap-4">
                             <div className="grid gap-3">
@@ -355,28 +354,30 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="px-4 flex gap-2">
-                        <Button
-                            type="submit"
-                            disabled={processing}
-                            className="flex-1"
-                        >
-                            {processing ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                        <SheetClose asChild>
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
+                        <div className="flex w-full gap-2">
+                            <DialogClose asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    data-dialog-close
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                            </DialogClose>
                             <Button
-                                type="button"
-                                variant="outline"
-                                data-sheet-close
-                                className="flex-1"
+                                type="submit"
+                                disabled={processing}
+                                className="flex-2"
                             >
-                                Cancel
+                                {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
-                        </SheetClose>
-                    </SheetFooter>
+                        </div>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

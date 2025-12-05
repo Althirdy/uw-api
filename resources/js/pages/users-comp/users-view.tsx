@@ -1,20 +1,59 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { MoveLeft } from 'lucide-react';
 
+import { useIdentifyNumber } from '@/hooks/use-identify-number';
 import { users_T } from '@/types/user-types';
+
+// Network provider color configurations
+const networkColors: Record<
+    string,
+    { bg: string; text: string; border: string }
+> = {
+    Globe: {
+        bg: 'bg-[#23308F]',
+        text: 'text-white',
+        border: 'border-[#23308F]',
+    },
+    Smart: {
+        bg: 'bg-[#099343]',
+        text: 'text-white',
+        border: 'border-[#099343]',
+    },
+    TNT: {
+        bg: 'bg-[#FD9D22]',
+        text: 'text-[#D7E600]',
+        border: 'border-[#D7E600]',
+    },
+    'Sun Cellular': {
+        bg: 'bg-[#FDB810]',
+        text: 'text-[#ED2C2B]',
+        border: 'border-[#FDB810]',
+    },
+    DITO: {
+        bg: 'bg-[#CD1025]',
+        text: 'text-white',
+        border: 'border-[#CD1025]',
+    },
+    Unknown: {
+        bg: 'bg-muted',
+        text: 'text-muted-foreground',
+        border: 'border-muted',
+    },
+};
 
 type ViewUserProps = {
     user: users_T;
@@ -63,18 +102,32 @@ function ViewUser({ user, children }: ViewUserProps) {
         return 'N/A';
     };
 
-    return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader className="sticky top-0 z-10 bg-background">
-                    <SheetTitle>User Details</SheetTitle>
-                    <SheetDescription>
-                        View detailed information about this user account.
-                    </SheetDescription>
-                </SheetHeader>
+    const phoneNumberInfo = useIdentifyNumber(getUserPhoneNumber(user));
 
-                <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
+    const getUserStatus = (user: users_T) => {
+        const status =
+            user.citizen_details?.status ||
+            user.official_details?.status ||
+            user.status ||
+            'Active';
+        return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    };
+
+    return (
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                    <DialogTitle>User Details</DialogTitle>
+                    <DialogDescription>
+                        View detailed information about this user account.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex w-full flex-1 flex-col justify-start gap-10 overflow-y-auto px-6 py-4">
                     {/* Basic Information */}
                     <div className="flex flex-row items-center gap-4">
                         <Avatar className="h-16 w-16">
@@ -82,60 +135,83 @@ function ViewUser({ user, children }: ViewUserProps) {
                                 {getInitials(user)}
                             </AvatarFallback>
                         </Avatar>
-                        <div className="text-left">
-                            <h3 className="text-xl font-semibold">
-                                {getUserFullName(user)}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                                {user.email}
-                            </p>
+                        <div className="flex w-full flex-row justify-between">
+                            <div className="text-left">
+                                <h3 className="text-xl font-semibold">
+                                    {getUserFullName(user)}
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {user.email}
+                                </p>
+                            </div>
+                            <Badge
+                                className={`inline-flex h-fit items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${
+                                    getUserStatus(user) === 'Active'
+                                        ? 'bg-green-800 dark:bg-green-900'
+                                        : 'bg-gray-800'
+                                }`}
+                            >
+                                {getUserStatus(user)}
+                            </Badge>
                         </div>
                     </div>
                     {/* Contact Information & Role */}
                     <div className="flex w-full flex-col gap-6">
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-2">
                             <div className="grid">
-                                <p className="text-sm font-medium text-[var(--gray)]">
+                                <p className="text-sm font-medium text-muted-foreground">
                                     Contact Information
                                 </p>
                             </div>
-                            <div className="grid gap-4">
-                                <Label htmlFor="email">Email</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={user.email}
-                                        readOnly
-                                        tabIndex={-1}
-                                        placeholder="Enter email address"
-                                        className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                                    />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={user.email}
+                                            readOnly
+                                            tabIndex={-1}
+                                            placeholder="Enter email address"
+                                            className="border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="grid gap-4">
-                                <Label htmlFor="contact">Contact Number</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="contact"
-                                        type="tel"
-                                        value={getUserPhoneNumber(user)}
-                                        readOnly
-                                        tabIndex={-1}
-                                        placeholder="Enter contact number"
-                                        className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                                    />
+                                <div className="grid gap-2">
+                                    <Label htmlFor="contact">
+                                        Contact Number
+                                    </Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            id="contact"
+                                            type="tel"
+                                            value={getUserPhoneNumber(user)}
+                                            readOnly
+                                            tabIndex={-1}
+                                            placeholder="Enter contact number"
+                                            className="border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                        />
+                                        {phoneNumberInfo.network !==
+                                            'Unknown' && (
+                                            <Badge
+                                                className={`${networkColors[phoneNumberInfo.carrier]?.bg || networkColors[phoneNumberInfo.network]?.bg} ${networkColors[phoneNumberInfo.carrier]?.text || networkColors[phoneNumberInfo.network]?.text} ${networkColors[phoneNumberInfo.carrier]?.border || networkColors[phoneNumberInfo.network]?.border} absolute right-10 rounded-[var(--radius)] border`}
+                                            >
+                                                {phoneNumberInfo.carrier}
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div className="flex flex-col gap-2">
                             <div className="grid">
-                                <p className="text-sm font-medium text-[var(--gray)]">
+                                <p className="text-sm font-medium text-muted-foreground">
                                     Role & Location
                                 </p>
                             </div>
                             <div className="flex w-full flex-row gap-4">
-                                <div className="grid flex-1 gap-4">
+                                <div className="grid flex-1 gap-2">
                                     <Label htmlFor="role">Role</Label>
                                     <div className="relative">
                                         <Input
@@ -149,26 +225,29 @@ function ViewUser({ user, children }: ViewUserProps) {
                                             readOnly
                                             tabIndex={-1}
                                             placeholder="Enter role address"
-                                            className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                            className="border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                                         />
                                     </div>
                                 </div>
-                                <div className="grid flex-1 gap-4">
-                                    <Label htmlFor="contact">
-                                        Assigned Barangay
+                                <div className="grid flex-1 gap-2">
+                                    <Label htmlFor="location">
+                                        Assigned Location
                                     </Label>
                                     <div className="relative">
                                         <Input
-                                            id="contact"
-                                            type="tel"
+                                            id="location"
+                                            type="text"
                                             value={
                                                 user.citizen_details
-                                                    ?.barangay || 'N/A'
+                                                    ?.barangay ||
+                                                user.official_details
+                                                    ?.assigned_brgy ||
+                                                'N/A'
                                             }
                                             readOnly
                                             tabIndex={-1}
-                                            placeholder="Enter contact number"
-                                            className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                            placeholder="Assigned location"
+                                            className="border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
                                         />
                                     </div>
                                 </div>
@@ -177,16 +256,16 @@ function ViewUser({ user, children }: ViewUserProps) {
                     </div>
                 </div>
 
-                <SheetFooter className="sticky bottom-0 z-10 bg-background px-4">
-                    <SheetClose asChild>
+                <DialogFooter className="flex-shrink-0 px-6 pb-4">
+                    <DialogClose asChild>
                         <Button variant="outline">
                             <MoveLeft className="h-6 w-6" />
-                            Return
+                            Close
                         </Button>
-                    </SheetClose>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 

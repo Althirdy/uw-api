@@ -8,6 +8,16 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,16 +25,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/use-toast';
 import { cn } from '@/lib/utils';
@@ -163,7 +163,7 @@ function EditLocation({
                 reset();
             },
             onError: () => {
-                // Keep the sheet open to show errors
+                // Keep the dialog open to show errors
                 toast({
                     title: 'Error',
                     description:
@@ -207,19 +207,25 @@ function EditLocation({
     };
 
     return (
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={onSubmit} className="flex h-full flex-col">
-                    <SheetHeader className="sticky top-0 z-10 bg-background pb-4">
-                        <SheetTitle className="flex items-center gap-2">
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={onSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle className="flex items-center gap-2">
                             Edit Location
-                        </SheetTitle>
-                        <SheetDescription>
+                        </DialogTitle>
+                        <DialogDescription>
                             Update the location details and coordinates.
-                        </SheetDescription>
-                    </SheetHeader>
-                    <div className="flex-1 overflow-y-auto px-4 py-6 pb-20">
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto px-6 py-4 pb-20">
                         <div className="grid auto-rows-min gap-6">
                             <div className="grid gap-3">
                                 <div>
@@ -589,16 +595,9 @@ function EditLocation({
                             </div>
                         </div>
                     </div>
-                    <SheetFooter className="sticky bottom-0 z-10 bg-background px-4 pt-4">
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
                         <div className="flex w-full gap-2">
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="flex-1"
-                            >
-                                {processing ? 'Saving...' : 'Save Changes'}
-                            </Button>
-                            <SheetClose asChild>
+                            <DialogClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
@@ -608,12 +607,19 @@ function EditLocation({
                                 >
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-2"
+                            >
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

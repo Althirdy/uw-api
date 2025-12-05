@@ -18,53 +18,53 @@ class UserSeeder extends Seeder
     {
         // Create Operator User
         User::firstOrCreate(
-            ['email' => 'nico@gmail.com'],
+            ['email' => 'jericotagorda@gmail.com'],
             [
                 'role_id' => 1,
-                'name' => 'Nico Saydallus',
+                'name' => 'Jerico Tagorda',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
             ]
         );
 
         OfficialsDetails::firstOrCreate(
-            ['user_id' => User::where('email', 'nico@gmail.com')->first()->id],
+            ['user_id' => User::where('email', 'jericotagorda@gmail.com')->first()->id],
             [
                 'contact_number' => '+63 912-345-6789',
-                'first_name' => 'Nico',
-                'middle_name' => 'M.',
-                'last_name' => 'Saydallus',
+                'first_name' => 'Jerico',
+                'middle_name' => '',
+                'last_name' => 'Tagorda',
                 'suffix' => null,
-                'office_address' => 'ph1 Barangay 176-E Near Sto Nino Parish',
+                'office_address' => 'Phase 9 Package 7A, Brgy, 176 E Bagong Silang, Caloocan',
                 'assigned_brgy' => 'Barangay 176-E',
-                'latitude' => '14.5995',
-                'longitude' => '120.9842',
+                'latitude' => '14.779280528659992',
+                'longitude' => ' 121.0363472121374',
                 'status' => 'active',
             ]
         );
 
         // Create Purok Leader User
         User::firstOrCreate(
-            ['email' => 'adoracion@gmail.com'],
+            ['email' => 'nestorparungao@gmail.com'],
             [
                 'role_id' => 2,
-                'name' => 'Adoracion S. Jumadiao',
+                'name' => 'Nestor Parungao',
                 'password' => Hash::make('1001'),
                 'email_verified_at' => now(),
             ]
         );
         OfficialsDetails::firstOrCreate(
-            ['user_id' => User::where('email', 'adoracion@gmail.com')->first()->id],
+            ['user_id' => User::where('email', 'nestorparungao@gmail.com')->first()->id],
             [
                 'contact_number' => '+63 987-654-3210',
-                'first_name' => 'Adoracion',
-                'middle_name' => 'S.',
-                'last_name' => 'Jumadiao',
+                'first_name' => 'Nestor',
+                'middle_name' => '',
+                'last_name' => 'Parungao',
                 'suffix' => null,
-                'office_address' => 'Pkg 1A Bicolandia',
+                'office_address' => 'Phase 7A Lakan',
                 'assigned_brgy' => 'Barangay 176-E',
-                'latitude' => '14.6095',
-                'longitude' => '120.9742',
+                'latitude' => '14.77967214227513',
+                'longitude' => ' 121.03578998323289',
                 'status' => 'active',
             ]
         );

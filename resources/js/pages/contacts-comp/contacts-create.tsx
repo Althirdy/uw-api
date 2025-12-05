@@ -8,6 +8,16 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,16 +25,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/use-toast';
 import { cn } from '@/lib/utils';
@@ -102,8 +102,8 @@ type SelectionState = {
 };
 
 function AddContacts() {
-    // Sheet control state
-    const [sheetOpen, setSheetOpen] = useState(false);
+    // Dialog control state
+    const [dialogOpen, setDialogOpen] = useState(false);
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
     // Mobile number validation function
@@ -268,7 +268,7 @@ function AddContacts() {
         post('/contacts', {
             onSuccess: () => {
                 reset();
-                setSheetOpen(false);
+                setDialogOpen(false);
                 setHasAttemptedSubmit(false);
                 // Reset all state when successful
                 setBranchUnitNameState({ value: null, open: false });
@@ -292,10 +292,10 @@ function AddContacts() {
     };
 
     return (
-        <Sheet
-            open={sheetOpen}
+        <Dialog
+            open={dialogOpen}
             onOpenChange={(open) => {
-                setSheetOpen(open);
+                setDialogOpen(open);
                 if (!open) {
                     // Reset all states when closing
                     setHasAttemptedSubmit(false);
@@ -307,21 +307,27 @@ function AddContacts() {
                 }
             }}
         >
-            <SheetTrigger asChild>
+            <DialogTrigger asChild>
                 <Button>
                     <Plus className="h-4 w-4" /> Add Contacts
                 </Button>
-            </SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={onSubmit} className="flex h-full flex-col">
-                    <SheetHeader className="flex-shrink-0 pb-4">
-                        <SheetTitle>Add Contacts</SheetTitle>
-                        <SheetDescription>
+            </DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={onSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle>Add Contacts</DialogTitle>
+                        <DialogDescription>
                             Responder details, barangay, phones and service
                             radius
-                        </SheetDescription>
-                    </SheetHeader>
-                    <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
                         <div className="space-y-4">
                             {/* Contact Person (Optional) */}
                             <div>
@@ -739,16 +745,9 @@ function AddContacts() {
                             </div>
                         </div>
                     </div>
-                    <SheetFooter className="flex-shrink-0 bg-background px-4 py-4">
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
                         <div className="flex w-full gap-2">
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="flex-1"
-                            >
-                                {processing ? 'Creating...' : 'Add Contact'}
-                            </Button>
-                            <SheetClose asChild>
+                            <DialogClose asChild>
                                 <Button
                                     variant="outline"
                                     type="button"
@@ -756,12 +755,19 @@ function AddContacts() {
                                 >
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-2"
+                            >
+                                {processing ? 'Creating...' : 'Add Contact'}
+                            </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

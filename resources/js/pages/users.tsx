@@ -6,12 +6,13 @@ import { Head } from '@inertiajs/react';
 import { List, Table } from 'lucide-react';
 import { useState } from 'react';
 
+import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { PaginatedUsers, users_T } from '@/types/user-types';
-import CreateUsers from './users-comp/users-create';
 import UserCard from './users-comp/users-card';
-import UserTable from './users-comp/users-table';
+import CreateUsers from './users-comp/users-create';
 import UserActionTab from './users-comp/users-tab';
+import UserTable from './users-comp/users-table';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -23,9 +24,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function Users({
     users,
     roles,
+    locations,
 }: {
     users: PaginatedUsers;
     roles: roles_T[];
+    locations: location_T[];
 }) {
     const [filtered_users, setFilteredUsers] = useState<users_T[]>(users.data);
 
@@ -33,7 +36,7 @@ export default function Users({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users" />
             <div className="space-y-4 p-4">
-                <CreateUsers roles={roles} />
+                <CreateUsers roles={roles} locations={locations} />
 
                 <Tabs defaultValue="table" className="w-full space-y-2">
                     <div className="flex flex-row gap-4">
@@ -59,10 +62,18 @@ export default function Users({
                     </div>
 
                     <TabsContent value="table" className="w-full">
-                        <UserTable users={filtered_users} roles={roles} />
+                        <UserTable
+                            users={filtered_users}
+                            roles={roles}
+                            locations={locations}
+                        />
                     </TabsContent>
                     <TabsContent value="card" className="w-full">
-                        <UserCard users={filtered_users} roles={roles} />
+                        <UserCard
+                            users={filtered_users}
+                            roles={roles}
+                            locations={locations}
+                        />
                     </TabsContent>
                 </Tabs>
             </div>
