@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useIdentifyNumber } from '@/hooks/use-identify-number';
 import { Contact } from '@/types/contacts-types';
 import { MoveLeft } from 'lucide-react';
 import React from 'react';
@@ -21,6 +22,43 @@ interface ViewContactsProps {
     contact: Contact;
     children?: React.ReactNode;
 }
+
+// Network provider color configurations
+const networkColors: Record<
+    string,
+    { bg: string; text: string; border: string }
+> = {
+    Globe: {
+        bg: 'bg-[#23308F]',
+        text: 'text-white',
+        border: 'border-[#23308F]',
+    },
+    Smart: {
+        bg: 'bg-[#099343]',
+        text: 'text-white',
+        border: 'border-[#099343]',
+    },
+    TNT: {
+        bg: 'bg-[#FD9D22]',
+        text: 'text-[#D7E600]',
+        border: 'border-[#D7E600]',
+    },
+    'Sun Cellular': {
+        bg: 'bg-[#FDB810]',
+        text: 'text-[#ED2C2B]',
+        border: 'border-[#FDB810]',
+    },
+    DITO: {
+        bg: 'bg-[#CD1025]',
+        text: 'text-white',
+        border: 'border-[#CD1025]',
+    },
+    Unknown: {
+        bg: 'bg-muted',
+        text: 'text-muted-foreground',
+        border: 'border-muted',
+    },
+};
 
 const responderTypeColors: Record<string, string> = {
     Fire: 'bg-red-600 text-white',
@@ -53,6 +91,10 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
         return name.charAt(0).toUpperCase() || '?';
     };
 
+    // Phone number network identification
+    const primaryPhoneInfo = useIdentifyNumber(contact.primary_mobile || '');
+    const backupPhoneInfo = useIdentifyNumber(contact.backup_mobile || '');
+
     return (
         <Dialog>
             <DialogTrigger asChild>{children}</DialogTrigger>
@@ -79,9 +121,9 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
                                     {getDisplayName()}
                                 </h3>
 
-                                    {contact.contact_person && (
-                                        <span className="text-md font-normal text-muted-foreground">
-                                            {contact.branch_unit_name}
+                                {contact.contact_person && (
+                                    <span className="text-md font-normal text-muted-foreground">
+                                        {contact.branch_unit_name}
                                     </span>
                                 )}
                             </div>
@@ -197,13 +239,23 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
                                     >
                                         Primary Contact
                                     </Label>
-                                    <Input
-                                        id="primary-mobile"
-                                        value={contact.primary_mobile}
-                                        readOnly
-                                        tabIndex={-1}
-                                        className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                                    />
+                                    <div className="relative flex items-center">
+                                        <Input
+                                            id="primary-mobile"
+                                            value={contact.primary_mobile}
+                                            readOnly
+                                            tabIndex={-1}
+                                            className="cursor-not-allowed border-none bg-muted pr-20 select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                        />
+                                        {primaryPhoneInfo.network !==
+                                            'Unknown' && (
+                                            <Badge
+                                                className={`${networkColors[primaryPhoneInfo.carrier]?.bg || networkColors[primaryPhoneInfo.network]?.bg} ${networkColors[primaryPhoneInfo.carrier]?.text || networkColors[primaryPhoneInfo.network]?.text} ${networkColors[primaryPhoneInfo.carrier]?.border || networkColors[primaryPhoneInfo.network]?.border} absolute right-2 rounded-[var(--radius)] border`}
+                                            >
+                                                {primaryPhoneInfo.carrier}
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="w-full space-y-2">
                                     <Label
@@ -212,13 +264,26 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
                                     >
                                         Backup Contact
                                     </Label>
-                                    <Input
-                                        id="backup-mobile"
-                                        value={contact.backup_mobile || 'N/A'}
-                                        readOnly
-                                        tabIndex={-1}
-                                        className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                                    />
+                                    <div className="relative flex items-center">
+                                        <Input
+                                            id="backup-mobile"
+                                            value={
+                                                contact.backup_mobile || 'N/A'
+                                            }
+                                            readOnly
+                                            tabIndex={-1}
+                                            className="cursor-not-allowed border-none bg-muted pr-20 select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                        />
+                                        {contact.backup_mobile &&
+                                            backupPhoneInfo.network !==
+                                                'Unknown' && (
+                                                <Badge
+                                                    className={`${networkColors[backupPhoneInfo.carrier]?.bg || networkColors[backupPhoneInfo.network]?.bg} ${networkColors[backupPhoneInfo.carrier]?.text || networkColors[backupPhoneInfo.network]?.text} ${networkColors[backupPhoneInfo.carrier]?.border || networkColors[backupPhoneInfo.network]?.border} absolute right-2 rounded-[var(--radius)] border`}
+                                                >
+                                                    {backupPhoneInfo.carrier}
+                                                </Badge>
+                                            )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
