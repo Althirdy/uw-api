@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\PurokLeader;
 
+use App\Events\ConcernStatusUpdated;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Models\ConcernDistribution;
 use App\Models\Citizen\Concern;
@@ -129,7 +130,16 @@ class ConcernController extends BaseApiController
 
             DB::commit();
 
-            // TODO: Trigger event to notify citizen of status update
+            // Trigger event to notify citizen of status update
+            $purokLeader = auth()->user();
+            event(new ConcernStatusUpdated(
+                $concern->fresh(),
+                $distribution->fresh(),
+                $previousStatus,
+                $status,
+                $purokLeader,
+                $remarks
+            ));
 
             return $this->sendResponse([
                 'concern_id' => $id,

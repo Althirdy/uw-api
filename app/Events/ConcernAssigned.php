@@ -57,6 +57,9 @@ class ConcernAssigned implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
+        // Load relationships to avoid serialization issues in queue
+        $this->concern->loadMissing('citizen');
+        
         return [
             'concern' => [
                 'id' => $this->concern->id,
