@@ -1,16 +1,16 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { formatDateTime } from '@/lib/utils';
 import { PublicPost_T } from '@/types/public-post-types';
 import { router } from '@inertiajs/react';
@@ -86,12 +86,15 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
     };
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader>
-                    <SheetTitle>Public Post Details</SheetTitle>
-                    <SheetDescription className="flex flex-col gap-1">
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                    <DialogTitle>Public Post Details</DialogTitle>
+                    <DialogDescription className="flex flex-col gap-1">
                         <span>Post ID: #{post.id}</span>
                         <Badge
                             variant={statusInfo.variant}
@@ -99,9 +102,9 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                         >
                             {statusInfo.label}
                         </Badge>
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="flex w-full flex-col justify-start gap-4 px-4 py-2">
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex w-full flex-1 flex-col justify-start gap-4 overflow-y-auto px-6 py-4">
                     {/* Report Preview */}
                     <div className="flex flex-col gap-2">
                         <p className="text-md font-medium">Report Snapshot</p>
@@ -177,43 +180,43 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                         ])}
                     </div>
                 </div>
-                <SheetFooter>
-                    <SheetClose asChild>
-                        <div className="flex w-full flex-col items-end justify-end gap-2">
-                            {!post.published_at ? (
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={handlePublish}
-                                    className="w-1/3 cursor-pointer py-6"
-                                >
-                                    <Globe className="mr-2 inline h-4 w-4" />
-                                    Publish Now
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleUnpublish}
-                                    className="w-1/3 cursor-pointer py-6"
-                                >
-                                    <Eye className="mr-2 inline h-4 w-4" />
-                                    Unpublish
-                                </Button>
-                            )}
+                <DialogFooter className="flex-shrink-0 px-6 pb-4">
+                    <div className="flex w-full gap-2">
+                        <DialogClose asChild>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="w-1/4 cursor-pointer py-4"
+                                className="flex-1 cursor-pointer py-4"
                             >
                                 <MoveLeft className="mr-2 inline h-4 w-4" />
-                                Return
+                                Close
                             </Button>
-                        </div>
-                    </SheetClose>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
+                        </DialogClose>
+                        {!post.published_at ? (
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={handlePublish}
+                                className="flex-2 cursor-pointer py-4"
+                            >
+                                <Globe className="mr-2 inline h-4 w-4" />
+                                Publish Now
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleUnpublish}
+                                className="flex-2 cursor-pointer py-4"
+                            >
+                                <Eye className="mr-2 inline h-4 w-4" />
+                                Unpublish
+                            </Button>
+                        )}
+                    </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 

@@ -7,6 +7,8 @@ use App\Http\Requests\Citizen\ConcernRequest;
 use App\Http\Requests\Citizen\UpdateConcernRequest;
 use App\Models\Citizen\Concern;
 use App\Models\IncidentMedia;
+use App\Models\ConcernDistribution;
+use App\Events\ConcernAssigned;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -79,12 +81,23 @@ class ManualConcernController extends BaseApiController
         DB::beginTransaction();
 
         try {
+            // 🔍 Step 0: Determine Concern Type & Prepare Data
+            $concernType = $validated['type'];
+            
+            if ($concernType === 'voice') {
+                $title = 'Voice Concern - ' . now()->format('M d, Y H:i');
+                $description = 'Audio recording received. Transcription pending...';
+            } else {
+                $title = $validated['title'];
+                $description = $validated['description'];
+            }
+
             // 🟢 Step 1: Create the Concern record
             $concern = Concern::create([
-                'type' => 'manual',
-                'citizen_id' => auth()->id(), // Use authenticated user's ID
-                'title' => $validated['title'],
-                'description' => $validated['description'],
+                'type' => $concernType,
+                'citizen_id' => auth()->id(),
+                'title' => $title,
+                'description' => $description,
                 'status' => 'pending',
                 'category' => $validated['category'],
                 'severity' => 'low',
@@ -93,7 +106,8 @@ class ManualConcernController extends BaseApiController
                 'latitude' => $validated['latitude'] ?? null,
             ]);
 
-            $uploadedMedia = [];
+            $uploadedImages = [];
+            $audioUrl = null;
 
             // 🟡 Step 2: Handle file uploads
             if ($request->hasFile('files')) {
@@ -107,27 +121,49 @@ class ManualConcernController extends BaseApiController
 
                 // 🟣 Step 3: Save uploaded files in the database
                 foreach ($uploadResults['successful'] as $upload) {
-                    $media = IncidentMedia::create([
+                    $mimeType = $upload['mime_type'] ?? '';
+                    $isAudio = str_starts_with($mimeType, 'audio/');
+                    $mediaType = $isAudio ? 'audio' : 'image';
+                    
+                    if ($isAudio) {
+                        $audioUrl = $upload['public_url'];
+                    } else {
+                        $uploadedImages[] = $upload['public_url'];
+                    }
+
+                    IncidentMedia::create([
                         'source_type' => \App\Models\Citizen\Concern::class,
                         'source_id' => $concern->id,
                         'source_category' => 'citizen_concern',
-                        'media_type' => 'image', // you can later detect type dynamically
+                        'media_type' => $mediaType,
                         'original_path' => $upload['public_url'] ?? null,
                         'blurred_path' => null,
                         'public_id' => $upload['storage_path'] ?? null,
                         'original_filename' => $upload['original_filename'] ?? null,
                         'file_size' => $upload['file_size'] ?? null,
-                        'mime_type' => $upload['mime_type'] ?? null,
+                        'mime_type' => $mimeType,
                         'captured_at' => now(),
                     ]);
-
-                    $uploadedMedia[] = $media->original_path;
                 }
             }
 
+            // 🔵 Step 4: Distribute concern to purok leader
+            // TODO: Replace hardcoded purok_leader_id with actual location-based logic
+            $purokLeaderId = 2;
+
+            $distribution = ConcernDistribution::create([
+                'concern_id' => $concern->id,
+                'purok_leader_id' => $purokLeaderId,
+                'status' => 'assigned',
+                'assigned_at' => now(),
+            ]);
+
             DB::commit();
 
-            // 🟢 Step 4: Return successful response
+            // 🟣 Step 5: Broadcast real-time notification to purok leader
+            event(new ConcernAssigned($concern, $distribution, $uploadedImages, $audioUrl));
+
+            // 🟢 Step 6: Return successful response
             return $this->sendResponse([
                 'concern' => [
                     'id' => $concern->id,
@@ -137,7 +173,9 @@ class ManualConcernController extends BaseApiController
                     'severity' => $concern->severity,
                     'status' => $concern->status,
                     'created_at' => $concern->created_at,
-                    'images' => $uploadedMedia,
+                    'images' => $uploadedImages,
+                    'audio' => $audioUrl,
+                    'summary' => null,
                 ],
             ], 'Concern submitted successfully!');
         } catch (\Exception $e) {

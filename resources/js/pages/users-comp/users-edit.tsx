@@ -1,5 +1,13 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -9,23 +17,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetFooter,
-    SheetHeader,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
 import { useForm } from '@inertiajs/react';
-import { MoveLeft } from 'lucide-react';
 import { FormEvent } from 'react';
 
 type EditUserProps = {
     user: users_T;
     roles: roles_T[];
+    locations: location_T[];
     children: React.ReactNode;
 };
 
@@ -53,7 +54,7 @@ type EditUserForm = {
     longitude: string;
 };
 
-function EditUser({ user, roles, children }: EditUserProps) {
+function EditUser({ user, roles, locations, children }: EditUserProps) {
     // Function to generate initials from user's name
     const getInitials = (user: users_T) => {
         let firstName = '';
@@ -135,7 +136,7 @@ function EditUser({ user, roles, children }: EditUserProps) {
             onSuccess: (page) => {
                 reset();
                 const closeButton = document.querySelector(
-                    '[data-sheet-close]',
+                    '[data-dialog-close]',
                 ) as HTMLButtonElement;
                 if (closeButton) closeButton.click();
             },
@@ -145,11 +146,17 @@ function EditUser({ user, roles, children }: EditUserProps) {
     };
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="mb-6 flex-shrink-0">
                         <div className="flex flex-row items-center gap-4">
                             <Avatar className="h-14 w-14">
                                 <AvatarFallback className="bg-primary text-2xl font-semibold text-primary-foreground">
@@ -165,171 +172,186 @@ function EditUser({ user, roles, children }: EditUserProps) {
                                 </p>
                             </div>
                         </div>
-                    </SheetHeader>
+                    </DialogHeader>
 
-                    <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
-                        {/* Basic Information */}
-
+                    <div className="flex-1 space-y-6 overflow-y-auto">
                         {/* Contact Information & Role */}
                         <div className="flex w-full flex-col gap-6">
-                            <div className="grid flex-1 auto-rows-min gap-2">
-                                <div className="grid gap-3">
-                                    <p className="text-sm font-medium text-[var(--gray)]">
+                            <div className="grid flex-1 auto-rows-min gap-4">
+                                <div className="grid">
+                                    <p className="text-sm font-medium text-muted-foreground">
                                         Personal Information
                                     </p>
                                 </div>
-                                <div className="grid gap-3">
-                                    <Label htmlFor="first-name">
-                                        First Name
-                                    </Label>
-                                    <div className="relative">
+                                {/* First Name and Middle name */}
+                                <div className="grid w-full grid-cols-5 gap-4">
+                                    <div className="col-span-3 grid gap-2">
+                                        <Label htmlFor="first-name">
+                                            First Name
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="first-name"
+                                                value={data.first_name}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'first_name',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Enter first name"
+                                                className={
+                                                    errors.first_name
+                                                        ? 'border-[var(--destructive)] focus:ring-[var(--ring)]'
+                                                        : ''
+                                                }
+                                            />
+                                            {errors.first_name && (
+                                                <span className="absolute -bottom-5 left-0 text-xs text-[var(--destructive)]">
+                                                    {errors.first_name}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="col-span-2 grid gap-2">
+                                        <Label htmlFor="middle-name">
+                                            Middle Name
+                                        </Label>
                                         <Input
-                                            id="first-name"
-                                            value={data.first_name}
+                                            id="middle-name"
+                                            value={data.middle_name}
                                             onChange={(e) =>
                                                 setData(
-                                                    'first_name',
+                                                    'middle_name',
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="Enter first name"
-                                            className={
-                                                errors.first_name
-                                                    ? 'border-[var(--destructive)] focus:ring-[var(--ring)]'
-                                                    : ''
-                                            }
+                                            placeholder="Enter middle name (optional)"
                                         />
-                                        {errors.first_name && (
-                                            <span className="absolute -bottom-5 left-0 text-xs text-[var(--destructive)]">
-                                                {errors.first_name}
-                                            </span>
-                                        )}
                                     </div>
                                 </div>
-                                <div className="grid gap-3">
-                                    <Label htmlFor="middle-name">
-                                        Middle Name
-                                    </Label>
-                                    <Input
-                                        id="middle-name"
-                                        value={data.middle_name}
-                                        onChange={(e) =>
-                                            setData(
-                                                'middle_name',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="Enter middle name (optional)"
-                                    />
-                                </div>
-                                <div className="grid gap-3">
-                                    <Label htmlFor="last-name">Last Name</Label>
-                                    <div className="relative">
+                                {/* Last Name and Suffix */}
+                                <div className="grid w-full grid-cols-4 gap-4">
+                                    <div className="col-span-3 grid gap-2">
+                                        <Label htmlFor="last-name">
+                                            Last Name
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="last-name"
+                                                value={data.last_name}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'last_name',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Enter last name"
+                                                className={
+                                                    errors.last_name
+                                                        ? 'border-red-500 focus:ring-red-500'
+                                                        : ''
+                                                }
+                                            />
+                                            {errors.last_name && (
+                                                <span className="absolute -bottom-5 left-0 text-xs text-red-500">
+                                                    {errors.last_name}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="col-span-1 grid gap-2">
+                                        <Label htmlFor="suffix">
+                                            Suffix (Optional)
+                                        </Label>
                                         <Input
-                                            id="last-name"
-                                            value={data.last_name}
+                                            id="suffix"
+                                            value={data.suffix}
                                             onChange={(e) =>
                                                 setData(
-                                                    'last_name',
+                                                    'suffix',
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="Enter last name"
-                                            className={
-                                                errors.last_name
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : ''
-                                            }
+                                            placeholder="Jr., Sr., III, etc."
                                         />
-                                        {errors.last_name && (
-                                            <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                {errors.last_name}
-                                            </span>
-                                        )}
                                     </div>
-                                </div>
-                                <div className="grid gap-3">
-                                    <Label htmlFor="suffix">
-                                        Suffix (Optional)
-                                    </Label>
-                                    <Input
-                                        id="suffix"
-                                        value={data.suffix}
-                                        onChange={(e) =>
-                                            setData('suffix', e.target.value)
-                                        }
-                                        placeholder="Jr., Sr., III, etc."
-                                    />
                                 </div>
                             </div>
                             <div className="flex flex-col gap-4">
                                 <div className="grid">
-                                    <p className="text-sm font-medium text-[var(--gray)]">
+                                    <p className="text-sm font-medium text-[var(--color-text-muted)]">
                                         Contact Information
                                     </p>
                                 </div>
-                                <div className="grid gap-4">
-                                    <Label htmlFor="email">Email</Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="email"
-                                            type="email"
-                                            value={data.email}
-                                            onChange={(e) =>
-                                                setData('email', e.target.value)
-                                            }
-                                            placeholder="Enter email address"
-                                            className={
-                                                errors.email
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : ''
-                                            }
-                                        />
-                                        {errors.email && (
-                                            <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                {errors.email}
-                                            </span>
-                                        )}
+                                <div className="grid w-full grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                value={data.email}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'email',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Enter email address"
+                                                className={
+                                                    errors.email
+                                                        ? 'border-red-500 focus:ring-red-500'
+                                                        : ''
+                                                }
+                                            />
+                                            {errors.email && (
+                                                <span className="absolute -bottom-5 left-0 text-xs text-red-500">
+                                                    {errors.email}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="grid gap-4">
-                                    <Label htmlFor="contact">
-                                        Contact Number
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="contact"
-                                            type="number"
-                                            value={data.phone_number}
-                                            onChange={(e) =>
-                                                setData(
-                                                    'phone_number',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Enter contact number"
-                                            className={
-                                                errors.phone_number
-                                                    ? 'border-red-500 focus:ring-red-500'
-                                                    : ''
-                                            }
-                                        />
-                                        {errors.phone_number && (
-                                            <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                {errors.phone_number}
-                                            </span>
-                                        )}
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="contact">
+                                            Contact Number
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="contact"
+                                                type="tel"
+                                                value={data.phone_number}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'phone_number',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Enter contact number"
+                                                className={
+                                                    errors.phone_number
+                                                        ? 'border-red-500 focus:ring-red-500'
+                                                        : ''
+                                                }
+                                            />
+                                            {errors.phone_number && (
+                                                <span className="absolute -bottom-5 left-0 text-xs text-red-500">
+                                                    {errors.phone_number}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-4">
                                 <div className="grid">
-                                    <p className="text-sm font-medium text-[var(--gray)]">
+                                    <p className="text-sm font-medium text-[var(--color-text-muted)]">
                                         Role & Location
                                     </p>
                                 </div>
-                                <div className="flex w-full flex-row gap-4">
-                                    <div className="grid flex-1 gap-4">
+                                <div className="grid w-full grid-cols-2 gap-4">
+                                    <div className="grid flex-1 gap-2">
                                         <Label htmlFor="role">Role</Label>
                                         <div className="relative">
                                             <Select
@@ -365,9 +387,9 @@ function EditUser({ user, roles, children }: EditUserProps) {
                                             )}
                                         </div>
                                     </div>
-                                    <div className="grid flex-1 gap-4">
-                                        <Label htmlFor="barangay">
-                                            Assigned Barangay
+                                    <div className="grid flex-1 gap-2">
+                                        <Label htmlFor="location">
+                                            Assigned Location
                                         </Label>
                                         <div className="relative">
                                             <Select
@@ -387,27 +409,25 @@ function EditUser({ user, roles, children }: EditUserProps) {
                                                             : ''
                                                     }
                                                 >
-                                                    <SelectValue placeholder="Select barangay" />
+                                                    <SelectValue placeholder="Select location" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="Barangay 176A">
-                                                        Barangay 176A
-                                                    </SelectItem>
-                                                    <SelectItem value="Barangay 176B">
-                                                        Barangay 176B
-                                                    </SelectItem>
-                                                    <SelectItem value="Barangay 176C">
-                                                        Barangay 176C
-                                                    </SelectItem>
-                                                    <SelectItem value="Barangay 176D">
-                                                        Barangay 176D
-                                                    </SelectItem>
-                                                    <SelectItem value="Barangay 176E">
-                                                        Barangay 176E
-                                                    </SelectItem>
-                                                    <SelectItem value="Barangay 176F">
-                                                        Barangay 176F
-                                                    </SelectItem>
+                                                    {locations.map(
+                                                        (location) => (
+                                                            <SelectItem
+                                                                key={
+                                                                    location.id
+                                                                }
+                                                                value={
+                                                                    location.location_name
+                                                                }
+                                                            >
+                                                                {
+                                                                    location.location_name
+                                                                }
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
                                                 </SelectContent>
                                             </Select>
                                             {errors.barangay && (
@@ -425,8 +445,8 @@ function EditUser({ user, roles, children }: EditUserProps) {
                                         Status
                                     </p>
                                 </div>
-                                <div className="flex w-auto flex-row gap-4">
-                                    <div className="grid flex-2 gap-4">
+                                <div className="flex w-auto flex-row gap-2">
+                                    <div className="grid flex-2 gap-2">
                                         <div className="relative">
                                             <Select
                                                 value={data.status}
@@ -467,31 +487,30 @@ function EditUser({ user, roles, children }: EditUserProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="px-4">
-                        <div className="flex w-full flex-row justify-end gap-2">
-                            <SheetClose asChild>
+                    <DialogFooter className="flex-shrink-0 bg-background pt-5">
+                        <div className="flex w-full gap-4">
+                            <DialogClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    data-sheet-close
-                                    className="cursor-pointer"
+                                    data-dialog-close
+                                    className="flex-1"
                                 >
-                                    <MoveLeft className="mr-2 h-4 w-4" />
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="cursor-pointer"
+                                className="flex-2"
                             >
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

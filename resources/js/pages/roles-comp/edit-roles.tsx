@@ -101,14 +101,15 @@ function EditRoles({ role }: { role: roles_T }) {
                             </div>
                         </div>
                     </div>
-                    <SheetFooter className="px-4">
-                        <Button type="submit" disabled={processing}>
+                    <SheetFooter className="px-4 flex gap-2">
+                        <Button type="submit" disabled={processing} className="flex-1">
                             {processing ? 'Saving...' : 'Save Changes'}
                         </Button>
                         <SheetClose asChild>
                             <Button
                                 type="button"
                                 variant="outline"
+                                className="flex-1"
                                 onClick={() => {
                                     reset();
                                     setData({

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Casts\Attribute; // Import the Attribute class
 
 class User extends Authenticatable
 {
@@ -21,7 +22,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'role_id',
-        'name',
+        'name', // Keep 'name' fillable, but accessor will override its display
         'first_name',
         'middle_name',
         'last_name',
@@ -53,6 +54,50 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's full name.
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn (string $value = null, array $attributes) => trim(
+                ($attributes['first_name'] ?? '') . ' ' .
+                (($attributes['middle_name'] ?? null) ? (($attributes['middle_name'] ?? '') . ' ') : '') .
+                ($attributes['last_name'] ?? '')
+            ),
+        );
+    }
+
+    /**
+     * Interact with the user's first name.
+     */
+    protected function firstName(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => ucwords(trim($value)),
+        );
+    }
+
+    /**
+     * Interact with the user's middle name.
+     */
+    protected function middleName(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => ucwords(trim($value)),
+        );
+    }
+
+    /**
+     * Interact with the user's last name.
+     */
+    protected function lastName(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => ucwords(trim($value)),
+        );
     }
 
     public function role()

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\IncidentMedia;
 use App\Models\User;
+use App\Models\ConcernDistribution;
+use App\Models\ConcernHistory;
 
 class Concern extends Model
 {
@@ -13,6 +15,7 @@ class Concern extends Model
 
     protected $fillable = [
         'citizen_id',
+        'tracking_code',
         'title',
         'type',
         'description',
@@ -34,5 +37,20 @@ class Concern extends Model
     public function media()
     {
         return $this->morphMany(IncidentMedia::class, 'source');
+    }
+
+    public function citizen()
+    {
+        return $this->belongsTo(User::class, 'citizen_id');
+    }
+
+    public function distribution()
+    {
+        return $this->hasOne(ConcernDistribution::class, 'concern_id');
+    }
+
+    public function histories()
+    {
+        return $this->hasMany(ConcernHistory::class, 'concern_id')->orderBy('created_at', 'desc');
     }
 }

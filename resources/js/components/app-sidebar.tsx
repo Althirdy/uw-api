@@ -10,7 +10,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import {
-    dashboard,
+    contacts,
     devices,
     locations,
     publicPosts,
@@ -23,7 +23,7 @@ import {
     File,
     FlagTriangleRight,
     Folder,
-    LayoutGrid,
+    LayoutDashboard,
     MapPin,
     User,
     Users,
@@ -33,28 +33,28 @@ import AppLogo from './app-logo';
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
+        href: '/dashboard',
+        icon: LayoutDashboard,
     },
     {
         title: 'Users',
-        href: users(),
+        href: users().url,
         icon: User,
     },
 
     {
         title: 'Public Posts',
-        href: publicPosts(),
+        href: publicPosts().url,
         icon: FlagTriangleRight,
     },
     {
         title: 'Reports',
-        href: reports(),
+        href: reports().url,
         icon: File,
     },
     {
         title: 'Locations',
-        href: locations(),
+        href: locations().url,
         icon: MapPin,
     },
     {
@@ -64,7 +64,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Contacts',
-        href: '/contacts',
+        href: contacts().url,
         icon: Users,
     },
 ];
@@ -84,12 +84,12 @@ const mainNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="inset" className="py-4">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={dashboard()} prefetch>
+                            <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

@@ -1,6 +1,14 @@
 import { MapModal } from '@/components/map-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,25 +18,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetFooter,
-    SheetHeader,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDateTime } from '@/lib/utils';
 import { reports_T } from '@/types/report-types';
 import { useForm } from '@inertiajs/react';
-import {
-    Globe,
-    LocateFixed,
-    MoveLeft,
-    TriangleAlert,
-    User,
-} from 'lucide-react';
+import { Globe, LocateFixed, TriangleAlert, User } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type EditReportProps = {
@@ -92,11 +86,17 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
     };
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
                         <div className="flex flex-row items-center gap-4">
                             <div className="text-left">
                                 <h3 className="text-xl font-semibold">
@@ -124,9 +124,9 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                 </div>
                             </div>
                         </div>
-                    </SheetHeader>
+                    </DialogHeader>
 
-                    <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
                         {/* Report Information */}
                         <div className="flex w-full flex-col gap-6">
                             <div className="grid flex-1 auto-rows-min gap-2">
@@ -379,31 +379,30 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="px-4">
-                        <div className="flex w-full flex-row justify-end gap-2">
-                            <SheetClose asChild>
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
+                        <div className="flex w-full gap-2">
+                            <DialogClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    data-sheet-close
-                                    className="cursor-pointer"
+                                    data-dialog-close
+                                    className="flex-1"
                                 >
-                                    <MoveLeft className="mr-2 h-4 w-4" />
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="cursor-pointer"
+                                className="flex-2"
                             >
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

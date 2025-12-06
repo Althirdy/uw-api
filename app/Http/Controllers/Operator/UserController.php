@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Operator;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operator\UserRequest;
 use App\Models\CitizenDetails;
+use App\Models\Locations;
 use App\Models\OfficialsDetails;
 use App\Models\Roles;
 use App\Models\User;
@@ -57,10 +58,12 @@ class UserController extends Controller
                       ->withQueryString();
 
         $roles = Roles::all();
+        $locations = Locations::select('id', 'location_name', 'barangay')->get();
 
         return Inertia::render('users', [
             'users' => $users,
             'roles' => $roles,
+            'locations' => $locations,
             'filters' => $request->only(['search', 'role_id', 'barangay']),
         ]);
     }

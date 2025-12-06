@@ -12,7 +12,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
     const page = usePage();
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>Operator Dashboard</SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (
                     <SidebarMenuItem key={item.title}>
@@ -24,6 +24,7 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                                     : item.href.url,
                             )}
                             tooltip={{ children: item.title }}
+                            className="flex h-10 flex-row px-4 transition-all duration-300 active:scale-95"
                         >
                             <Link href={item.href} prefetch>
                                 {item.icon && <item.icon />}
