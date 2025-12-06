@@ -1,5 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,16 +25,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { toast } from '@/components/use-toast';
 import { useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
@@ -39,8 +39,8 @@ interface EditCCTVDevice {
 }
 
 function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
-    // Sheet control state
-    const [sheetOpen, setSheetOpen] = useState(false);
+    // Dialog control state
+    const [dialogOpen, setDialogOpen] = useState(false);
     const { data, setData, put, processing, errors, reset } = useForm({
         device_name: cctv?.device_name || '',
         primary_rtsp_url: cctv?.primary_rtsp_url || '',
@@ -76,7 +76,7 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
                     description: 'CCTV device updated successfully.',
                     variant: 'default',
                 });
-                setSheetOpen(false);
+                setDialogOpen(false);
             },
             onError: (errors) => {
                 console.log('Validation errors:', errors);
@@ -91,23 +91,29 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
     };
 
     return (
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
                 {children || (
                     <div className="cursor-pointer rounded-full p-2 hover:bg-primary/20">
                         <SquarePen size={20} />
                     </div>
                 )}
-            </SheetTrigger>
-            <SheetContent className="flex h-full flex-col">
-                <form onSubmit={onSubmit} className="flex h-full flex-col">
+            </DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={onSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
                     {/* Fixed Header */}
-                    <SheetHeader className="flex-shrink-0 border-b px-6 py-6">
-                        <SheetTitle>Edit CCTV Device</SheetTitle>
-                        <SheetDescription>
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle>Edit CCTV Device</DialogTitle>
+                        <DialogDescription>
                             Update the CCTV camera device configuration details.
-                        </SheetDescription>
-                    </SheetHeader>
+                        </DialogDescription>
+                    </DialogHeader>
 
                     {/* Scrollable Content */}
                     <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -393,9 +399,9 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
                     </div>
 
                     {/* Fixed Footer */}
-                    <SheetFooter className="flex-shrink-0 border-t bg-background px-6 py-4">
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
                         <div className="flex w-full gap-2">
-                            <SheetClose asChild>
+                            <DialogClose asChild>
                                 <Button
                                     variant="outline"
                                     type="button"
@@ -403,19 +409,19 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
                                 >
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="flex-1"
+                                className="flex-2"
                             >
                                 {processing ? 'Updating...' : 'Update CCTV'}
                             </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

@@ -1,16 +1,16 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { formatDateTime } from '@/lib/utils';
 import { reports_T } from '@/types/report-types';
 import { router } from '@inertiajs/react';
@@ -64,12 +64,15 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
         report.media && report.media.length > 0 ? report.media[0] : null;
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader className="sticky top-0 z-10 bg-background">
-                    <SheetTitle>Incident Details</SheetTitle>
-                    <SheetDescription className="flex flex-col gap-2">
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                    <DialogTitle>Incident Details</DialogTitle>
+                    <DialogDescription className="flex flex-col gap-2">
                         <span className="text-base font-semibold">
                             Report ID: #{report.id}
                         </span>
@@ -88,9 +91,9 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                                 {report.status.toUpperCase()}
                             </Badge>
                         </div>
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="flex w-full flex-col justify-start gap-4 px-4 py-2">
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex w-full flex-1 flex-col justify-start gap-4 overflow-y-auto px-6 py-4">
                     {/* Accident Image */}
                     <div className="flex flex-col gap-2">
                         <p className="text-md font-semibold">
@@ -175,19 +178,9 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         ])}
                     </div>
                 </div>
-                <SheetFooter className="sticky bottom-0 z-10 flex-shrink-0 border-t bg-background px-4 py-4">
+                <DialogFooter className="flex-shrink-0 px-6 py-4">
                     <div className="flex w-full gap-2">
-                        {!report.is_acknowledge && (
-                            <Button
-                                variant="default"
-                                onClick={handleAcknowledge}
-                                className="flex-1"
-                            >
-                                <Check className="mr-2 inline h-4 w-4" />
-                                Acknowledge
-                            </Button>
-                        )}
-                        <SheetClose asChild>
+                        <DialogClose asChild>
                             <Button
                                 variant="outline"
                                 className={
@@ -197,13 +190,23 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                                 {!report.is_acknowledge && (
                                     <MoveLeft className="mr-2 inline h-4 w-4" />
                                 )}
-                                Return
+                                Close
                             </Button>
-                        </SheetClose>
+                        </DialogClose>
+                        {!report.is_acknowledge && (
+                            <Button
+                                variant="default"
+                                onClick={handleAcknowledge}
+                                className="flex-2"
+                            >
+                                <Check className="mr-2 inline h-4 w-4" />
+                                Acknowledge
+                            </Button>
+                        )}
                     </div>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 export default ViewReportDetails;

@@ -217,14 +217,14 @@ const PublicPostTab = ({ posts, setFilteredPosts }: PublicPostTabProps) => {
                             <CommandGroup>
                                 {/* Add "All Statuses" option */}
                                 <CommandItem
-                                    key="all-statuses"
+                                    key="all-status"
                                     value=""
                                     onSelect={() => {
                                         setStatusValue(null);
                                         setStatusOpen(false);
                                     }}
                                 >
-                                    All Statuses
+                                    All Status
                                     <Check
                                         className={cn(
                                             'ml-auto',

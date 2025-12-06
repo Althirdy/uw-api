@@ -8,6 +8,16 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,16 +25,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/use-toast';
 import { cn } from '@/lib/utils';
@@ -90,8 +90,8 @@ function CreateLocation({
 }: {
     locationCategory?: LocationCategory_T[];
 }) {
-    // Sheet control state
-    const [sheetOpen, setSheetOpen] = useState(false);
+    // Dialog control state
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     // Track if form has been submitted to control error display
 
@@ -211,23 +211,29 @@ function CreateLocation({
     };
 
     return (
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
                 <Button>
                     <Plus className="h-4 w-4" /> Add Location
                 </Button>
-            </SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={onSubmit} className="flex h-full flex-col">
-                    <SheetHeader className="flex-shrink-0 pb-4">
-                        <SheetTitle>Create New Location</SheetTitle>
-                        <SheetDescription>
+            </DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={onSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle>Create New Location</DialogTitle>
+                        <DialogDescription>
                             Add a new location with its details and coordinates.
-                        </SheetDescription>
-                    </SheetHeader>
+                        </DialogDescription>
+                    </DialogHeader>
 
                     {/* Scrollable Form Content */}
-                    <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
                         <div className="space-y-4">
                             {/* Location Name (Package) Selector */}
                             <Popover
@@ -567,16 +573,9 @@ function CreateLocation({
                         </div>
                     </div>
 
-                    <SheetFooter className="flex-shrink-0 bg-background px-4 py-4">
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
                         <div className="flex w-full gap-2">
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="flex-1"
-                            >
-                                {processing ? 'Creating...' : 'Add Location'}
-                            </Button>
-                            <SheetClose asChild>
+                            <DialogClose asChild>
                                 <Button
                                     variant="outline"
                                     type="button"
@@ -584,12 +583,19 @@ function CreateLocation({
                                 >
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-2"
+                            >
+                                {processing ? 'Creating...' : 'Add Location'}
+                            </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

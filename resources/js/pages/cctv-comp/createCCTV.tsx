@@ -1,5 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -14,16 +24,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { toast } from '@/components/use-toast';
 import { useForm } from '@inertiajs/react';
 import { Select } from '@radix-ui/react-select';
@@ -33,8 +33,8 @@ import React, { useState } from 'react';
 import { location_T } from '../../types/cctv-location-types';
 
 function AddCCTVDevice({ location }: { location: location_T[] }) {
-    // Sheet control state
-    const [sheetOpen, setSheetOpen] = useState(false);
+    // Dialog control state
+    const [dialogOpen, setDialogOpen] = useState(false);
     const { data, setData, post, processing, errors, reset } = useForm({
         device_name: '',
         primary_rtsp_url: '',
@@ -67,7 +67,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                 });
                 reset();
                 setDate(undefined);
-                setSheetOpen(false);
+                setDialogOpen(false);
             },
             onError: (errors) => {
                 console.log('Validation errors:', errors);
@@ -82,24 +82,30 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
     };
 
     return (
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
                 <Button>
                     <Plus className="h-4 w-4" /> Add CCTV
                 </Button>
-            </SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={onSubmit} className="flex h-full flex-col">
-                    <SheetHeader className="flex-shrink-0 pb-4">
-                        <SheetTitle>Add New CCTV Device</SheetTitle>
-                        <SheetDescription>
+            </DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={onSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle>Add New CCTV Device</DialogTitle>
+                        <DialogDescription>
                             Add a new CCTV camera device with its configuration
                             details.
-                        </SheetDescription>
-                    </SheetHeader>
+                        </DialogDescription>
+                    </DialogHeader>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
                         <div className="space-y-4">
                             <div className="flex flex-col gap-2">
                                 <Label htmlFor="camera-name">Camera Name</Label>
@@ -371,16 +377,9 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                         </div>
                     </div>
 
-                    <SheetFooter className="flex-shrink-0 bg-background px-4 py-4">
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
                         <div className="flex w-full gap-2">
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="flex-1"
-                            >
-                                {processing ? 'Saving...' : 'Add CCTV'}
-                            </Button>
-                            <SheetClose asChild>
+                            <DialogClose asChild>
                                 <Button
                                     variant="outline"
                                     type="button"
@@ -388,12 +387,19 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                 >
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-2"
+                            >
+                                {processing ? 'Saving...' : 'Add CCTV'}
+                            </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

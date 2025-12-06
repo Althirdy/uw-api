@@ -10,16 +10,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { toast } from '@/components/use-toast';
 import { router } from '@inertiajs/react';
 import { Select } from '@radix-ui/react-select';
@@ -34,8 +24,8 @@ function AddUWDevice({
     location: location_T[];
     cctvDevices?: cctv_T[];
 }): React.JSX.Element {
-    // Sheet control state
-    const [sheetOpen, setSheetOpen] = useState(false);
+    // Dialog control state
+    const [dialogOpen, setDialogOpen] = useState(false);
     const [deviceName, setDeviceName] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedLocationDetails, setSelectedLocationDetails] =
@@ -205,7 +195,7 @@ function AddUWDevice({
                 setUseCustomLocation(false);
                 setCustomAddress('');
                 setCoordinates({ latitude: '', longitude: '' });
-                setSheetOpen(false);
+                setDialogOpen(false);
             },
             onError: (errors) => {
                 console.error('Submission errors:', errors);
@@ -231,24 +221,30 @@ function AddUWDevice({
     };
 
     return (
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
                 <Button>
                     <Plus className="h-4 w-4" /> Add Device
                 </Button>
-            </SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={onSubmit} className="flex h-full flex-col">
-                    <SheetHeader className="flex-shrink-0 pb-4">
-                        <SheetTitle>Add New IoT Sensor</SheetTitle>
-                        <SheetDescription>
+            </DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={onSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle>Add New IoT Sensor</DialogTitle>
+                        <DialogDescription>
                             Configure a new IoT sensor and link it to CCTV
                             cameras
-                        </SheetDescription>
-                    </SheetHeader>
+                        </DialogDescription>
+                    </DialogHeader>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
                         <div className="space-y-6">
                             {/* IoT Device Name */}
                             <div className="flex flex-col gap-2">
@@ -671,9 +667,9 @@ function AddUWDevice({
                         </div>
                     </div>
 
-                    <SheetFooter className="flex-shrink-0 bg-background px-4 py-4">
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
                         <div className="flex w-full gap-2">
-                            <SheetClose asChild>
+                            <DialogClose asChild>
                                 <Button
                                     variant="outline"
                                     type="button"
@@ -681,19 +677,19 @@ function AddUWDevice({
                                 >
                                     Cancel
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
                             <Button
                                 type="submit"
-                                className="flex-1"
+                                className="flex-2"
                                 disabled={isSubmitting}
                             >
                                 {isSubmitting ? 'Creating...' : 'Add Device'}
                             </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

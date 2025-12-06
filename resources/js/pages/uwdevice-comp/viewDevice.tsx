@@ -1,13 +1,16 @@
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { cctv_T, uwDevice_T } from '@/types/cctv-location-types';
 import { Camera, Cpu, ExternalLink, MapPin, Zap } from 'lucide-react';
 import React, { useState } from 'react';
@@ -21,7 +24,7 @@ function ViewUWDevice({
     device,
     children,
 }: ViewUWDeviceProps): React.JSX.Element {
-    const [sheetOpen, setSheetOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     // Get status badge variant - matching CCTV pattern
     const getStatusStyles = (status: string) => {
@@ -38,25 +41,28 @@ function ViewUWDevice({
     };
 
     return (
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
                 {children || (
                     <div className="cursor-pointer rounded-full p-2 hover:bg-secondary/20">
                         <ExternalLink size={20} />
                     </div>
                 )}
-            </SheetTrigger>
-            <SheetContent className="flex h-full flex-col">
+            </DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
                 {/* Fixed Header */}
-                <SheetHeader className="sticky top-0 z-10 flex-shrink-0 border-b bg-background px-6 py-6">
-                    <SheetTitle className="flex items-center gap-2">
+                <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                    <DialogTitle className="flex items-center gap-2">
                         <Cpu className="h-5 w-5 text-green-600" />
                         Device Details
-                    </SheetTitle>
-                    <SheetDescription>
+                    </DialogTitle>
+                    <DialogDescription>
                         View details and configuration of {device.device_name}
-                    </SheetDescription>
-                </SheetHeader>
+                    </DialogDescription>
+                </DialogHeader>
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -276,8 +282,19 @@ function ViewUWDevice({
                         </div>
                     </div>
                 </div>
-            </SheetContent>
-        </Sheet>
+
+                {/* Fixed Footer */}
+                <DialogFooter className="flex-shrink-0 px-6 py-4">
+                    <div className="flex w-full gap-2">
+                        <DialogClose asChild>
+                            <Button variant="outline" className="flex-1">
+                                Close
+                            </Button>
+                        </DialogClose>
+                    </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 

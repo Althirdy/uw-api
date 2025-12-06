@@ -1,16 +1,16 @@
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { Textarea } from '@/components/ui/textarea';
 import { location_T } from '@/types/location-types';
 import { Cctv, MoveLeft } from 'lucide-react';
@@ -49,14 +49,17 @@ const getCategoryColor = (categoryName: string) => {
 
 function ViewLocation({ location, children }: ViewLocationProps) {
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-4 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader className="sticky top-0 z-10 bg-background">
-                    <SheetTitle className="flex flex-row items-center gap-2 text-xl">
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <DialogHeader className="flex-shrink-0 px-6 pt-6">
+                    <DialogTitle className="flex flex-row items-center gap-2 text-xl">
                         {location.location_name}
-                    </SheetTitle>
-                    <SheetDescription className="flex flex-row gap-4">
+                    </DialogTitle>
+                    <DialogDescription className="flex flex-row gap-4">
                         <span
                             className={`inline-flex items-center rounded-full px-2 py-1 text-sm font-medium ${getCategoryColor(location.location_category?.name || 'Uncategorized')}`}
                         >
@@ -69,9 +72,9 @@ function ViewLocation({ location, children }: ViewLocationProps) {
                             <Cctv className="h-auto w-4.5 text-muted-foreground" />
                             {location.cctv_count || 0}
                         </span>
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex w-full flex-1 flex-col justify-start gap-10 overflow-y-auto px-6 py-4">
                     <div className="grid auto-rows-min gap-6">
                         <div className="grid gap-3">
                             <Label>Location Map</Label>
@@ -169,16 +172,16 @@ function ViewLocation({ location, children }: ViewLocationProps) {
                         </div>
                     </div>
                 </div>
-                <SheetFooter className="sticky bottom-0 z-10 bg-background">
-                    <SheetClose asChild>
+                <DialogFooter className="flex-shrink-0 px-6 pb-4">
+                    <DialogClose asChild>
                         <Button variant="outline">
                             <MoveLeft className="h-6 w-6" />
-                            Return
+                            Close
                         </Button>
-                    </SheetClose>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
+                    </DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 

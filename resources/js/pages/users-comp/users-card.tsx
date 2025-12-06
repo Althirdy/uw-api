@@ -15,13 +15,22 @@ import {
 } from '@/components/ui/tooltip';
 import { Archive, ExternalLink as Open, SquarePen } from 'lucide-react';
 
+import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
 import ArchiveUser from './users-archive';
 import EditUser from './users-edit';
 import ViewUser from './users-view';
 
-const UserCard = ({ users, roles }: { users: users_T[]; roles: roles_T[] }) => {
+const UserCard = ({
+    users,
+    roles,
+    locations,
+}: {
+    users: users_T[];
+    roles: roles_T[];
+    locations: location_T[];
+}) => {
     return (
         <div className="grid auto-rows-min gap-4 md:grid-cols-4">
             {users.length === 0 && (
@@ -92,7 +101,11 @@ const UserCard = ({ users, roles }: { users: users_T[]; roles: roles_T[] }) => {
                                 </TooltipContent>
                             </Tooltip>
                             <Tooltip>
-                                <EditUser user={user} roles={roles}>
+                                <EditUser
+                                    user={user}
+                                    roles={roles}
+                                    locations={locations}
+                                >
                                     <TooltipTrigger asChild>
                                         <Button
                                             variant="outline"

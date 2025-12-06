@@ -80,7 +80,7 @@ export const columns = (): ColumnDef<Contact>[] => [
 
             return (
                 <Badge
-                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${colorClass}`}
+                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium ${colorClass}`}
                 >
                     {responderType}
                 </Badge>
@@ -118,7 +118,7 @@ export const columns = (): ColumnDef<Contact>[] => [
             const active = row.getValue('active') as boolean;
             return (
                 <Badge
-                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                    className={`inline-flex items-center rounded-[var(--radius)] px-2 py-1 text-xs font-medium ${
                         active ? 'bg-green-800' : 'bg-gray-800'
                     }`}
                 >

@@ -8,6 +8,16 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,16 +25,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/use-toast';
 import { cn } from '@/lib/utils';
@@ -95,8 +95,8 @@ interface EditContactsProps {
 }
 
 export default function EditContacts({ contact, children }: EditContactsProps) {
-    // Sheet control state
-    const [sheetOpen, setSheetOpen] = useState(false);
+    // Dialog control state
+    const [dialogOpen, setDialogOpen] = useState(false);
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
     // Mobile number validation function
@@ -274,7 +274,7 @@ export default function EditContacts({ contact, children }: EditContactsProps) {
 
         put(`/contacts/${contact.id}`, {
             onSuccess: () => {
-                setSheetOpen(false);
+                setDialogOpen(false);
                 setHasAttemptedSubmit(false);
                 toast({
                     title: 'Success',
@@ -293,22 +293,26 @@ export default function EditContacts({ contact, children }: EditContactsProps) {
     };
 
     return (
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={onSubmit} className="flex h-full flex-col">
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={onSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
                     {/* Fixed Header */}
-                    <div className="sticky top-0 z-10 flex-shrink-0 bg-background">
-                        <SheetHeader>
-                            <SheetTitle>Edit Contact</SheetTitle>
-                            <SheetDescription>
-                                Update contact information and details
-                            </SheetDescription>
-                        </SheetHeader>
-                    </div>
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle>Edit Contact</DialogTitle>
+                        <DialogDescription>
+                            Update contact information and details
+                        </DialogDescription>
+                    </DialogHeader>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 overflow-y-auto px-4 py-6">
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
                         <div className="space-y-4">
                             {/* Contact Person (Optional) */}
                             <div>
@@ -721,16 +725,9 @@ export default function EditContacts({ contact, children }: EditContactsProps) {
                     </div>
 
                     {/* Fixed Footer */}
-                    <div className="flex-shrink-0">
-                        <SheetFooter className="flex gap-2 px-4 py-4">
-                            <Button
-                                type="submit"
-                                disabled={processing}
-                                className="flex-1"
-                            >
-                                {processing ? 'Updating...' : 'Update Contact'}
-                            </Button>
-                            <SheetClose asChild>
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
+                        <div className="flex w-full gap-2">
+                            <DialogClose asChild>
                                 <Button
                                     variant="outline"
                                     type="button"
@@ -738,11 +735,18 @@ export default function EditContacts({ contact, children }: EditContactsProps) {
                                 >
                                     Cancel
                                 </Button>
-                            </SheetClose>
-                        </SheetFooter>
-                    </div>
+                            </DialogClose>
+                            <Button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-2"
+                            >
+                                {processing ? 'Updating...' : 'Update Contact'}
+                            </Button>
+                        </div>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }

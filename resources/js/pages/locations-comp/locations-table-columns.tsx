@@ -87,11 +87,6 @@ export const columns = (
             return (
                 <div>
                     <div className="font-medium">{location.location_name}</div>
-                    {location.landmark && (
-                        <div className="text-xs text-muted-foreground">
-                            {location.landmark}
-                        </div>
-                    )}
                 </div>
             );
         },
