@@ -23,6 +23,7 @@ import {
     File,
     FlagTriangleRight,
     Folder,
+    LayoutDashboard,
     MapPin,
     User,
     Users,
@@ -30,6 +31,11 @@ import {
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+    },
     {
         title: 'Users',
         href: users().url,
@@ -83,7 +89,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={users()} prefetch>
+                            <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
