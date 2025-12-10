@@ -1,12 +1,25 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 import { PublicPost_T } from '@/types/public-post-types';
 import { router, useForm } from '@inertiajs/react';
-import { Calendar, Globe, TriangleAlert, User } from 'lucide-react';
+import { format } from 'date-fns';
+import { ChevronDownIcon, Globe, TriangleAlert, User } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type EditPublicPostProps = {
@@ -20,12 +33,19 @@ type EditPublicPostForm = {
     description: string;
 };
 
+const reportTypeColors: Record<string, string> = {
+    CCTV: 'bg-blue-800',
+    'Citizen Concern': 'bg-purple-800',
+    Emergency: 'bg-red-800',
+    Announcement: 'bg-yellow-800',
+};
+
 function getStatusBadge(publishedAt: string | null) {
     if (!publishedAt) {
         return (
-            <Badge variant="outline" className="text-gray-500">
+            <span className="inline-flex items-center rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-medium">
                 Draft
-            </Badge>
+            </span>
         );
     }
 
@@ -34,16 +54,16 @@ function getStatusBadge(publishedAt: string | null) {
 
     if (publishDate > now) {
         return (
-            <Badge variant="secondary" className="text-blue-600">
+            <span className="inline-flex items-center rounded-full bg-yellow-800 px-2.5 py-0.5 text-xs font-medium">
                 Scheduled
-            </Badge>
+            </span>
         );
     }
 
     return (
-        <Badge variant="default" className="bg-green-600 text-white">
+        <span className="inline-flex items-center rounded-full text-white bg-green-800 px-2.5 py-0.5 text-xs font-medium">
             Published
-        </Badge>
+        </span>
     );
 }
 
@@ -59,6 +79,10 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
         !!post.published_at && new Date(post.published_at) > new Date(),
     );
     const [publishNow, setPublishNow] = useState(false);
+    const [calendarOpen, setCalendarOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+        data.published_at ? new Date(data.published_at) : undefined,
+    );
 
     // Check if post is already published
     const isPublished =
@@ -140,7 +164,12 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                             <div className="rounded-lg border bg-muted/30 p-3">
                                 <div className="mb-2 flex items-center gap-2">
                                     <TriangleAlert className="h-4 w-4" />
-                                    <span className="text-sm font-medium">
+                                    <span
+                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                            reportTypeColors[post.report?.report_type || ''] ||
+                                            'bg-gray-100 text-gray-800'
+                                        }`}
+                                    >
                                         {post.report?.report_type}
                                     </span>
                                 </div>
@@ -267,39 +296,56 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                 {scheduleMode && (
                                     <div className="grid gap-3">
                                         <Label htmlFor="published_at">
-                                            Schedule Date & Time
+                                            Schedule Date
                                         </Label>
                                         <div className="relative">
-                                            <Input
-                                                id="published_at"
-                                                type="datetime-local"
-                                                value={
-                                                    data.published_at
-                                                        ? formatDateTimeForInput(
-                                                              data.published_at,
-                                                          )
-                                                        : ''
-                                                }
-                                                onChange={(e) => {
-                                                    const date = e.target.value
-                                                        ? new Date(
-                                                              e.target.value,
-                                                          ).toISOString()
-                                                        : '';
-                                                    setData(
-                                                        'published_at',
-                                                        date,
-                                                    );
-                                                }}
-                                                min={new Date()
-                                                    .toISOString()
-                                                    .slice(0, 16)}
-                                                className={
-                                                    errors.published_at
-                                                        ? 'border-red-500 focus:ring-red-500'
-                                                        : ''
-                                                }
-                                            />
+                                            <Popover
+                                                open={calendarOpen}
+                                                onOpenChange={setCalendarOpen}
+                                            >
+                                                <PopoverTrigger asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        id="published_at"
+                                                        className="w-full justify-between font-normal"
+                                                    >
+                                                        {selectedDate
+                                                            ? format(
+                                                                  selectedDate,
+                                                                  'PPP',
+                                                              )
+                                                            : 'Select date'}
+                                                        <ChevronDownIcon />
+                                                    </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent
+                                                    className="w-auto overflow-hidden p-0"
+                                                    align="start"
+                                                >
+                                                    <Calendar
+                                                        mode="single"
+                                                        selected={selectedDate}
+                                                        captionLayout="dropdown"
+                                                        onSelect={(date) => {
+                                                            setSelectedDate(
+                                                                date,
+                                                            );
+                                                            setData(
+                                                                'published_at',
+                                                                date
+                                                                    ? date.toISOString()
+                                                                    : '',
+                                                            );
+                                                            setCalendarOpen(
+                                                                false,
+                                                            );
+                                                        }}
+                                                        disabled={(date) =>
+                                                            date < new Date()
+                                                        }
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
                                             {errors.published_at && (
                                                 <span className="absolute -bottom-5 left-0 text-xs text-red-500">
                                                     {errors.published_at}

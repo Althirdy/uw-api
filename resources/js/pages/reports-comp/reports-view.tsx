@@ -142,7 +142,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         {renderDetailItems([
                             {
                                 icon: LocateFixed,
-                                text: `${Number(report.latitute).toFixed(2)}, ${Number(report.longtitude).toFixed(2)}`,
+                                text: `${Number(report.latitude).toFixed(2)}, ${Number(report.longtitude).toFixed(2)}`,
                             },
                             {
                                 icon: TriangleAlert,

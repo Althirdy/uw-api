@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { cctv_T, uwDevice_T } from '@/types/cctv-location-types';
-import { Camera, Cpu, ExternalLink, MapPin, Zap } from 'lucide-react';
+import { Camera, Cpu, ExternalLink, MapPin, MoveLeft, Zap } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface ViewUWDeviceProps {
@@ -54,47 +54,26 @@ function ViewUWDevice({
                 showCloseButton={false}
             >
                 {/* Fixed Header */}
-                <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
-                    <DialogTitle className="flex items-center gap-2">
-                        <Cpu className="h-5 w-5 text-green-600" />
-                        Device Details
+                <DialogHeader className="flex-shrink-0 px-6 pt-6">
+                    <DialogTitle className="flex items-center gap-2 text-xl">
+                        {device.device_name}
                     </DialogTitle>
-                    <DialogDescription>
-                        View details and configuration of {device.device_name}
-                    </DialogDescription>
-                </DialogHeader>
-
-                {/* Scrollable Content */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                    <div className="space-y-6">
-                        {/* Device Name Section */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-muted-foreground">
-                                Device Name
-                            </Label>
-                            <div className="rounded-lg bg-muted/50 p-3">
-                                <p className="font-medium">
-                                    {device.device_name}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Status Section */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium text-muted-foreground">
-                                Status
-                            </Label>
-                            <div className="flex items-center gap-2">
-                                <Badge
+                    <DialogDescription className="flex flex-row items-center gap-2">
+                        <Badge
                                     className={`capitalize ${getStatusStyles(device.status)}`}
                                 >
                                     {device.status}
                                 </Badge>
-                            </div>
-                        </div>
+                    </DialogDescription>
+                </DialogHeader>
+
+                {/* Scrollable Content */}
+                <div className="flex w-full flex-1 flex-col justify-start gap-10 overflow-y-auto px-6">
+                    <div className="grid auto-rows-min gap-6">
+                        
                         {/* Location Assignment Section */}
-                        <div className="space-y-3">
-                            <Label className="text-sm font-medium text-muted-foreground">
+                        <div className="grid gap-3">
+                            <Label className="text-muted-foreground">
                                 Location Assignment
                             </Label>
 
@@ -111,24 +90,8 @@ function ViewUWDevice({
                                                             .location_name
                                                     }
                                                 </p>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="text-xs"
-                                                >
-                                                    Predefined
-                                                </Badge>
+                                               
                                             </div>
-                                            {device.location?.category_name && (
-                                                <Badge
-                                                    variant="outline"
-                                                    className="text-xs"
-                                                >
-                                                    {
-                                                        device.location
-                                                            .category_name
-                                                    }
-                                                </Badge>
-                                            )}
                                             <p className="text-sm text-muted-foreground">
                                                 {device.location?.landmark}
                                             </p>
@@ -146,17 +109,7 @@ function ViewUWDevice({
                                     <div className="flex items-start gap-3">
                                         <MapPin className="mt-1 h-4 w-4 text-muted-foreground" />
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-medium">
-                                                    Custom Location
-                                                </p>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="border-blue-200 bg-blue-50 text-xs text-blue-700"
-                                                >
-                                                    Custom
-                                                </Badge>
-                                            </div>
+                                            
                                             <p className="text-sm text-muted-foreground">
                                                 {device.custom_address}
                                             </p>
@@ -199,8 +152,8 @@ function ViewUWDevice({
                         </div>
 
                         {/* Linked CCTV Cameras Section */}
-                        <div className="space-y-3">
-                            <Label className="text-sm font-medium text-muted-foreground">
+                        <div className="grid gap-3">
+                            <Label className="text-muted-foreground">
                                 Linked CCTV Cameras
                             </Label>
                             {device.cctv_cameras &&
@@ -250,8 +203,8 @@ function ViewUWDevice({
                         </div>
 
                         {/* Device Information Summary */}
-                        <div className="space-y-3">
-                            <Label className="text-sm font-medium text-muted-foreground">
+                        <div className="grid gap-3">
+                            <Label className="text-muted-foreground">
                                 Device Summary
                             </Label>
                             <div className="grid grid-cols-2 gap-4">
@@ -284,14 +237,13 @@ function ViewUWDevice({
                 </div>
 
                 {/* Fixed Footer */}
-                <DialogFooter className="flex-shrink-0 px-6 py-4">
-                    <div className="flex w-full gap-2">
-                        <DialogClose asChild>
-                            <Button variant="outline" className="flex-1">
-                                Close
-                            </Button>
-                        </DialogClose>
-                    </div>
+                <DialogFooter className="flex-shrink-0 px-6 pb-4">
+                    <DialogClose asChild>
+                        <Button variant="outline">
+                            <MoveLeft className="h-6 w-6" />
+                            Close
+                        </Button>
+                    </DialogClose>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

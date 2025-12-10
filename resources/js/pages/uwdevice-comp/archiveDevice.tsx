@@ -182,14 +182,6 @@ function ArchiveUWDevice({
                                 {device.status}
                             </span>
                         </div>
-                        <div className="text-sm">
-                            <span className="block text-gray-400">
-                                Category:
-                            </span>
-                            <span className="text-gray-300">
-                                {device.location?.category_name || 'N/A'}
-                            </span>
-                        </div>
                     </div>
 
                     {/* AI Detection Status */}

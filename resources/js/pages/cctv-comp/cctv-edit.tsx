@@ -18,6 +18,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+    Select,
     SelectContent,
     SelectGroup,
     SelectItem,
@@ -26,47 +27,55 @@ import {
 } from '@/components/ui/select';
 import { toast } from '@/components/use-toast';
 import { useForm } from '@inertiajs/react';
-import { Select } from '@radix-ui/react-select';
-import { format } from 'date-fns'; // Add this import
-import { ChevronDownIcon, Plus } from 'lucide-react';
+import { format } from 'date-fns';
+import { ChevronDownIcon, SquarePen } from 'lucide-react';
 import React, { useState } from 'react';
-import { location_T } from '../../types/cctv-location-types';
+import { cctv_T, location_T } from '../../types/cctv-location-types';
 
-function AddCCTVDevice({ location }: { location: location_T[] }) {
+interface EditCCTVDevice {
+    location: location_T[];
+    cctv: cctv_T;
+    children?: React.ReactNode;
+}
+
+function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
     // Dialog control state
     const [dialogOpen, setDialogOpen] = useState(false);
-    const { data, setData, post, processing, errors, reset } = useForm({
-        device_name: '',
-        primary_rtsp_url: '',
-        backup_rtsp_url: '',
-        location_id: '',
-        status: '',
-        model: '',
-        brand: '',
-        fps: '',
-        resolution: '',
-        bitrate: '',
-        installation_date: '',
+    const { data, setData, put, processing, errors, reset } = useForm({
+        device_name: cctv?.device_name || '',
+        primary_rtsp_url: cctv?.primary_rtsp_url || '',
+        backup_rtsp_url: cctv?.backup_rtsp_url || '',
+        location_id: cctv?.location?.id?.toString() || '',
+        status: cctv?.status || '',
+        model: cctv?.model || '',
+        brand: cctv?.brand || '',
+        fps: cctv?.fps?.toString() || '',
+        resolution: cctv?.resolution || '',
+        installation_date: cctv?.installation_date || '',
     });
 
     const [open, setOpen] = React.useState(false);
-    const [date, setDate] = React.useState<Date | undefined>(undefined);
+    const [date, setDate] = React.useState<Date | undefined>(() => {
+        if (cctv.installation_date) {
+            const originalDate = new Date(cctv.installation_date);
+            return originalDate;
+        }
+        return undefined;
+    });
 
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        console.log('Form data being sent:', data); // Debug log
+        console.log('Form data being sent:', data);
 
-        post('/devices/cctv', {
+        put(`/devices/cctv/${cctv.id}`, {
             onSuccess: () => {
-                console.log('CCTV device created successfully');
+                console.log('CCTV device updated successfully');
                 toast({
                     title: 'Success!',
-                    description: 'CCTV device created successfully.',
+                    description: 'CCTV device updated successfully.',
                     variant: 'default',
                 });
-                reset();
-                setDate(undefined);
                 setDialogOpen(false);
             },
             onError: (errors) => {
@@ -74,7 +83,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                 toast({
                     title: 'Error',
                     description:
-                        'Failed to create CCTV device. Please check your inputs.',
+                        'Failed to update CCTV device. Please check your inputs.',
                     variant: 'destructive',
                 });
             },
@@ -84,9 +93,11 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
     return (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-                <Button>
-                    <Plus className="h-4 w-4" /> Add CCTV
-                </Button>
+                {children || (
+                    <div className="cursor-pointer rounded-full p-2 hover:bg-primary/20">
+                        <SquarePen size={20} />
+                    </div>
+                )}
             </DialogTrigger>
             <DialogContent
                 className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
@@ -96,16 +107,16 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                     onSubmit={onSubmit}
                     className="flex h-full flex-col overflow-hidden"
                 >
-                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
-                        <DialogTitle>Add New CCTV Device</DialogTitle>
+                    {/* Fixed Header */}
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6">
+                        <DialogTitle>Edit CCTV Device</DialogTitle>
                         <DialogDescription>
-                            Add a new CCTV camera device with its configuration
-                            details.
+                            Update the CCTV camera device configuration details.
                         </DialogDescription>
                     </DialogHeader>
 
                     {/* Scrollable Content */}
-                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
                         <div className="space-y-4">
                             <div className="flex flex-col gap-2">
                                 <Label htmlFor="camera-name">Camera Name</Label>
@@ -165,74 +176,75 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                 )}
                             </div>
 
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="cctv-location">
-                                    CCTV Location
-                                </Label>
-                                <Select
-                                    onValueChange={(value) =>
-                                        setData('location_id', value)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent id="cctv-location">
-                                        <SelectGroup>
-                                            {location.map((loc) => (
-                                                <SelectItem
-                                                    key={loc.id}
-                                                    value={loc.id.toString()}
-                                                >
-                                                    <div>
-                                                        {loc.location_name} -{' '}
-                                                        {loc.category_name}
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {loc.landmark},{' '}
-                                                            {loc.barangay}
+                            <div className="flex flex-row justify-between gap-2">
+                                <div className="flex w-full flex-col gap-2">
+                                    <Label htmlFor="cctv-location">
+                                        CCTV Location
+                                    </Label>
+                                    <Select
+                                        value={data.location_id}
+                                        onValueChange={(value) =>
+                                            setData('location_id', value)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select a location" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {location.map((loc) => (
+                                                    <SelectItem
+                                                        key={loc.id}
+                                                        value={loc.id.toString()}
+                                                    >
+                                                        <div className="font-medium">
+                                                            {loc.location_name}
                                                         </div>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {errors.location_id && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.location_id}
-                                    </p>
-                                )}
-                            </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.location_id && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.location_id}
+                                        </p>
+                                    )}
+                                </div>
 
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="cctv-status">CCTV Status</Label>
-                                <Select
-                                    onValueChange={(value) =>
-                                        setData('status', value)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent id="cctv-status">
-                                        <SelectGroup>
-                                            <SelectItem value="active">
-                                                Active
-                                            </SelectItem>
-                                            <SelectItem value="inactive">
-                                                Inactive
-                                            </SelectItem>
-                                            <SelectItem value="maintenance">
-                                                Maintenance
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {errors.status && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.status}
-                                    </p>
-                                )}
+                                <div className="flex w-full flex-col gap-2">
+                                    <Label htmlFor="cctv-status">
+                                        CCTV Status
+                                    </Label>
+                                    <Select
+                                        value={data.status}
+                                        onValueChange={(value) =>
+                                            setData('status', value)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="active">
+                                                    Active
+                                                </SelectItem>
+                                                <SelectItem value="inactive">
+                                                    Inactive
+                                                </SelectItem>
+                                                <SelectItem value="maintenance">
+                                                    Maintenance
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.status && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.status}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-4">
@@ -283,8 +295,6 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                     <Input
                                         id="fps"
                                         type="number"
-                                        min="30"
-                                        max="120"
                                         value={data.fps}
                                         onChange={(e) =>
                                             setData('fps', e.target.value)
@@ -301,20 +311,27 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                         Resolution
                                     </Label>
                                     <Select
+                                        value={data.resolution}
                                         onValueChange={(value) =>
                                             setData('resolution', value)
                                         }
                                     >
                                         <SelectTrigger className="w-full">
-                                            <SelectValue />
+                                            <SelectValue placeholder="Select resolution" />
                                         </SelectTrigger>
-                                        <SelectContent id="cctv-resolution">
+                                        <SelectContent>
                                             <SelectGroup>
                                                 <SelectItem value="4k">
                                                     4K
                                                 </SelectItem>
                                                 <SelectItem value="1080p">
                                                     1080p
+                                                </SelectItem>
+                                                <SelectItem value="720p">
+                                                    720p
+                                                </SelectItem>
+                                                <SelectItem value="480p">
+                                                    480p
                                                 </SelectItem>
                                             </SelectGroup>
                                         </SelectContent>
@@ -339,7 +356,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                             className="w-full justify-between font-normal"
                                         >
                                             {date
-                                                ? date.toLocaleDateString()
+                                                ? format(date, 'PPP')
                                                 : 'Select date'}
                                             <ChevronDownIcon />
                                         </Button>
@@ -377,6 +394,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                         </div>
                     </div>
 
+                    {/* Fixed Footer */}
                     <DialogFooter className="flex-shrink-0 px-6 py-4">
                         <div className="flex w-full gap-2">
                             <DialogClose asChild>
@@ -393,7 +411,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                 disabled={processing}
                                 className="flex-2"
                             >
-                                {processing ? 'Saving...' : 'Add CCTV'}
+                                {processing ? 'Updating...' : 'Update CCTV'}
                             </Button>
                         </div>
                     </DialogFooter>
@@ -403,4 +421,4 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
     );
 }
 
-export default AddCCTVDevice;
+export default EditCCTVDevice;

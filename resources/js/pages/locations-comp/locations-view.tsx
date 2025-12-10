@@ -59,22 +59,14 @@ function ViewLocation({ location, children }: ViewLocationProps) {
                     <DialogTitle className="flex flex-row items-center gap-2 text-xl">
                         {location.location_name}
                     </DialogTitle>
-                    <DialogDescription className="flex flex-row gap-4">
-                        <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-sm font-medium ${getCategoryColor(location.location_category?.name || 'Uncategorized')}`}
-                        >
-                            {location.location_category
-                                ? location.location_category.name
-                                : 'Uncategorized'}
-                        </span>
-
+                    <DialogDescription className="flex flex-row">
                         <span className="flex flex-row items-center gap-2 text-lg">
                             <Cctv className="h-auto w-4.5 text-muted-foreground" />
                             {location.cctv_count || 0}
                         </span>
                     </DialogDescription>
                 </DialogHeader>
-                <div className="flex w-full flex-1 flex-col justify-start gap-10 overflow-y-auto px-6 py-4">
+                <div className="flex w-full flex-1 flex-col justify-start gap-10 overflow-y-auto px-6">
                     <div className="grid auto-rows-min gap-6">
                         <div className="grid gap-3">
                             <Label>Location Map</Label>
@@ -133,27 +125,28 @@ function ViewLocation({ location, children }: ViewLocationProps) {
                                 </div>
                             </div>
                         </div>
+                        <div className="flex flex-row justify-between gap-4">
+                            <div className="grid w-full gap-3">
+                                <Label htmlFor="barangay">Barangay</Label>
+                                <Input
+                                    id="barangay"
+                                    value={location.barangay}
+                                    readOnly
+                                    tabIndex={-1}
+                                    className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                />
+                            </div>
 
-                        <div className="grid gap-3">
-                            <Label htmlFor="landmark">Near Landmark</Label>
-                            <Input
-                                id="landmark"
-                                value={location.landmark}
-                                readOnly
-                                tabIndex={-1}
-                                className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                            />
-                        </div>
-
-                        <div className="grid gap-3">
-                            <Label htmlFor="barangay">Barangay</Label>
-                            <Input
-                                id="barangay"
-                                value={location.barangay}
-                                readOnly
-                                tabIndex={-1}
-                                className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-                            />
+                            <div className="grid w-full gap-3">
+                                <Label htmlFor="landmark">Near Landmark</Label>
+                                <Input
+                                    id="landmark"
+                                    value={location.landmark}
+                                    readOnly
+                                    tabIndex={-1}
+                                    className="cursor-not-allowed border-none bg-muted select-none focus:ring-0 focus:ring-offset-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+                                />
+                            </div>
                         </div>
 
                         <div className="grid gap-3">
