@@ -20,15 +20,16 @@ import EditPublicPost from './public-post-edit';
 import ViewPublicPostDetails from './public-post-view';
 
 const reportTypeColors: Record<string, string> = {
-    CCTV: 'bg-blue-100 text-blue-800',
-    'Citizen Concern': 'bg-purple-100 text-purple-800',
-    Emergency: 'bg-red-100 text-red-800',
+    CCTV: 'bg-blue-800 ',
+    'Citizen Concern': 'bg-purple-800 ',
+    Emergency: 'bg-red-800 ',
+    Announcement: 'bg-yellow-800',
 };
 
 function getStatusBadge(publishedAt: string | null) {
     if (!publishedAt) {
         return (
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+            <span className="inline-flex items-center rounded-[var(--radius)] bg-zinc-600 px-2.5 py-0.5 text-xs font-medium">
                 Draft
             </span>
         );
@@ -39,14 +40,14 @@ function getStatusBadge(publishedAt: string | null) {
 
     if (publishDate > now) {
         return (
-            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+            <span className="inline-flex items-center rounded-[var(--radius)] bg-yellow-800 px-2.5 py-0.5 text-xs font-medium">
                 Scheduled
             </span>
         );
     }
 
     return (
-        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+        <span className="inline-flex items-center rounded-[var(--radius)] bg-green-800 px-2.5 py-0.5 text-xs font-medium text-white">
             Published
         </span>
     );
@@ -95,7 +96,7 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
 
             return (
                 <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorClass}`}
+                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${colorClass}`}
                 >
                     {reportType}
                 </span>
@@ -110,11 +111,8 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
             return (
                 <div className="max-w-xs text-left">
                     <div className="ellipsis flex flex-col truncate">
-                        <span className="text-md font-semibold">
-                            {post.report?.transcript}
-                        </span>
                         <span
-                            className="mt-1 block truncate text-xs text-muted-foreground"
+                            className="mt-1 block truncate text-md text-muted-foreground"
                             title={post.report?.description}
                         >
                             {post.report?.description &&

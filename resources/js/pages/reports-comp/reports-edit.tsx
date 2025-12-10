@@ -35,7 +35,7 @@ type EditReportForm = {
     report_type: string;
     description: string;
     transcript: string;
-    latitute: string;
+    latitude: string;
     longtitude: string;
     is_acknowledge: boolean;
 };
@@ -46,13 +46,13 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
             report_type: report.report_type,
             description: report.description,
             transcript: report.transcript || '',
-            latitute: report.latitute,
+            latitude: report.latitude,
             longtitude: report.longtitude,
             is_acknowledge: report.is_acknowledge,
         });
 
     const [coordinates, setCoordinates] = useState({
-        latitude: report.latitute,
+        latitude: report.latitude,
         longitude: report.longtitude,
     });
 
@@ -62,7 +62,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
             longitude: location.lng.toString(),
         };
         setCoordinates(coords);
-        setData('latitute', coords.latitude);
+        setData('latitude', coords.latitude);
         setData('longtitude', coords.longitude);
     };
 
@@ -244,14 +244,14 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                                     value={coordinates.latitude}
                                                     disabled
                                                     className={
-                                                        errors.latitute
+                                                        errors.latitude
                                                             ? 'border-red-500 focus:ring-red-500'
                                                             : ''
                                                     }
                                                 />
-                                                {errors.latitute && (
+                                                {errors.latitude && (
                                                     <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                        {errors.latitute}
+                                                        {errors.latitude}
                                                     </span>
                                                 )}
                                             </div>
@@ -354,7 +354,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                     <div className="flex flex-row items-center gap-2">
                                         <LocateFixed className="h-4 w-4" />
                                         <span>
-                                            Location: {report.latitute},{' '}
+                                            Location: {report.latitude},{' '}
                                             {report.longtitude}
                                         </span>
                                     </div>

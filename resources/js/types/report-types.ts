@@ -6,7 +6,7 @@ export type reports_T = {
     report_type: string;
     transcript: string;
     description: string;
-    latitute: string;
+    latitude: string;
     longtitude: string;
     is_acknowledge: boolean;
     acknowledge_by?: number;

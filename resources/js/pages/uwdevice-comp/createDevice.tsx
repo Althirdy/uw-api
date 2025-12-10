@@ -10,7 +10,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { toast } from '@/components/use-toast';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';import { toast } from '@/components/use-toast';
 import { router } from '@inertiajs/react';
 import { Select } from '@radix-ui/react-select';
 import { Camera, Plus } from 'lucide-react';
@@ -363,13 +372,11 @@ function AddUWDevice({
                                                             value={loc.id.toString()}
                                                         >
                                                             <div>
-                                                                {
-                                                                    loc.location_name
-                                                                }{' '}
-                                                                -{' '}
-                                                                {
-                                                                    loc.category_name
-                                                                }
+                                                                <div className="font-medium">
+                                                                    {
+                                                                        loc.location_name
+                                                                    }
+                                                                </div>
                                                                 <div className="text-xs text-muted-foreground">
                                                                     {
                                                                         loc.landmark
