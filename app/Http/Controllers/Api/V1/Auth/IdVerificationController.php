@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Controllers\Controller;
 use App\Services\NationalIdOcrService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
 
 class IdVerificationController extends BaseApiController
 {

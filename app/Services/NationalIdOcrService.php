@@ -105,10 +105,10 @@ class NationalIdOcrService
                     'apikey' => $this->apiKey,
                     'base64Image' => $base64Image,
                     'language' => 'eng',
-                    'isOverlayRequired' => false,
-                    'detectOrientation' => true,
-                    'scale' => true,
-                    'OCREngine' => 2, // Engine 2 is better for IDs
+                    'isOverlayRequired' => 'false',
+                    'detectOrientation' => 'true',
+                    'scale' => 'true',
+                    'OCREngine' => '2', // Engine 2 is better for IDs
                 ]);
 
             if (!$response->successful()) {

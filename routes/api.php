@@ -22,6 +22,8 @@ Route::prefix('v1')->group(function () {
     
     // YOLO detection routes
     require __DIR__ . '/api/v1/yolo.php';
+
+    Route::post('/ocr/national-id',[App\Http\Controllers\Api\V1\Auth\IdVerificationController::class, 'scanIdFront'] );
 });
 
 /**
