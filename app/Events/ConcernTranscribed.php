@@ -63,14 +63,12 @@ class ConcernTranscribed implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'concern' => [
-                'id' => $this->concern->id,
-                'title' => $this->concern->title,
-                'description' => $this->concern->description,
-                'transcript_text' => $this->concern->transcript_text,
-                'status' => $this->concern->status,
-                'updated_at' => $this->concern->updated_at,
-            ],
+            'id' => $this->concern->id,
+            'title' => $this->concern->title,
+            'description' => $this->concern->description,
+            'transcript_text' => $this->concern->transcript_text,
+            'status' => $this->concern->status,
+            'updated_at' => $this->concern->updated_at->toISOString(),
         ];
     }
 }
