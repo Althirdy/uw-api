@@ -11,6 +11,7 @@ use App\Models\IncidentMedia;
 use App\Models\ConcernDistribution;
 use App\Models\ConcernHistory;
 use App\Events\ConcernAssigned;
+use App\Jobs\ProcessVoiceConcernJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
@@ -178,6 +179,11 @@ class ConcernController extends BaseApiController
             event(new ConcernAssigned($concern, $distribution, $uploadedMedia));
 
             DB::commit();
+
+            // 🧠 Step 5.5: Dispatch Background Job for Voice Analysis
+            if ($concernType === 'voice') {
+                ProcessVoiceConcernJob::dispatch($concern->id);
+            }
 
             // Load relationships for resource
             $concern->load(['media', 'distribution.purokLeader.officialDetails', 'histories.actor.officialDetails']);

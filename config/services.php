@@ -40,4 +40,8 @@ return [
         'api_url' => env('OCR_SPACE_API_URL', 'https://api.ocr.space/parse/image'),
     ],
 
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
 ];

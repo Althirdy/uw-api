@@ -62,10 +62,7 @@ Route::prefix('legacy')->group(function () {
     // Keep old heatmap route
     Route::get('contacts/heatmap', [App\Http\Controllers\Operator\ContactController::class, 'heatMapContacts']);
 
-    // Keep old citizen concern routes
-    Route::middleware(['auth:sanctum'])->group(function(){
-        Route::apiResource('citizen/manual-concerns', \App\Http\Controllers\Api\Citizen\Concern\ManualConcernController::class);
-    });
+
 });
 
 /**
@@ -77,4 +74,33 @@ Route::get('health', function () {
         'version' => 'v1',
         'timestamp' => now()->toISOString()
     ], 200);
+});
+
+/**
+ * Test Endpoint for Gemini Audio Transcription
+ */
+Route::post('test-gemini', function (Request $request, App\Services\GeminiService $geminiService) {
+    if (!$request->hasFile('audio')) {
+        return response()->json(['error' => 'No audio file provided. Please upload a file with key "audio".'], 400);
+    }
+
+    try {
+        $file = $request->file('audio');
+        $content = $file->get();
+        $mimeType = $file->getMimeType();
+
+        $result = $geminiService->analyzeAudio($content, $mimeType);
+
+        if (!$result) {
+             return response()->json(['error' => 'Gemini analysis failed or returned null'], 500);
+        }
+
+        return response()->json([
+            'message' => 'Gemini Analysis Successful',
+            'data' => $result
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 });
