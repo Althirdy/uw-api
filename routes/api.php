@@ -75,32 +75,3 @@ Route::get('health', function () {
         'timestamp' => now()->toISOString()
     ], 200);
 });
-
-/**
- * Test Endpoint for Gemini Audio Transcription
- */
-Route::post('test-gemini', function (Request $request, App\Services\GeminiService $geminiService) {
-    if (!$request->hasFile('audio')) {
-        return response()->json(['error' => 'No audio file provided. Please upload a file with key "audio".'], 400);
-    }
-
-    try {
-        $file = $request->file('audio');
-        $content = $file->get();
-        $mimeType = $file->getMimeType();
-
-        $result = $geminiService->analyzeAudio($content, $mimeType);
-
-        if (!$result) {
-             return response()->json(['error' => 'Gemini analysis failed or returned null'], 500);
-        }
-
-        return response()->json([
-            'message' => 'Gemini Analysis Successful',
-            'data' => $result
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
