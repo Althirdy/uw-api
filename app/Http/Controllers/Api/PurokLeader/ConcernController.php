@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Api\PurokLeader;
 
 use App\Events\ConcernStatusUpdated;
 use App\Http\Controllers\Api\BaseApiController;
-use App\Models\ConcernDistribution;
+use App\Http\Resources\Api\PurokLeader\AssignedConcernResource;
 use App\Models\Citizen\Concern;
+use App\Models\ConcernDistribution;
 use App\Models\ConcernHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
-use App\Http\Resources\Api\PurokLeader\AssignedConcernResource;
 
 class ConcernController extends BaseApiController
 {
@@ -30,7 +29,7 @@ class ConcernController extends BaseApiController
                 ->get();
 
             return $this->sendResponse([
-                'concerns' => AssignedConcernResource::collection($distributions)
+                'concerns' => AssignedConcernResource::collection($distributions),
             ], 'Assigned concerns retrieved successfully');
 
         } catch (\Exception $e) {
@@ -38,7 +37,8 @@ class ConcernController extends BaseApiController
                 'error' => $e->getMessage(),
                 'purok_leader_id' => auth()->id(),
             ]);
-            return $this->sendError('Failed to retrieve concerns: ' . $e->getMessage());
+
+            return $this->sendError('Failed to retrieve concerns: '.$e->getMessage());
         }
     }
 
@@ -53,7 +53,7 @@ class ConcernController extends BaseApiController
                 ->where('purok_leader_id', auth()->id())
                 ->first();
 
-            if (!$distribution) {
+            if (! $distribution) {
                 return $this->sendError('Concern not found or not assigned to you', [], 404);
             }
 
@@ -62,14 +62,15 @@ class ConcernController extends BaseApiController
             $distribution->load(['concern.media', 'concern.citizen']);
 
             return $this->sendResponse([
-                'concern' => new AssignedConcernResource($distribution)
+                'concern' => new AssignedConcernResource($distribution),
             ], 'Concern details retrieved successfully');
 
         } catch (\Exception $e) {
             Log::error('Error showing concern', [
                 'error' => $e->getMessage(),
-                'concern_id' => $id
+                'concern_id' => $id,
             ]);
+
             return $this->sendError('Failed to retrieve concern details');
         }
     }
@@ -80,7 +81,7 @@ class ConcernController extends BaseApiController
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,ongoing,escalated,resolved' // Added resolved to validation
+            'status' => 'required|in:pending,ongoing,escalated,resolved', // Added resolved to validation
         ]);
 
         DB::beginTransaction();
@@ -90,7 +91,7 @@ class ConcernController extends BaseApiController
                 ->where('purok_leader_id', auth()->id())
                 ->first();
 
-            if (!$distribution) {
+            if (! $distribution) {
                 return $this->sendError('Concern not found or not assigned to you', [], 404);
             }
 
@@ -104,12 +105,12 @@ class ConcernController extends BaseApiController
 
             // 2. Update the specific distribution status
             // Mapping statuses if they differ, otherwise usage is direct
-            $distributionStatus = match($status) {
+            $distributionStatus = match ($status) {
                 'pending' => 'assigned',
                 'ongoing' => 'in_progress', // Fix: Map 'ongoing' to 'in_progress'
                 default => $status
             };
-            
+
             // Check if transitioning to a state that implies acknowledgement
             if ($distribution->status === 'assigned' && $distributionStatus !== 'assigned') {
                 $distribution->update([
@@ -144,16 +145,17 @@ class ConcernController extends BaseApiController
             return $this->sendResponse([
                 'concern_id' => $id,
                 'previous_status' => $previousStatus,
-                'new_status' => $status
+                'new_status' => $status,
             ], 'Concern status updated successfully');
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating concern status', [
                 'error' => $e->getMessage(),
-                'concern_id' => $id
+                'concern_id' => $id,
             ]);
-            return $this->sendError('Failed to update concern status: ' . $e->getMessage());
+
+            return $this->sendError('Failed to update concern status: '.$e->getMessage());
         }
     }
 }

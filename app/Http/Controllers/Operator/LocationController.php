@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Operator\LocationRequest;
 use App\Models\Locations;
 use App\Services\LocationService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class LocationController extends Controller
@@ -20,16 +19,16 @@ class LocationController extends Controller
         try {
             $validated = $request->validated();
             \Log::info('Creating location with data:', $validated);
-            
+
             $this->locationService->createLocation($validated);
 
             return redirect()->back()->with('success', 'Location created successfully!');
         } catch (\Exception $e) {
-            \Log::error('Failed to create location: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+            \Log::error('Failed to create location: '.$e->getMessage());
+            \Log::error('Stack trace: '.$e->getTraceAsString());
+
             return redirect()->back()
-                ->withErrors(['error' => 'An error occurred while creating the location: ' . $e->getMessage()])
+                ->withErrors(['error' => 'An error occurred while creating the location: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -42,7 +41,7 @@ class LocationController extends Controller
         $locationWithDetails = $this->locationService->getLocationWithDetails($location);
 
         return Inertia::render('LocationDetails', [
-            'location' => $locationWithDetails
+            'location' => $locationWithDetails,
         ]);
     }
 

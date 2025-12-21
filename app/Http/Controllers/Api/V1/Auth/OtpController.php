@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Mail\OtpMail;
 use App\Models\Otp;
 use App\Models\User;
 use App\Services\MailService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
@@ -38,7 +36,7 @@ class OtpController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -47,12 +45,13 @@ class OtpController extends Controller
         $name = $request->name ?? 'User';
 
         // Rate limiting: 3 attempts per email per 10 minutes
-        $key = 'otp:send:' . $email;
+        $key = 'otp:send:'.$email;
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
+
             return response()->json([
                 'success' => false,
-                'message' => "Too many OTP requests. Please try again in " . ceil($seconds / 60) . " minutes.",
+                'message' => 'Too many OTP requests. Please try again in '.ceil($seconds / 60).' minutes.',
             ], 429);
         }
 
@@ -67,7 +66,7 @@ class OtpController extends Controller
             }
         } elseif ($type === 'forgot_password') {
             // Check if user exists
-            if (!User::where('email', $email)->exists()) {
+            if (! User::where('email', $email)->exists()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Email not found',
@@ -77,11 +76,11 @@ class OtpController extends Controller
 
         // Delete old OTPs for this email and type
         Otp::where('email', $email)
-           ->where('type', $type)
-           ->delete();
+            ->where('type', $type)
+            ->delete();
 
         // Generate 6-digit OTP
-        $otpCode = str_pad((string)random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+        $otpCode = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
 
         // Create OTP record
         $otp = Otp::create([
@@ -94,10 +93,10 @@ class OtpController extends Controller
         // Send email
         $emailSent = $this->mailService->sendOtpEmail($email, $otpCode, $name);
 
-        if (!$emailSent) {
+        if (! $emailSent) {
             // Delete OTP if email fails
             $otp->delete();
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send OTP email. Please try again.',
@@ -112,7 +111,7 @@ class OtpController extends Controller
             'data' => [
                 'email' => $email,
                 'expires_in' => 10, // minutes
-            ]
+            ],
         ]);
     }
 
@@ -131,12 +130,12 @@ class OtpController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         // Rate limiting: 5 attempts per email per 10 minutes
-        $key = 'otp:verify:' . $request->email;
+        $key = 'otp:verify:'.$request->email;
         if (RateLimiter::tooManyAttempts($key, 5)) {
             return response()->json([
                 'success' => false,
@@ -146,13 +145,14 @@ class OtpController extends Controller
 
         // Find valid OTP
         $otp = Otp::forEmail($request->email)
-                  ->ofType($request->type)
-                  ->valid()
-                  ->latest()
-                  ->first();
+            ->ofType($request->type)
+            ->valid()
+            ->latest()
+            ->first();
 
-        if (!$otp) {
+        if (! $otp) {
             RateLimiter::hit($key, 600);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid or expired OTP',
@@ -162,6 +162,7 @@ class OtpController extends Controller
         // Verify OTP code
         if ($otp->otp !== $request->otp) {
             RateLimiter::hit($key, 600);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Incorrect OTP',
@@ -182,12 +183,12 @@ class OtpController extends Controller
         // If forgot password, generate and return a reset token
         if ($request->type === 'forgot_password') {
             $token = \Illuminate\Support\Str::random(60);
-            
+
             \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
                 ['email' => $request->email],
                 [
                     'token' => \Illuminate\Support\Facades\Hash::make($token),
-                    'created_at' => now()
+                    'created_at' => now(),
                 ]
             );
 
@@ -197,7 +198,7 @@ class OtpController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'OTP verified successfully',
-            'data' => $responseData
+            'data' => $responseData,
         ]);
     }
 
@@ -224,17 +225,17 @@ class OtpController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $otp = Otp::forEmail($request->email)
-                  ->ofType($request->type)
-                  ->valid()
-                  ->latest()
-                  ->first();
+            ->ofType($request->type)
+            ->valid()
+            ->latest()
+            ->first();
 
-        if (!$otp) {
+        if (! $otp) {
             return response()->json([
                 'success' => false,
                 'message' => 'No valid OTP found',

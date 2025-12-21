@@ -16,7 +16,7 @@ class AuthService
             ->where('email', $email)
             ->first();
 
-        if (!$user || !Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             return null;
         }
 
@@ -37,7 +37,7 @@ class AuthService
             }
         }
 
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -48,10 +48,10 @@ class AuthService
     {
         DB::beginTransaction();
         try {
-            $fullName = trim($data['first_name'] . ' ' .
-                ($data['middle_name'] ?? '') . ' ' .
-                $data['last_name'] .
-                ($data['suffix'] ? ' ' . $data['suffix'] : ''));
+            $fullName = trim($data['first_name'].' '.
+                ($data['middle_name'] ?? '').' '.
+                $data['last_name'].
+                ($data['suffix'] ? ' '.$data['suffix'] : ''));
 
             $user = User::create([
                 'name' => $fullName,
@@ -107,7 +107,7 @@ class AuthService
         return [
             'token' => $access_token,
             'refreshToken' => $refresh_token,
-            'user' => $user
+            'user' => $user,
         ];
     }
 }

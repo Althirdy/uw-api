@@ -4,9 +4,7 @@ namespace App\Events;
 
 use App\Models\Citizen\Concern;
 use App\Models\ConcernDistribution;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -17,8 +15,11 @@ class ConcernAssigned implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $concern;
+
     public $distribution;
+
     public $images;
+
     public $audioUrl;
 
     /**
@@ -40,7 +41,7 @@ class ConcernAssigned implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('purok-leader.' . $this->distribution->purok_leader_id),
+            new PrivateChannel('purok-leader.'.$this->distribution->purok_leader_id),
         ];
     }
 
@@ -59,7 +60,7 @@ class ConcernAssigned implements ShouldBroadcast
     {
         // Load relationships to avoid serialization issues in queue
         $this->concern->loadMissing('citizen');
-        
+
         return [
             'concern' => [
                 'id' => $this->concern->id,

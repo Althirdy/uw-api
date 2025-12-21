@@ -34,8 +34,8 @@ class CleanupExpiredOtps extends Command
 
         // Delete verified OTPs older than 24 hours
         $verifiedCount = Otp::where('is_verified', true)
-                             ->where('updated_at', '<', Carbon::now()->subHours(24))
-                             ->delete();
+            ->where('updated_at', '<', Carbon::now()->subHours(24))
+            ->delete();
 
         $totalDeleted = $expiredCount + $verifiedCount;
 

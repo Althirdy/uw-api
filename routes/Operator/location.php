@@ -16,7 +16,7 @@ Route::middleware('auth')->group(function () {
 
         $locations = Locations::with([
             'locationCategory:id,name',
-            'cctvDevices:id,location_id' // Load the devices to count them
+            'cctvDevices:id,location_id', // Load the devices to count them
         ])
             ->select('id', 'location_category', 'location_name', 'landmark', 'barangay', 'latitude', 'longitude', 'description')
             ->get();
@@ -24,12 +24,13 @@ Route::middleware('auth')->group(function () {
         $locations->transform(function ($location) {
             $location->cctv_count = $location->cctvDevices->count(); // Manual count
             unset($location->cctvDevices); // Remove the actual devices array to keep only the count
+
             return $location;
         });
 
         return Inertia::render('locations', [
             'locationCategories' => $locationCategory,
-            'locations' => $locations
+            'locations' => $locations,
         ]);
     })->name('locations');
 

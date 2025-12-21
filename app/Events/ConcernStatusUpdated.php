@@ -5,9 +5,7 @@ namespace App\Events;
 use App\Models\Citizen\Concern;
 use App\Models\ConcernDistribution;
 use App\Models\User;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -18,10 +16,15 @@ class ConcernStatusUpdated implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $concern;
+
     public $distribution;
+
     public $previousStatus;
+
     public $newStatus;
+
     public $purokLeader;
+
     public $remarks;
 
     /**
@@ -51,7 +54,7 @@ class ConcernStatusUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('App.Models.User.' . $this->concern->citizen_id),
+            new PrivateChannel('App.Models.User.'.$this->concern->citizen_id),
         ];
     }
 
@@ -91,23 +94,23 @@ class ConcernStatusUpdated implements ShouldBroadcast
                 'citizenId' => $this->concern->citizen_id,
                 'createdAt' => $this->concern->created_at?->toISOString(),
                 'updatedAt' => $this->concern->updated_at?->toISOString(),
-                
+
                 // Media
                 'images' => $this->concern->media
                     ->where('media_type', 'image')
                     ->pluck('original_path')
                     ->values()
                     ->toArray(),
-                
+
                 // Assigned Leader
                 'assignedTo' => [
                     'id' => $this->purokLeader->id,
-                    'name' => $this->purokLeader->officialDetails 
-                        ? trim("{$this->purokLeader->officialDetails->first_name} {$this->purokLeader->officialDetails->last_name}") 
+                    'name' => $this->purokLeader->officialDetails
+                        ? trim("{$this->purokLeader->officialDetails->first_name} {$this->purokLeader->officialDetails->last_name}")
                         : $this->purokLeader->name,
                     'role' => $this->purokLeader->role->name ?? 'Purok Leader',
                 ],
-                
+
                 // Timeline (Full History) - Matches ConcernResource structure
                 'timeline' => $this->concern->histories->map(function ($history) {
                     return [
@@ -116,7 +119,7 @@ class ConcernStatusUpdated implements ShouldBroadcast
                         'remarks' => $history->remarks,
                         'actedBy' => $history->actor ? [
                             'id' => $history->actor->id,
-                            'name' => $history->actor->officialDetails 
+                            'name' => $history->actor->officialDetails
                                 ? trim("{$history->actor->officialDetails->first_name} {$history->actor->officialDetails->last_name}")
                                 : $history->actor->name,
                         ] : ['name' => 'UrbanWatch System'],
@@ -124,14 +127,14 @@ class ConcernStatusUpdated implements ShouldBroadcast
                         'timeAgo' => $history->created_at->diffForHumans(),
                     ];
                 })->values()->toArray(),
-                
+
                 // Latest history entry (for easy access)
                 'latestUpdate' => [
                     'status' => $this->newStatus,
                     'remarks' => $this->remarks,
                     'actedBy' => [
                         'id' => $this->purokLeader->id,
-                        'name' => $this->purokLeader->officialDetails 
+                        'name' => $this->purokLeader->officialDetails
                             ? trim("{$this->purokLeader->officialDetails->first_name} {$this->purokLeader->officialDetails->last_name}")
                             : $this->purokLeader->name,
                     ],

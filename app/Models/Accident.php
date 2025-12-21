@@ -16,7 +16,7 @@ class Accident extends Model
         'status',
         'severity',
     ];
-    
+
     public function media()
     {
         return $this->morphMany(IncidentMedia::class, 'source');

@@ -18,7 +18,7 @@ class AssignedConcernResource extends JsonResource
         $concern = $this->concern;
 
         // Return null or empty structure if concern is missing (defensive coding)
-        if (!$concern) {
+        if (! $concern) {
             return [];
         }
 

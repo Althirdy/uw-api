@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Api\Auth;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Contracts\Validation\Validator;
 
 class LoginRequest extends FormRequest
 {
@@ -38,6 +38,7 @@ class LoginRequest extends FormRequest
             'password.required' => 'Password is required.',
         ];
     }
+
     /**
      * Handle a failed validation attempt.
      */
