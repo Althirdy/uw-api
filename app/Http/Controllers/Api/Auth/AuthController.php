@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Api\BaseApiController;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\LoginRequest;
 use App\Http\Requests\Api\Auth\PurokLeaderLoginRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
@@ -16,7 +15,7 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends BaseApiController
 {
-    //****LOGIN METHODD */
+    // ****LOGIN METHODD */
 
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
@@ -27,7 +26,7 @@ class AuthController extends BaseApiController
                 ->where('email', $validated['email'])
                 ->firstOrFail();
 
-            if (!$user || !Hash::check($validated['password'], $user->password)) {
+            if (! $user || ! Hash::check($validated['password'], $user->password)) {
                 return $this->sendUnauthorized('Invalid credentials');
             }
 
@@ -39,7 +38,7 @@ class AuthController extends BaseApiController
             if ($user['role_id'] == 2 || $user['role_id'] == 1) {
                 $officialDetails = $user->officialDetails;
 
-                if (!$officialDetails) {
+                if (! $officialDetails) {
                     return $this->sendError('Official details not found for this user');
                 }
 
@@ -56,12 +55,12 @@ class AuthController extends BaseApiController
                         'role' => $user->role->name,
                         'officeAddress' => $officialDetails->office_address,
                         'phoneNumber' => $officialDetails->contact_number,
-                    ]
+                    ],
                 ]);
-            } else if ($user['role_id'] == 3) {
+            } elseif ($user['role_id'] == 3) {
                 $citizenDetails = $user->citizenDetails;
 
-                if (!$citizenDetails) {
+                if (! $citizenDetails) {
                     return $this->sendError('Citizen details not found for this user');
                 }
 
@@ -83,7 +82,7 @@ class AuthController extends BaseApiController
                         'province' => $citizenDetails->province,
                         'postalCode' => $citizenDetails->postal_code,
                         'isVerified' => $citizenDetails->is_verified,
-                    ]
+                    ],
                 ]);
             }
 
@@ -113,19 +112,19 @@ class AuthController extends BaseApiController
                 }
             }
 
-            if (!$user) {
+            if (! $user) {
                 return $this->sendUnauthorized('Invalid PIN');
             }
 
             // Create access token with 'access-api' ability
             $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
-            
+
             // Create refresh token with 'refresh-token' ability
             $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
 
             $officialDetails = $user->officialDetails;
 
-            if (!$officialDetails) {
+            if (! $officialDetails) {
                 return $this->sendError('Official details not found for this user');
             }
 
@@ -142,12 +141,13 @@ class AuthController extends BaseApiController
                     'role' => $user->role->name,
                     'officeAddress' => $officialDetails->office_address,
                     'phoneNumber' => $officialDetails->contact_number,
-                ]
+                ],
             ], 'Login successful');
         } catch (\Exception $e) {
             return $this->sendUnauthorized('Invalid PIN');
         }
     }
+
     /**
      * Logout user (revoke token).
      */
@@ -172,7 +172,7 @@ class AuthController extends BaseApiController
             if ($user['role_id'] == 2 || $user['role_id'] == 1) {
                 $officialDetails = $user->officialDetails;
 
-                if (!$officialDetails) {
+                if (! $officialDetails) {
                     return $this->sendError('Official details not found for this user');
                 }
 
@@ -187,12 +187,12 @@ class AuthController extends BaseApiController
                         'role' => $user->role->name,
                         'officeAddress' => $officialDetails->office_address,
                         'phoneNumber' => $officialDetails->contact_number,
-                    ]
+                    ],
                 ]);
-            } else if ($user['role_id'] == 3) {
+            } elseif ($user['role_id'] == 3) {
                 $citizenDetails = $user->citizenDetails;
 
-                if (!$citizenDetails) {
+                if (! $citizenDetails) {
                     return $this->sendError('Citizen details not found for this user');
                 }
 
@@ -212,7 +212,7 @@ class AuthController extends BaseApiController
                         'province' => $citizenDetails->province,
                         'zipCode' => $citizenDetails->postal_code,
                         'isVerified' => $citizenDetails->is_verified,
-                    ]
+                    ],
                 ]);
             }
 
@@ -222,11 +222,11 @@ class AuthController extends BaseApiController
         }
     }
 
-    public function refreshToken(Request  $request): \Illuminate\Http\JsonResponse
+    public function refreshToken(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             // Verify the token has 'refresh-token' ability
-            if (!$request->user()->tokenCan('refresh-token')) {
+            if (! $request->user()->tokenCan('refresh-token')) {
                 return $this->sendUnauthorized('Invalid token type. Please use refresh token.');
             }
 
@@ -267,18 +267,18 @@ class AuthController extends BaseApiController
             $results = [];
 
             // Check email availability if provided
-            if (!empty($validated['email'])) {
+            if (! empty($validated['email'])) {
                 $existingEmail = User::where('email', $validated['email'])->first();
                 $results['email'] = [
-                    'available' => !$existingEmail,
-                    'message' => $existingEmail 
-                        ? 'This email is already registered.' 
-                        : 'Email is available.'
+                    'available' => ! $existingEmail,
+                    'message' => $existingEmail
+                        ? 'This email is already registered.'
+                        : 'Email is available.',
                 ];
             }
 
             // Check name availability if first_name and last_name are provided
-            if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
+            if (! empty($validated['first_name']) && ! empty($validated['last_name'])) {
                 $query = CitizenDetails::where('first_name', $validated['first_name'])
                     ->where('last_name', $validated['last_name']);
 
@@ -292,10 +292,10 @@ class AuthController extends BaseApiController
 
                 $existingCitizen = $query->first();
                 $results['name'] = [
-                    'available' => !$existingCitizen,
-                    'message' => $existingCitizen 
-                        ? 'A user with this name is already registered.' 
-                        : 'Name is available.'
+                    'available' => ! $existingCitizen,
+                    'message' => $existingCitizen
+                        ? 'A user with this name is already registered.'
+                        : 'Name is available.',
                 ];
             }
 
@@ -307,7 +307,7 @@ class AuthController extends BaseApiController
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->sendError('Validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
-            return $this->sendError('An error occurred while verifying registration information: ' . $e->getMessage());
+            return $this->sendError('An error occurred while verifying registration information: '.$e->getMessage());
         }
     }
 
@@ -322,10 +322,10 @@ class AuthController extends BaseApiController
             DB::beginTransaction();
 
             // Concatenate full name
-            $fullName = trim($validated['first_name'] . ' ' .
-                ($validated['middle_name'] ?? '') . ' ' .
-                $validated['last_name'] .
-                ($validated['suffix'] ? ' ' . $validated['suffix'] : ''));
+            $fullName = trim($validated['first_name'].' '.
+                ($validated['middle_name'] ?? '').' '.
+                $validated['last_name'].
+                ($validated['suffix'] ? ' '.$validated['suffix'] : ''));
 
             // Create user record
             $user = User::create([
@@ -378,11 +378,12 @@ class AuthController extends BaseApiController
                     'province' => $citizenDetails->province,
                     'postalCode' => $citizenDetails->postal_code,
                     'isVerified' => $citizenDetails->is_verified,
-                ]
+                ],
             ], 'Registration successful');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->sendError('Registration failed: ' . $e->getMessage());
+
+            return $this->sendError('Registration failed: '.$e->getMessage());
         }
     }
 }

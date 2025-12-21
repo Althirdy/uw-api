@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class UserController extends Controller 
+class UserController extends Controller
 {
     public function index(Request $request): Response
     {
@@ -26,18 +26,18 @@ class UserController extends Controller
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', "%{$searchTerm}%")
-                  ->orWhere('email', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('officialDetails', function ($officialQuery) use ($searchTerm) {
-                      $officialQuery->where('first_name', 'like', "%{$searchTerm}%")
-                                   ->orWhere('last_name', 'like', "%{$searchTerm}%")
-                                   ->orWhere('contact_number', 'like', "%{$searchTerm}%");
-                  })
-                  ->orWhereHas('citizenDetails', function ($citizenQuery) use ($searchTerm) {
-                      $citizenQuery->where('first_name', 'like', "%{$searchTerm}%")
-                                  ->orWhere('last_name', 'like', "%{$searchTerm}%")
-                                  ->orWhere('phone_number', 'like', "%{$searchTerm}%")
-                                  ->orWhere('barangay', 'like', "%{$searchTerm}%");
-                  });
+                    ->orWhere('email', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('officialDetails', function ($officialQuery) use ($searchTerm) {
+                        $officialQuery->where('first_name', 'like', "%{$searchTerm}%")
+                            ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                            ->orWhere('contact_number', 'like', "%{$searchTerm}%");
+                    })
+                    ->orWhereHas('citizenDetails', function ($citizenQuery) use ($searchTerm) {
+                        $citizenQuery->where('first_name', 'like', "%{$searchTerm}%")
+                            ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                            ->orWhere('phone_number', 'like', "%{$searchTerm}%")
+                            ->orWhere('barangay', 'like', "%{$searchTerm}%");
+                    });
             });
         }
 
@@ -54,8 +54,8 @@ class UserController extends Controller
         }
 
         $users = $query->orderBy('created_at', 'desc')
-                      ->paginate(10)
-                      ->withQueryString();
+            ->paginate(10)
+            ->withQueryString();
 
         $roles = Roles::all();
         $locations = Locations::select('id', 'location_name', 'barangay')->get();
@@ -71,7 +71,7 @@ class UserController extends Controller
     public function create(): Response
     {
         $roles = Roles::all();
-        
+
         return Inertia::render('Users/Create', [
             'roles' => $roles,
         ]);
@@ -83,8 +83,8 @@ class UserController extends Controller
 
         // Combine names for the user table
         $validated['name'] = trim(
-            $validated['first_name'] . ' ' . 
-            ($validated['middle_name'] ? $validated['middle_name'] . '. ' : '') . 
+            $validated['first_name'].' '.
+            ($validated['middle_name'] ? $validated['middle_name'].'. ' : '').
             $validated['last_name']
         );
 
@@ -134,18 +134,19 @@ class UserController extends Controller
                     'is_verified' => false, // Default to unverified
                 ]);
             }
-            
+
             DB::commit();
 
             return redirect()->route('users')
                 ->with('success', 'User created successfully.');
-                
+
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Failed to create user: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Failed to create user: '.$e->getMessage());
+            \Log::error('Stack trace: '.$e->getTraceAsString());
+
             return back()
-                ->withErrors(['error' => 'Failed to create user: ' . $e->getMessage()])
+                ->withErrors(['error' => 'Failed to create user: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -153,7 +154,7 @@ class UserController extends Controller
     public function show(User $user): Response
     {
         $user->load(['role', 'officialDetails', 'citizenDetails']);
-        
+
         return Inertia::render('Users/Show', [
             'user' => $user,
         ]);
@@ -163,7 +164,7 @@ class UserController extends Controller
     {
         $user->load(['role', 'officialDetails', 'citizenDetails']);
         $roles = Roles::all();
-        
+
         return Inertia::render('Users/Edit', [
             'user' => $user,
             'roles' => $roles,
@@ -176,8 +177,8 @@ class UserController extends Controller
 
         // Combine names for the user table
         $validated['name'] = trim(
-            $validated['first_name'] . ' ' . 
-            ($validated['middle_name'] ? $validated['middle_name'] . ' ' : '') . 
+            $validated['first_name'].' '.
+            ($validated['middle_name'] ? $validated['middle_name'].' ' : '').
             $validated['last_name']
         );
 
@@ -194,7 +195,7 @@ class UserController extends Controller
             if ($user->role_id == 1 || $user->role_id == 2) {
                 // Operator or Purok Leader - update OfficialsDetails
                 $assignedBrgy = $validated['assigned_brgy'] ?? $validated['barangay'] ?? null;
-            
+
                 $officialDetails = $user->officialDetails()->updateOrCreate(
                     ['user_id' => $user->id],
                     [
@@ -210,8 +211,7 @@ class UserController extends Controller
                         'status' => strtolower($validated['status'] ?? 'active'),
                     ]
                 );
-                
-               
+
             } elseif ($user->role_id == 3) {
                 // Citizen - update CitizenDetails
                 $user->citizenDetails()->updateOrCreate(
@@ -240,7 +240,7 @@ class UserController extends Controller
                 ->with('success', 'User updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-           
+
             return back()
                 ->with('error', 'Failed to update user. Please try again.')
                 ->withInput();
@@ -258,13 +258,14 @@ class UserController extends Controller
                 } elseif ($user->role_id == 3) {
                     $user->citizenDetails()->update(['status' => 'archived']);
                 }
-            
+
                 DB::commit();
 
                 return redirect()->route('users')
                     ->with('success', 'User archived successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to archive user. Please try again.');
             }
@@ -282,7 +283,7 @@ class UserController extends Controller
                 // Delete related details first (cascade should handle this, but being explicit)
                 $user->officialDetails()->delete();
                 $user->citizenDetails()->delete();
-                
+
                 // Delete the user
                 $user->delete();
                 DB::commit();
@@ -291,6 +292,7 @@ class UserController extends Controller
                     ->with('success', 'User deleted successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to delete user. Please try again.');
             }

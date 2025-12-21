@@ -1,9 +1,7 @@
 <?php
 
 use App\Http\Controllers\Operator\ContactController;
-use App\Models\Contact;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('contacts', [ContactController::class, 'index'])->name('contacts');

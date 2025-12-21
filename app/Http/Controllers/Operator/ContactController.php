@@ -41,7 +41,7 @@ class ContactController extends Controller
 
         return Inertia::render('contacts', [
             'contacts' => $contacts,
-            'filters' => $request->only(['search', 'responder_type', 'active'])
+            'filters' => $request->only(['search', 'responder_type', 'active']),
         ]);
     }
 
@@ -75,7 +75,7 @@ class ContactController extends Controller
     public function show(Contact $contact)
     {
         return Inertia::render('ContactDetails', [
-            'contact' => $contact
+            'contact' => $contact,
         ]);
     }
 

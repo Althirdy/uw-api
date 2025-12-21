@@ -46,7 +46,7 @@ class ContactController extends BaseApiController
                     'last_page' => $contacts->lastPage(),
                     'per_page' => $contacts->perPage(),
                     'total' => $contacts->total(),
-                ]
+                ],
             ], 'Contacts retrieved successfully');
 
         } catch (\Exception $e) {
@@ -55,7 +55,7 @@ class ContactController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while retrieving contacts: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving contacts: '.$e->getMessage());
         }
     }
 
@@ -74,7 +74,7 @@ class ContactController extends BaseApiController
             DB::commit();
 
             return $this->sendResponse([
-                'contact' => new ContactResource($contact)
+                'contact' => new ContactResource($contact),
             ], 'Contact created successfully!', 201);
 
         } catch (\Exception $e) {
@@ -85,7 +85,7 @@ class ContactController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while creating the contact: ' . $e->getMessage());
+            return $this->sendError('An error occurred while creating the contact: '.$e->getMessage());
         }
     }
 
@@ -96,7 +96,7 @@ class ContactController extends BaseApiController
     {
         try {
             return $this->sendResponse([
-                'contact' => new ContactResource($contact)
+                'contact' => new ContactResource($contact),
             ], 'Contact retrieved successfully');
 
         } catch (\Exception $e) {
@@ -105,7 +105,7 @@ class ContactController extends BaseApiController
                 'contact_id' => $contact->id,
             ]);
 
-            return $this->sendError('An error occurred while retrieving the contact: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving the contact: '.$e->getMessage());
         }
     }
 
@@ -124,7 +124,7 @@ class ContactController extends BaseApiController
             DB::commit();
 
             return $this->sendResponse([
-                'contact' => new ContactResource($contact)
+                'contact' => new ContactResource($contact),
             ], 'Contact updated successfully!');
 
         } catch (\Exception $e) {
@@ -136,7 +136,7 @@ class ContactController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while updating the contact: ' . $e->getMessage());
+            return $this->sendError('An error occurred while updating the contact: '.$e->getMessage());
         }
     }
 
@@ -153,7 +153,7 @@ class ContactController extends BaseApiController
             DB::commit();
 
             return $this->sendResponse([
-                'contact_id' => $contact->id
+                'contact_id' => $contact->id,
             ], 'Contact deleted successfully!');
 
         } catch (\Exception $e) {
@@ -165,7 +165,7 @@ class ContactController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while deleting the contact: ' . $e->getMessage());
+            return $this->sendError('An error occurred while deleting the contact: '.$e->getMessage());
         }
     }
 
@@ -178,7 +178,7 @@ class ContactController extends BaseApiController
             $contacts = Contact::where('active', true)->get();
 
             return $this->sendResponse([
-                'contacts' => ContactResource::collection($contacts)
+                'contacts' => ContactResource::collection($contacts),
             ], 'Contacts retrieved successfully for heatmap');
 
         } catch (\Exception $e) {
@@ -187,7 +187,7 @@ class ContactController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while retrieving contacts: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving contacts: '.$e->getMessage());
         }
     }
 }

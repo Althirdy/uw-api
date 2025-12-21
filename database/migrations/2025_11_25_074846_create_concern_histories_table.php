@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('concern_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('concern_id')->constrained('concerns')->onDelete('cascade');
-            $table->foreignId('acted_by')->nullable()->constrained('users')->nullOnDelete(); 
+            $table->foreignId('acted_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('status'); // The status *after* this action (e.g., 'pending', 'ongoing')
             $table->text('remarks')->nullable();
             $table->timestamps();

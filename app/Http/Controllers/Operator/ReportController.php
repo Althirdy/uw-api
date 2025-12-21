@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
-use App\Models\PublicPost;
-use App\Models\Report;
 use App\Models\Accident;
+use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,8 +23,8 @@ class ReportController extends Controller
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('description', 'like', "%{$searchTerm}%")
-                  ->orWhere('accident_type', 'like', "%{$searchTerm}%");
+                    ->orWhere('description', 'like', "%{$searchTerm}%")
+                    ->orWhere('accident_type', 'like', "%{$searchTerm}%");
             });
         }
 
@@ -41,8 +40,8 @@ class ReportController extends Controller
         }
 
         $accidents = $query->orderBy('created_at', 'desc')
-                        ->paginate(10)
-                        ->withQueryString();
+            ->paginate(10)
+            ->withQueryString();
 
         // Transform accidents data to match reports structure
         $accidents->getCollection()->transform(function ($accident) {
@@ -76,7 +75,7 @@ class ReportController extends Controller
     public function create(): Response
     {
         $users = User::all();
-        
+
         return Inertia::render('Reports/Create', [
             'users' => $users,
             'reportTypes' => Report::getReportTypes(),
@@ -88,7 +87,7 @@ class ReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'report_type' => 'required|string|in:' . implode(',', Report::getReportTypes()),
+                'report_type' => 'required|string|in:'.implode(',', Report::getReportTypes()),
                 'transcript' => 'required|string|max:500',
                 'description' => 'required|string|max:1000',
                 'latitute' => 'required|numeric|between:-90,90',
@@ -98,28 +97,29 @@ class ReportController extends Controller
             ]);
 
             // Set user_id to current user if not provided
-            if (!isset($validated['user_id'])) {
+            if (! isset($validated['user_id'])) {
                 $validated['user_id'] = auth()->id();
             }
-            
+
             // Set default status if not provided
-            if (!isset($validated['status'])) {
+            if (! isset($validated['status'])) {
                 $validated['status'] = 'Pending';
             }
-            
+
             $validated['is_acknowledge'] = false;
 
             DB::beginTransaction();
             try {
                 $report = Report::create($validated);
-                
+
                 DB::commit();
 
                 return redirect()->route('reports')
                     ->with('success', 'Report created successfully.');
-                    
+
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to create report. Please try again.')
                     ->withInput();
@@ -132,7 +132,7 @@ class ReportController extends Controller
     public function show(Report $report): Response
     {
         $report->load(['user', 'acknowledgedBy']);
-        
+
         return Inertia::render('Reports/Show', [
             'report' => $report,
             'statusOptions' => Report::getStatusOptions(),
@@ -142,7 +142,7 @@ class ReportController extends Controller
     public function edit(Report $report): Response
     {
         $users = User::all();
-        
+
         return Inertia::render('Reports/Edit', [
             'report' => $report,
             'users' => $users,
@@ -184,6 +184,7 @@ class ReportController extends Controller
                     ->with('success', 'Accident report updated successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to update report. Please try again.')
                     ->withInput();
@@ -209,6 +210,7 @@ class ReportController extends Controller
                     ->with('success', 'Accident report archived successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to archive report. Please try again.');
             }
@@ -232,9 +234,9 @@ class ReportController extends Controller
             try {
                 // Update status to ongoing when acknowledged
                 $accident->update([
-                    'status' => 'ongoing'
+                    'status' => 'ongoing',
                 ]);
-                
+
                 DB::commit();
 
                 return redirect()->route('reports')
@@ -242,6 +244,7 @@ class ReportController extends Controller
                     ->with('refresh', true);
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to acknowledge report. Please try again.');
             }
@@ -271,6 +274,7 @@ class ReportController extends Controller
                     ->with('success', 'Report resolved successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to resolve report. Please try again.');
             }
@@ -279,6 +283,4 @@ class ReportController extends Controller
                 ->with('error', 'Failed to resolve report. Please try again.');
         }
     }
-
-   
 }

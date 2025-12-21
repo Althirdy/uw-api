@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class Otp extends Model
 {
@@ -33,7 +33,7 @@ class Otp extends Model
      */
     public function isValid(): bool
     {
-        return !$this->isExpired() && !$this->is_verified;
+        return ! $this->isExpired() && ! $this->is_verified;
     }
 
     /**
@@ -42,6 +42,7 @@ class Otp extends Model
     public function markAsVerified(): bool
     {
         $this->is_verified = true;
+
         return $this->save();
     }
 
@@ -51,7 +52,7 @@ class Otp extends Model
     public function scopeValid($query)
     {
         return $query->where('is_verified', false)
-                    ->where('expires_at', '>', Carbon::now());
+            ->where('expires_at', '>', Carbon::now());
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -49,11 +48,11 @@ class Contact extends Model
      */
     public function scopeSearch($query, $term)
     {
-        return $query->where(function($q) use ($term) {
+        return $query->where(function ($q) use ($term) {
             $q->where('branch_unit_name', 'like', "%{$term}%")
-              ->orWhere('contact_person', 'like', "%{$term}%")
-              ->orWhere('primary_mobile', 'like', "%{$term}%")
-              ->orWhere('location', 'like', "%{$term}%");
+                ->orWhere('contact_person', 'like', "%{$term}%")
+                ->orWhere('primary_mobile', 'like', "%{$term}%")
+                ->orWhere('location', 'like', "%{$term}%");
         });
     }
 }

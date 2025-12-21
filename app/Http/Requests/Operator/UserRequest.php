@@ -31,7 +31,7 @@ class UserRequest extends FormRequest
             $passwordRules = 'nullable';
         } else {
             $passwordRules = ['required', 'string', 'confirmed'];
-            
+
             if ($isPurokLeader) {
                 // PIN validation for Purok Leader - only numbers, min 4 digits
                 $passwordRules[] = 'regex:/^\d+$/';
@@ -51,7 +51,7 @@ class UserRequest extends FormRequest
                 'required',
                 'email:rfc,dns',
                 'max:255',
-                $isUpdate ? 'unique:users,email,' . $userId : 'unique:users',
+                $isUpdate ? 'unique:users,email,'.$userId : 'unique:users',
             ],
             'phone_number' => 'nullable|regex:/^[0-9+\-\s]{10,20}$/',
             'role_id' => $isUpdate ? 'nullable|exists:roles,id' : 'required|numeric|exists:roles,id',
@@ -82,7 +82,7 @@ class UserRequest extends FormRequest
     {
         $isPurokLeader = $this->input('role_id') == 2;
         $passwordFieldName = $isPurokLeader ? 'PIN' : 'Password';
-        
+
         return [
             'first_name.required' => 'First name is required.',
             'first_name.regex' => 'First name can only contain letters, spaces, hyphens, and apostrophes.',
@@ -100,8 +100,8 @@ class UserRequest extends FormRequest
             'phone_number.regex' => 'Phone number must be a valid format (10-20 digits, can include +, -, and spaces).',
             'role_id.required' => 'User role is required.',
             'role_id.exists' => 'The selected role is invalid.',
-            'password.required' => $passwordFieldName . ' is required.',
-            'password.confirmed' => $passwordFieldName . ' confirmation does not match.',
+            'password.required' => $passwordFieldName.' is required.',
+            'password.confirmed' => $passwordFieldName.' confirmation does not match.',
             'password.regex' => $isPurokLeader ? 'PIN must contain only numbers.' : null,
             'password.min' => $isPurokLeader ? 'PIN must be at least 4 digits.' : 'Password must be at least 8 characters.',
             'status.in' => 'Status must be Active, Inactive, or Archived.',

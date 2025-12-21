@@ -10,6 +10,7 @@ Route::middleware('auth')->group(function () {
         $roles = Roles::withCount('users')
             ->latest()
             ->paginate(10);
+
         return Inertia::render('roles', ['roles' => $roles]);
     })->name('roles');
 

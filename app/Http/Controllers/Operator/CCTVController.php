@@ -5,9 +5,8 @@ namespace App\Http\Controllers\Operator;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operator\CCTVRequest;
 use App\Models\cctvDevices;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CCTVController extends Controller
 {
@@ -29,7 +28,7 @@ class CCTVController extends Controller
             Log::info('CCTV Device created successfully:', [
                 'id' => $cctvDevice->id,
                 'device_name' => $cctvDevice->device_name,
-                'location_id' => $cctvDevice->location_id
+                'location_id' => $cctvDevice->location_id,
             ]);
 
             // Commit the transaction
@@ -41,15 +40,15 @@ class CCTVController extends Controller
             DB::rollBack();
 
             // Log the error with details
-            Log::error('CCTV Creation Error: ' . $e->getMessage(), [
+            Log::error('CCTV Creation Error: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-                'validated_data' => $validated ?? 'No validated data'
+                'validated_data' => $validated ?? 'No validated data',
             ]);
 
             return redirect()->back()
-                ->with('error', 'An error occurred while creating the CCTV device: ' . $e->getMessage())
+                ->with('error', 'An error occurred while creating the CCTV device: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -72,7 +71,7 @@ class CCTVController extends Controller
             Log::info('CCTV Device updated successfully:', [
                 'id' => $cctv->id,
                 'device_name' => $cctv->device_name,
-                'location_id' => $cctv->location_id
+                'location_id' => $cctv->location_id,
             ]);
 
             // Commit the transaction
@@ -84,15 +83,15 @@ class CCTVController extends Controller
             DB::rollBack();
 
             // Log the error with details
-            Log::error('CCTV Update Error: ' . $e->getMessage(), [
+            Log::error('CCTV Update Error: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-                'validated_data' => $validated ?? 'No validated data'
+                'validated_data' => $validated ?? 'No validated data',
             ]);
 
             return redirect()->back()
-                ->with('error', 'An error occurred while updating the CCTV device: ' . $e->getMessage())
+                ->with('error', 'An error occurred while updating the CCTV device: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -108,18 +107,19 @@ class CCTVController extends Controller
             Log::info('CCTV Device deleted successfully:', [
                 'id' => $cctv->id,
                 'device_name' => $cctv->device_name,
-                'location_id' => $cctv->location_id
+                'location_id' => $cctv->location_id,
             ]);
 
             return redirect()->back()->with('success', 'CCTV device deleted successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('CCTV Deletion Error: ' . $e->getMessage(), [
+            Log::error('CCTV Deletion Error: '.$e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-                'cctv_id' => $cctv->id
+                'cctv_id' => $cctv->id,
             ]);
+
             return redirect()->back()
                 ->with('error', 'An error occurred while deleting the CCTV device.');
         }

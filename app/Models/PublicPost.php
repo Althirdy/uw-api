@@ -63,7 +63,7 @@ class PublicPost extends Model
     public function scopePublished($query)
     {
         return $query->whereNotNull('published_at')
-                    ->where('published_at', '<=', now());
+            ->where('published_at', '<=', now());
     }
 
     /**
@@ -72,7 +72,7 @@ class PublicPost extends Model
     public function scopeUnpublished($query)
     {
         return $query->whereNull('published_at')
-                    ->orWhere('published_at', '>', now());
+            ->orWhere('published_at', '>', now());
     }
 
     /**

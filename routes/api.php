@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /**
@@ -9,24 +8,25 @@ use Illuminate\Support\Facades\Route;
  */
 Route::prefix('v1')->group(function () {
     // Auth & OTP routes
-    require __DIR__ . '/api/v1/auth.php';
-    
+    require __DIR__.'/api/v1/auth.php';
+
     // Citizen concern management routes
-    require __DIR__ . '/api/v1/concerns.php';
-    
+    require __DIR__.'/api/v1/concerns.php';
+
     // Contact management routes
-    require __DIR__ . '/api/v1/contacts.php';
-    
+    require __DIR__.'/api/v1/contacts.php';
+
     // Accident/Report routes
-    require __DIR__ . '/api/v1/accidents.php';
-    
+    require __DIR__.'/api/v1/accidents.php';
+
     // YOLO detection routes
-    require __DIR__ . '/api/v1/yolo.php';
+    require __DIR__.'/api/v1/yolo.php';
 });
 
 /**
  * Legacy Routes (for backward compatibility)
  * These will be deprecated in future versions
+ *
  * @deprecated Use /api/v1 endpoints instead
  */
 Route::prefix('legacy')->group(function () {
@@ -47,7 +47,7 @@ Route::prefix('legacy')->group(function () {
         ->middleware(['auth:sanctum', 'ability.access']);
     Route::post('/refresh-token', [App\Http\Controllers\Api\Auth\AuthController::class, 'refreshToken'])
         ->middleware('auth:sanctum');
-    
+
     Route::middleware(['auth:sanctum', 'ability.access'])->group(function () {
         Route::prefix('auth')->group(function () {
             Route::get('user', [App\Http\Controllers\Api\Auth\AuthController::class, 'user']);
@@ -61,7 +61,7 @@ Route::prefix('legacy')->group(function () {
     Route::get('contacts/heatmap', [App\Http\Controllers\Operator\ContactController::class, 'heatMapContacts']);
 
     // Keep old citizen concern routes
-    Route::middleware(['auth:sanctum'])->group(function(){
+    Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('citizen/manual-concerns', \App\Http\Controllers\Api\Citizen\Concern\ManualConcernController::class);
     });
 });
@@ -73,6 +73,6 @@ Route::get('health', function () {
     return response()->json([
         'status' => 'OK',
         'version' => 'v1',
-        'timestamp' => now()->toISOString()
+        'timestamp' => now()->toISOString(),
     ], 200);
 });

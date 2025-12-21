@@ -39,7 +39,8 @@ class CCTVRequest extends FormRequest
      * Get custom error messages for validator errors.
      *
      * @return array<string, string>
-     */    public function messages(): array
+     */
+    public function messages(): array
     {
         return [
             'device_name.required' => 'Device name is required.',

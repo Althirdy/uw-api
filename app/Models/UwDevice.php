@@ -57,8 +57,9 @@ class UwDevice extends Model
     public function getDisplayLocationAttribute()
     {
         if ($this->location) {
-            return $this->location->location_name . ', ' . $this->location->barangay;
+            return $this->location->location_name.', '.$this->location->barangay;
         }
+
         return $this->custom_address ?? 'No location specified';
     }
 
@@ -70,6 +71,7 @@ class UwDevice extends Model
         if ($this->location) {
             return $this->location->latitude;
         }
+
         return $this->custom_latitude;
     }
 
@@ -81,6 +83,7 @@ class UwDevice extends Model
         if ($this->location) {
             return $this->location->longitude;
         }
+
         return $this->custom_longitude;
     }
 }
