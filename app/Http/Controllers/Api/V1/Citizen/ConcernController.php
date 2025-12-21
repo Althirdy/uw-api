@@ -176,6 +176,11 @@ class ConcernController extends BaseApiController
 
             DB::commit();
 
+            // 🧠 Step 5.5: Dispatch Background Job for Voice Analysis
+            if ($concernType === 'voice') {
+                ProcessVoiceConcernJob::dispatch($concern->id);
+            }
+
             // Load relationships for resource
             $concern->load(['media', 'distribution.purokLeader.officialDetails', 'histories.actor.officialDetails']);
 
