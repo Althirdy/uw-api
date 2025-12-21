@@ -21,6 +21,8 @@ Route::prefix('v1')->group(function () {
 
     // YOLO detection routes
     require __DIR__.'/api/v1/yolo.php';
+
+    Route::post('/ocr/national-id', [App\Http\Controllers\Api\V1\Auth\IdVerificationController::class, 'scanIdFront']);
 });
 
 /**
@@ -64,6 +66,7 @@ Route::prefix('legacy')->group(function () {
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('citizen/manual-concerns', \App\Http\Controllers\Api\Citizen\Concern\ManualConcernController::class);
     });
+
 });
 
 /**

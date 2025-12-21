@@ -3,9 +3,7 @@
 namespace App\Events;
 
 use App\Models\Citizen\Concern;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -36,14 +34,14 @@ class ConcernTranscribed implements ShouldBroadcast
 
         // Notify the citizen who created the concern
         if ($this->concern->citizen_id) {
-            $channels[] = new PrivateChannel('citizen.' . $this->concern->citizen_id);
+            $channels[] = new PrivateChannel('citizen.'.$this->concern->citizen_id);
         }
 
         // Notify the assigned purok leader
         // We need to fetch the active distribution to find the purok leader
         $distribution = $this->concern->distribution;
         if ($distribution && $distribution->purok_leader_id) {
-            $channels[] = new PrivateChannel('purok-leader.' . $distribution->purok_leader_id);
+            $channels[] = new PrivateChannel('purok-leader.'.$distribution->purok_leader_id);
         }
 
         return $channels;
