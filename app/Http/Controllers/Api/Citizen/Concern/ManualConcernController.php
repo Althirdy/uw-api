@@ -2,22 +2,19 @@
 
 namespace App\Http\Controllers\Api\Citizen\Concern;
 
+use App\Events\ConcernAssigned;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Requests\Citizen\ConcernRequest;
 use App\Http\Requests\Citizen\UpdateConcernRequest;
 use App\Models\Citizen\Concern;
-use App\Models\IncidentMedia;
 use App\Models\ConcernDistribution;
-use App\Events\ConcernAssigned;
+use App\Models\IncidentMedia;
+use App\Services\FileUploadService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
-use App\Services\FileUploadService;
-
 
 class ManualConcernController extends BaseApiController
 {
-
     protected $fileUploadService;
 
     public function __construct(FileUploadService $fileUploadService)
@@ -37,7 +34,7 @@ class ManualConcernController extends BaseApiController
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
-                    }
+                    },
                 ])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -53,12 +50,12 @@ class ManualConcernController extends BaseApiController
                     'longitude' => $concern->longitude,
                     'status' => $concern->status,
                     'created_at' => $concern->created_at,
-                    'images' => $concern->media->pluck('original_path')->toArray()
+                    'images' => $concern->media->pluck('original_path')->toArray(),
                 ];
             });
 
             return $this->sendResponse([
-                'concerns' => $formattedConcerns
+                'concerns' => $formattedConcerns,
             ], 'Manual concerns retrieved successfully');
 
         } catch (\Exception $e) {
@@ -67,7 +64,7 @@ class ManualConcernController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while retrieving concerns: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving concerns: '.$e->getMessage());
         }
     }
 
@@ -83,9 +80,9 @@ class ManualConcernController extends BaseApiController
         try {
             // 🔍 Step 0: Determine Concern Type & Prepare Data
             $concernType = $validated['type'];
-            
+
             if ($concernType === 'voice') {
-                $title = 'Voice Concern - ' . now()->format('M d, Y H:i');
+                $title = 'Voice Concern - '.now()->format('M d, Y H:i');
                 $description = 'Audio recording received. Transcription pending...';
             } else {
                 $title = $validated['title'];
@@ -124,7 +121,7 @@ class ManualConcernController extends BaseApiController
                     $mimeType = $upload['mime_type'] ?? '';
                     $isAudio = str_starts_with($mimeType, 'audio/');
                     $mediaType = $isAudio ? 'audio' : 'image';
-                    
+
                     if ($isAudio) {
                         $audioUrl = $upload['public_url'];
                     } else {
@@ -186,7 +183,7 @@ class ManualConcernController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while submitting concern: ' . $e->getMessage());
+            return $this->sendError('An error occurred while submitting concern: '.$e->getMessage());
         }
     }
 
@@ -203,11 +200,11 @@ class ManualConcernController extends BaseApiController
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
-                    }
+                    },
                 ])
                 ->first();
 
-            if (!$concern) {
+            if (! $concern) {
                 return $this->sendError('Manual concern not found or you do not have permission to view it', [], 404);
             }
 
@@ -221,11 +218,11 @@ class ManualConcernController extends BaseApiController
                 'latitude' => $concern->latitude,
                 'longitude' => $concern->longitude,
                 'created_at' => $concern->created_at,
-                'images' => $concern->media->pluck('original_path')->toArray()
+                'images' => $concern->media->pluck('original_path')->toArray(),
             ];
 
             return $this->sendResponse([
-                'concern' => $formattedConcern
+                'concern' => $formattedConcern,
             ], 'Manual concern retrieved successfully');
 
         } catch (\Exception $e) {
@@ -234,7 +231,7 @@ class ManualConcernController extends BaseApiController
                 'concern_id' => $id,
             ]);
 
-            return $this->sendError('An error occurred while retrieving concern: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving concern: '.$e->getMessage());
         }
     }
 
@@ -253,11 +250,11 @@ class ManualConcernController extends BaseApiController
                 ->with([
                     'media' => function ($query) {
                         $query->where('source_category', 'citizen_concern');
-                    }
+                    },
                 ])
                 ->first();
 
-            if (!$concern) {
+            if (! $concern) {
                 return $this->sendError('Manual concern not found or you do not have permission to update it', [], 404);
             }
 
@@ -280,11 +277,11 @@ class ManualConcernController extends BaseApiController
                 'longitude' => $concern->longitude,
                 'created_at' => $concern->created_at,
                 'updated_at' => $concern->updated_at,
-                'images' => $concern->media->pluck('original_path')->toArray()
+                'images' => $concern->media->pluck('original_path')->toArray(),
             ];
 
             return $this->sendResponse([
-                'concern' => $formattedConcern
+                'concern' => $formattedConcern,
             ], 'Manual concern updated successfully');
 
         } catch (\Exception $e) {
@@ -296,7 +293,7 @@ class ManualConcernController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while updating concern: ' . $e->getMessage());
+            return $this->sendError('An error occurred while updating concern: '.$e->getMessage());
         }
     }
 
@@ -314,7 +311,7 @@ class ManualConcernController extends BaseApiController
                 ->where('citizen_id', auth()->id())
                 ->first();
 
-            if (!$concern) {
+            if (! $concern) {
                 return $this->sendError('Manual concern not found or you do not have permission to delete it', [], 404);
             }
 
@@ -324,7 +321,7 @@ class ManualConcernController extends BaseApiController
             DB::commit();
 
             return $this->sendResponse([
-                'concern_id' => $id
+                'concern_id' => $id,
             ], 'Manual concern deleted successfully');
 
         } catch (\Exception $e) {
@@ -336,7 +333,7 @@ class ManualConcernController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while deleting concern: ' . $e->getMessage());
+            return $this->sendError('An error occurred while deleting concern: '.$e->getMessage());
         }
     }
 }

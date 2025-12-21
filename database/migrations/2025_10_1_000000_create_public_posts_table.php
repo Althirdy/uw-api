@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamps(); // This creates updated_at and created_at
             $table->softDeletes(); // This creates deleted_at
             $table->enum('status', ['draft', 'published', 'scheduled'])->default('draft');
-            
+
             // Foreign key constraints
             $table->foreign('report_id')->references('id')->on('reports');
             $table->foreign('published_by')->references('id')->on('users');

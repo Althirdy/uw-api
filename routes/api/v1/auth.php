@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
-//========OTP Routes========//
+// ========OTP Routes========//
 Route::prefix('otp')->group(function () {
     Route::post('/send', [OtpController::class, 'send']);
     Route::post('/verify', [OtpController::class, 'verify']);
@@ -13,7 +13,7 @@ Route::prefix('otp')->group(function () {
     Route::post('/check', [OtpController::class, 'check']);
 });
 
-//========Auth Routes========//
+// ========Auth Routes========//
 Route::post('/password/reset', [PasswordResetController::class, 'reset']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/ocr-front-id', [AuthController::class, 'scanFrontId']);

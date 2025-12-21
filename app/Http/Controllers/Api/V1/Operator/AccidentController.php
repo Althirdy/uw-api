@@ -48,7 +48,7 @@ class AccidentController extends BaseApiController
                     'last_page' => $accidents->lastPage(),
                     'per_page' => $accidents->perPage(),
                     'total' => $accidents->total(),
-                ]
+                ],
             ], 'Accidents retrieved successfully');
 
         } catch (\Exception $e) {
@@ -57,7 +57,7 @@ class AccidentController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while retrieving accidents: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving accidents: '.$e->getMessage());
         }
     }
 
@@ -70,7 +70,7 @@ class AccidentController extends BaseApiController
             $accident->load('media');
 
             return $this->sendResponse([
-                'accident' => new AccidentResource($accident)
+                'accident' => new AccidentResource($accident),
             ], 'Accident retrieved successfully');
 
         } catch (\Exception $e) {
@@ -79,7 +79,7 @@ class AccidentController extends BaseApiController
                 'accident_id' => $accident->id,
             ]);
 
-            return $this->sendError('An error occurred while retrieving the accident: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving the accident: '.$e->getMessage());
         }
     }
 
@@ -96,7 +96,7 @@ class AccidentController extends BaseApiController
             $accident->update($validated);
 
             return $this->sendResponse([
-                'accident' => new AccidentResource($accident)
+                'accident' => new AccidentResource($accident),
             ], 'Accident status updated successfully');
 
         } catch (\Exception $e) {
@@ -106,7 +106,7 @@ class AccidentController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while updating the accident status: ' . $e->getMessage());
+            return $this->sendError('An error occurred while updating the accident status: '.$e->getMessage());
         }
     }
 }

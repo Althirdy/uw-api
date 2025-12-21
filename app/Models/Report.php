@@ -62,7 +62,7 @@ class Report extends Model
             'CCTV',
             'IOT Box',
             'Citizen Concern',
-            
+
         ];
     }
 

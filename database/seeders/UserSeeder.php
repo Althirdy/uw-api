@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\CitizenDetails;
 use App\Models\OfficialsDetails;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -89,7 +88,7 @@ class UserSeeder extends Seeder
                 'date_of_birth' => '1990-01-01',
                 'phone_number' => '+63 912-345-6789',
                 'address' => 'Ph1 Pkg4, Barangay 176-E',
-                'barangay' =>  'Barangay 176-E',
+                'barangay' => 'Barangay 176-E',
                 'city' => 'Caloocan City',
                 'province' => 'Metro Manila',
                 'postal_code' => '1400',

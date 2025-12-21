@@ -22,17 +22,18 @@ class PasswordResetController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (!$record || !Hash::check($request->token, $record->token)) {
+        if (! $record || ! Hash::check($request->token, $record->token)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid or expired reset token.',
             ], 400);
         }
-        
+
         // Check token expiration (e.g., 60 minutes)
         if (now()->diffInMinutes($record->created_at) > 60) {
-             DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-             return response()->json([
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+            return response()->json([
                 'success' => false,
                 'message' => 'Reset token expired.',
             ], 400);
@@ -40,11 +41,11 @@ class PasswordResetController extends Controller
 
         // Update user password
         $user = User::where('email', $request->email)->first();
-        
+
         $user->forceFill([
             'password' => Hash::make($request->password),
         ])->save();
-        
+
         // Delete the used token
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 

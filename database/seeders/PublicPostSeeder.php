@@ -18,21 +18,22 @@ class PublicPostSeeder extends Seeder
 
         if ($reports->isEmpty()) {
             $this->command->info('No acknowledged ongoing reports found to create public posts.');
+
             return;
         }
 
         // Get a user to be the publisher (preferably an operator)
-        $publisher = User::whereHas('role', function($query) {
+        $publisher = User::whereHas('role', function ($query) {
             $query->where('name', 'Operator');
         })->first();
 
-        if (!$publisher) {
+        if (! $publisher) {
             $publisher = User::first();
         }
 
         foreach ($reports as $report) {
             // Check if public post already exists for this report
-            if (!$report->publicPost) {
+            if (! $report->publicPost) {
                 PublicPost::create([
                     'report_id' => $report->id,
                     'published_by' => $publisher->id,

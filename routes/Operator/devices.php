@@ -3,8 +3,8 @@
 use App\Http\Controllers\Operator\CCTVController;
 use App\Http\Controllers\Operator\UWDeviceController;
 use App\Models\cctvDevices;
-use App\Models\UwDevice;
 use App\Models\Locations;
+use App\Models\UwDevice;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,13 +23,14 @@ Route::middleware('auth')->group(function () {
 
         $cctvDevices = cctvDevices::with([
             'location:id,location_name,landmark,barangay,location_category',
-            'location.locationCategory:id,name'
+            'location.locationCategory:id,name',
         ])->paginate(10);
 
         $cctvDevices->getCollection()->transform(function ($device) {
             if ($device->location && $device->location->locationCategory) {
                 $device->location->category_name = $device->location->locationCategory->name;
             }
+
             return $device;
         });
 
@@ -37,21 +38,21 @@ Route::middleware('auth')->group(function () {
         $uwDevices = UwDevice::with([
             'location:id,location_name,landmark,barangay,location_category',
             'location.locationCategory:id,name',
-            'cctvDevice:id,device_name,location_id'
+            'cctvDevice:id,device_name,location_id',
         ])->paginate(10);
 
         $uwDevices->getCollection()->transform(function ($device) {
             if ($device->location && $device->location->locationCategory) {
                 $device->location->category_name = $device->location->locationCategory->name;
             }
-            
+
             // Add helper properties for frontend
             if ($device->cctvDevice) {
                 $device->cctv_cameras = [$device->cctvDevice];
             } else {
                 $device->cctv_cameras = [];
             }
-            
+
             // Add latitude/longitude helpers (from location or custom)
             if ($device->location) {
                 $device->latitude = $device->location->latitude ?? null;
@@ -60,7 +61,7 @@ Route::middleware('auth')->group(function () {
                 $device->latitude = $device->custom_latitude;
                 $device->longitude = $device->custom_longitude;
             }
-            
+
             return $device;
         });
 
@@ -71,7 +72,7 @@ Route::middleware('auth')->group(function () {
             'devices' => $cctvDevices,
             'uwDevices' => $uwDevices,
             'locations' => $location,
-            'cctvDevices' => $allCctvDevices
+            'cctvDevices' => $allCctvDevices,
         ]);
     })->name('devices');
 

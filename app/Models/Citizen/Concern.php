@@ -2,12 +2,12 @@
 
 namespace App\Models\Citizen;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\IncidentMedia;
-use App\Models\User;
 use App\Models\ConcernDistribution;
 use App\Models\ConcernHistory;
+use App\Models\IncidentMedia;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Concern extends Model
 {

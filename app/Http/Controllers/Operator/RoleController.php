@@ -10,7 +10,6 @@ use Inertia\Inertia;
 
 class RoleController extends Controller
 {
-
     public function store(Request $request)
     {
         try {
@@ -28,6 +27,7 @@ class RoleController extends Controller
                     ->with('success', 'Role created successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to create role. Please try again.')
                     ->withInput();
@@ -41,7 +41,7 @@ class RoleController extends Controller
     {
         try {
             return Inertia::render('Operator/Role/Edit', [
-                'role' => $role
+                'role' => $role,
             ]);
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to load role for editing.');
@@ -52,7 +52,7 @@ class RoleController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:roles,name,' . $role->id . ',id,deleted_at,NULL',
+                'name' => 'required|string|max:255|unique:roles,name,'.$role->id.',id,deleted_at,NULL',
                 'description' => 'nullable|string|max:1000',
             ]);
 
@@ -65,6 +65,7 @@ class RoleController extends Controller
                     ->with('success', 'Role updated successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to update role. Please try again.')
                     ->withInput();
@@ -86,6 +87,7 @@ class RoleController extends Controller
                     ->with('success', 'Role deleted successfully.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to delete role. Please try again.');
             }

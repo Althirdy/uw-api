@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Locations;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -130,7 +129,7 @@ class LocationSeeder extends Seeder
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
                 'latitude' => 14.777615573362453,
-                'longitude' =>  121.03631418402236,
+                'longitude' => 121.03631418402236,
                 'description' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -185,7 +184,7 @@ class LocationSeeder extends Seeder
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
                 'latitude' => 14.777615573362453,
-                'longitude' =>  121.03631418402236,
+                'longitude' => 121.03631418402236,
                 'description' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -195,7 +194,7 @@ class LocationSeeder extends Seeder
                 'location_name' => 'BFP & Annex pkg 5 #34',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
-                'latitude' => 14.781270313157409, 
+                'latitude' => 14.781270313157409,
                 'longitude' => 121.03715807961161,
                 'description' => '',
                 'created_at' => now(),
@@ -217,7 +216,7 @@ class LocationSeeder extends Seeder
                 'location_name' => 'Genesis School pkg 5 #31',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
-                'latitude' => 14.78125326313561, 
+                'latitude' => 14.78125326313561,
                 'longitude' => 121.03672820076504,
                 'description' => '',
                 'created_at' => now(),

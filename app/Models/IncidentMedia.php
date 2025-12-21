@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Citizen\Concern;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Citizen\Concern;
 
 class IncidentMedia extends Model
 {
@@ -129,7 +129,8 @@ class IncidentMedia extends Model
         ]));
     }
 
-    public function accident(){
+    public function accident()
+    {
         return $this->belongsTo(Accident::class, 'source_id', 'id');
     }
 }

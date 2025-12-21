@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('is_verified')->default(false);
             $table->timestamp('expires_at');
             $table->timestamps();
-            
+
             // Index for faster queries
             $table->index(['email', 'type', 'is_verified']);
         });

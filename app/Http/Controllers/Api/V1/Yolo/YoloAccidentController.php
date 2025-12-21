@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api\V1\Yolo;
 
+use App\Events\AccidentDetected;
 use App\Http\Controllers\Api\BaseApiController;
-use Illuminate\Http\Request;
-use App\Services\FileUploadService;
 use App\Models\Accident;
 use App\Models\IncidentMedia;
-use App\Events\AccidentDetected;
+use App\Services\FileUploadService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -87,7 +87,7 @@ class YoloAccidentController extends BaseApiController
             Log::info('Accident detected and broadcasted', [
                 'accident_id' => $accident->id,
                 'type' => $accidentType,
-                'severity' => $severity
+                'severity' => $severity,
             ]);
 
             return [
@@ -105,8 +105,8 @@ class YoloAccidentController extends BaseApiController
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('YOLO Accident Processing Error: ' . $e->getMessage());
-            
+            Log::error('YOLO Accident Processing Error: '.$e->getMessage());
+
             throw $e;
         }
     }
@@ -114,11 +114,11 @@ class YoloAccidentController extends BaseApiController
     public function ProcessSnapShot(Request $request)
     {
         try {
-            if (!$request->hasFile('snapshot')) {
+            if (! $request->hasFile('snapshot')) {
                 return $this->sendError('No snapshot file provided', null, 400);
             }
 
-            if (!$this->ValidateSnapShot($request->file('snapshot'))) {
+            if (! $this->ValidateSnapShot($request->file('snapshot'))) {
                 return $this->sendError('Invalid snapshot', null, 400);
             }
 
@@ -127,7 +127,7 @@ class YoloAccidentController extends BaseApiController
             return $this->sendResponse($result, 'Accident detected and saved successfully', 200);
 
         } catch (\Exception $e) {
-            return $this->sendError('Failed to process accident: ' . $e->getMessage(), null, 500);
+            return $this->sendError('Failed to process accident: '.$e->getMessage(), null, 500);
         }
     }
 }

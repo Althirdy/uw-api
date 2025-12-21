@@ -24,7 +24,7 @@ class AuthController extends BaseApiController
         $this->authService = $authService;
     }
 
-    //****LOGIN METHODD */
+    // ****LOGIN METHODD */
 
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
@@ -33,21 +33,21 @@ class AuthController extends BaseApiController
         try {
             $authData = $this->authService->login($validated['email'], $validated['password']);
 
-            if (!$authData) {
+            if (! $authData) {
                 return $this->sendUnauthorized('Invalid credentials');
             }
 
             $user = $authData['user'];
 
-            if (($user->role_id == 1 || $user->role_id == 2) && !$user->officialDetails) {
+            if (($user->role_id == 1 || $user->role_id == 2) && ! $user->officialDetails) {
                 return $this->sendError('Official details not found for this user');
             }
 
-            if ($user->role_id == 3 && !$user->citizenDetails) {
+            if ($user->role_id == 3 && ! $user->citizenDetails) {
                 return $this->sendError('Citizen details not found for this user');
             }
 
-            if (!in_array($user->role_id, [1, 2, 3])) {
+            if (! in_array($user->role_id, [1, 2, 3])) {
                 return $this->sendError('Invalid user role');
             }
 
@@ -70,13 +70,13 @@ class AuthController extends BaseApiController
         try {
             $authData = $this->authService->loginPurokLeader($validated['pin']);
 
-            if (!$authData) {
+            if (! $authData) {
                 return $this->sendUnauthorized('Invalid PIN');
             }
 
             $user = $authData['user'];
 
-            if (!$user->officialDetails) {
+            if (! $user->officialDetails) {
                 return $this->sendError('Official details not found for this user');
             }
 
@@ -89,6 +89,7 @@ class AuthController extends BaseApiController
             return $this->sendUnauthorized('Invalid PIN');
         }
     }
+
     /**
      * Logout user (revoke token).
      */
@@ -110,15 +111,15 @@ class AuthController extends BaseApiController
         try {
             $user = $request->user()->load(['role', 'officialDetails', 'citizenDetails']);
 
-            if (($user->role_id == 1 || $user->role_id == 2) && !$user->officialDetails) {
+            if (($user->role_id == 1 || $user->role_id == 2) && ! $user->officialDetails) {
                 return $this->sendError('Official details not found for this user');
             }
 
-            if ($user->role_id == 3 && !$user->citizenDetails) {
+            if ($user->role_id == 3 && ! $user->citizenDetails) {
                 return $this->sendError('Citizen details not found for this user');
             }
 
-            if (!in_array($user->role_id, [1, 2, 3])) {
+            if (! in_array($user->role_id, [1, 2, 3])) {
                 return $this->sendError('Invalid user role');
             }
 
@@ -130,11 +131,11 @@ class AuthController extends BaseApiController
         }
     }
 
-    public function refreshToken(Request  $request): \Illuminate\Http\JsonResponse
+    public function refreshToken(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             // Verify the token has 'refresh-token' ability
-            if (!$request->user()->tokenCan('refresh-token')) {
+            if (! $request->user()->tokenCan('refresh-token')) {
                 return $this->sendUnauthorized('Invalid token type. Please use refresh token.');
             }
 
@@ -163,18 +164,18 @@ class AuthController extends BaseApiController
             $results = [];
 
             // Check email availability if provided
-            if (!empty($validated['email'])) {
+            if (! empty($validated['email'])) {
                 $existingEmail = User::where('email', $validated['email'])->first();
                 $results['email'] = [
-                    'available' => !$existingEmail,
-                    'message' => $existingEmail 
-                        ? 'This email is already registered.' 
-                        : 'Email is available.'
+                    'available' => ! $existingEmail,
+                    'message' => $existingEmail
+                        ? 'This email is already registered.'
+                        : 'Email is available.',
                 ];
             }
 
             // Check name availability if first_name and last_name are provided
-            if (!empty($validated['first_name']) && !empty($validated['last_name'])) {
+            if (! empty($validated['first_name']) && ! empty($validated['last_name'])) {
                 $query = CitizenDetails::where('first_name', $validated['first_name'])
                     ->where('last_name', $validated['last_name']);
 
@@ -188,10 +189,10 @@ class AuthController extends BaseApiController
 
                 $existingCitizen = $query->first();
                 $results['name'] = [
-                    'available' => !$existingCitizen,
-                    'message' => $existingCitizen 
-                        ? 'A user with this name is already registered.' 
-                        : 'Name is available.'
+                    'available' => ! $existingCitizen,
+                    'message' => $existingCitizen
+                        ? 'A user with this name is already registered.'
+                        : 'Name is available.',
                 ];
             }
 
@@ -203,7 +204,7 @@ class AuthController extends BaseApiController
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->sendError('Validation failed', $e->errors(), 422);
         } catch (\Exception $e) {
-            return $this->sendError('An error occurred while verifying registration information: ' . $e->getMessage());
+            return $this->sendError('An error occurred while verifying registration information: '.$e->getMessage());
         }
     }
 
@@ -221,7 +222,7 @@ class AuthController extends BaseApiController
                 'user' => new AuthUserResource($authData['user']),
             ], 'Registration successful');
         } catch (\Exception $e) {
-            return $this->sendError('Registration failed: ' . $e->getMessage());
+            return $this->sendError('Registration failed: '.$e->getMessage());
         }
     }
 
@@ -239,8 +240,9 @@ class AuthController extends BaseApiController
             $flaskServiceUrl = env('FLASK_SERVICE_URL');
             $serviceApiKey = env('SERVICE_API_KEY');
 
-            if (!$flaskServiceUrl || !$serviceApiKey) {
+            if (! $flaskServiceUrl || ! $serviceApiKey) {
                 Log::error('Flask service URL or API key not configured.');
+
                 return $this->sendError('Service configuration error.', [], 500);
             }
 
@@ -259,12 +261,14 @@ class AuthController extends BaseApiController
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
+
                 return $this->sendError('Failed to process image with OCR service.', $response->json(), $response->status());
             }
         } catch (\Exception $e) {
-            Log::error('Error calling Flask OCR service: ' . $e->getMessage(), [
-                'exception' => $e
+            Log::error('Error calling Flask OCR service: '.$e->getMessage(), [
+                'exception' => $e,
             ]);
+
             return $this->sendError('An internal server error occurred.', $e->getMessage(), 500);
         }
     }
