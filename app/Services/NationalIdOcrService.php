@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class NationalIdOcrService
 {
     protected $apiKey;
+
     protected $apiUrl;
 
     public function __construct()
@@ -19,7 +20,7 @@ class NationalIdOcrService
     /**
      * Extract data from National ID front image.
      *
-     * @param string $base64Image Base64 encoded image
+     * @param  string  $base64Image  Base64 encoded image
      * @return array
      */
     public function extractIdData($base64Image)
@@ -28,7 +29,7 @@ class NationalIdOcrService
             // Step 1: Send image to OCR.space
             $ocrResult = $this->sendToOcrSpace($base64Image);
 
-            if (!$ocrResult['success']) {
+            if (! $ocrResult['success']) {
                 return [
                     'success' => false,
                     'error' => $ocrResult['error'] ?? 'OCR processing failed',
@@ -40,7 +41,7 @@ class NationalIdOcrService
             // Step 2: Validate it's a National ID (check for PCN)
             $pcnNumber = $this->parsePcnNumber($fullText);
 
-            if (!$pcnNumber) {
+            if (! $pcnNumber) {
                 // Check if it's the back of the ID
                 if ($this->isBackOfId($fullText)) {
                     return [
@@ -111,7 +112,7 @@ class NationalIdOcrService
                     'OCREngine' => '2', // Engine 2 is better for IDs
                 ]);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return [
                     'success' => false,
                     'error' => 'Failed to connect to OCR service',
@@ -120,7 +121,7 @@ class NationalIdOcrService
 
             $data = $response->json();
 
-            if (!empty($data['IsErroredOnProcessing'])) {
+            if (! empty($data['IsErroredOnProcessing'])) {
                 return [
                     'success' => false,
                     'error' => $data['ErrorMessage'][0] ?? 'OCR processing error',
@@ -142,9 +143,10 @@ class NationalIdOcrService
 
         } catch (\Exception $e) {
             Log::error('OCR.space API call failed', ['error' => $e->getMessage()]);
+
             return [
                 'success' => false,
-                'error' => 'Failed to process image: ' . $e->getMessage(),
+                'error' => 'Failed to process image: '.$e->getMessage(),
             ];
         }
     }
@@ -160,9 +162,9 @@ class NationalIdOcrService
             $cleaned = preg_replace('/[\s-]/', '', $pcn);
 
             if (strlen($cleaned) === 16) {
-                return substr($cleaned, 0, 4) . '-' .
-                       substr($cleaned, 4, 4) . '-' .
-                       substr($cleaned, 8, 4) . '-' .
+                return substr($cleaned, 0, 4).'-'.
+                       substr($cleaned, 4, 4).'-'.
+                       substr($cleaned, 8, 4).'-'.
                        substr($cleaned, 12, 4);
             }
         }
@@ -217,17 +219,19 @@ class NationalIdOcrService
             $year = $match[3];
 
             $monthNum = $months[$month] ?? '00';
+
             return "{$monthNum}/{$day}/{$year}";
         }
 
         // Fallback: Find date anywhere (validate year range)
         if (preg_match_all('/([A-Z]+)\s+(\d{1,2})\s*,\s*(\d{4})/i', $fullText, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
-                $year = (int)$match[3];
+                $year = (int) $match[3];
                 if ($year >= 1900 && $year <= 2025) {
                     $month = strtoupper($match[1]);
                     $day = str_pad($match[2], 2, '0', STR_PAD_LEFT);
                     $monthNum = $months[$month] ?? '00';
+
                     return "{$monthNum}/{$day}/{$match[3]}";
                 }
             }
@@ -261,14 +265,22 @@ class NationalIdOcrService
                 $line = trim($line);
 
                 // Skip empty lines
-                if (empty($line)) continue;
+                if (empty($line)) {
+                    continue;
+                }
 
                 // Stop at known non-address keywords
-                if (preg_match('/PHILIPPINE IDENTIFICATION|PCN|DATE OF BIRTH/i', $line)) break;
+                if (preg_match('/PHILIPPINE IDENTIFICATION|PCN|DATE OF BIRTH/i', $line)) {
+                    break;
+                }
 
                 // Filter noise
-                if (strlen($line) < 4 && !preg_match('/NCR/i', $line)) continue;
-                if (stripos($line, 'JITUD') !== false) continue;
+                if (strlen($line) < 4 && ! preg_match('/NCR/i', $line)) {
+                    continue;
+                }
+                if (stripos($line, 'JITUD') !== false) {
+                    continue;
+                }
 
                 $cleanLines[] = $line;
             }

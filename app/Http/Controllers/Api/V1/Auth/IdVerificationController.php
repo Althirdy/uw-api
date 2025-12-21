@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Api\BaseApiController;
-use App\Http\Controllers\Controller;
 use App\Services\NationalIdOcrService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-
 
 class IdVerificationController extends BaseApiController
 {
@@ -21,7 +19,6 @@ class IdVerificationController extends BaseApiController
     /**
      * Scan National ID front and extract data.
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function scanIdFront(Request $request)
@@ -35,14 +32,14 @@ class IdVerificationController extends BaseApiController
 
             // Convert image to base64
             $mimeType = $image->getMimeType();
-            $base64Image = 'data:' . $mimeType . ';base64,' . base64_encode(file_get_contents($image->getRealPath()));
+            $base64Image = 'data:'.$mimeType.';base64,'.base64_encode(file_get_contents($image->getRealPath()));
 
             Log::info('ID scan initiated');
 
             // Extract data using OCR
             $result = $this->ocrService->extractIdData($base64Image);
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return response()->json([
                     'success' => false,
                     'message' => $result['error'],
@@ -61,8 +58,8 @@ class IdVerificationController extends BaseApiController
                 }
             }
 
-            if (!empty($missingFields)) {
-                $result['warning'] = 'Could not extract: ' . implode(', ', $missingFields);
+            if (! empty($missingFields)) {
+                $result['warning'] = 'Could not extract: '.implode(', ', $missingFields);
             }
 
             return response()->json($result, 200);
