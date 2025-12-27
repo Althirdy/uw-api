@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendOtpJob;
 use App\Models\Otp;
 use App\Models\User;
 use App\Services\MailService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
@@ -19,6 +21,30 @@ class OtpController extends Controller
     public function __construct(MailService $mailService)
     {
         $this->mailService = $mailService;
+    }
+    
+    public function requestOtp(Request $request): JsonResponse
+    {
+        $request->validate([
+            'phone' => 'required|numeric|digits:11', // e.g., 09171234567
+        ]);
+
+        $phone = $request->phone;
+
+        if(Cache::has('otp_lock_'.$phone)) {
+           return response()->json(['error' => 'Please wait 60 seconds before requesting again.'], 429);
+        }
+
+        $code = rand(100000, 999999);
+        Cache::put('otp_' . $phone, $code, 300); // OTP valid for 5 minutes
+        Cache::put('otp_lock_' . $phone, true, 60);
+
+        SendOtpJob::dispatch($phone, $code);
+        
+        return response()->json([
+            'message' => 'OTP sent successfully!',
+            // 'debug' => $code // remove this line in production!
+        ]);
     }
 
     /**

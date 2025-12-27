@@ -43,5 +43,9 @@ return [
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
     ],
+    'semaphore' => [
+        'api_key' => env('SEMAPHORE_API_KEY'),
+        'sender_name' => env('SEMAPHORE_SENDER_NAME', 'SEMAPHORE'),
+    ]
 
 ];
