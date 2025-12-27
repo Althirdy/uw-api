@@ -17,9 +17,56 @@ class IdVerificationController extends BaseApiController
     }
 
     /**
-     * Scan National ID front and extract data.
+     * Scan National ID Front
+     * 
+     * Extract personal information from the front of a Philippine National ID using OCR technology.
+     * Supports multiple image formats including HEIC and HEIF.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam image file required National ID front image (jpg, jpeg, png, heic, heif, max 10MB). Example: id_front.jpg
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "last_name": "Doe",
+     *     "given_name": "John",
+     *     "middle_name": "Michael",
+     *     "date_of_birth": "1990-05-15"
+     *   }
+     * }
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "last_name": "Doe",
+     *     "given_name": "John",
+     *     "middle_name": "",
+     *     "date_of_birth": "1990-05-15"
+     *   },
+     *   "warning": "Could not extract: middle_name"
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Could not extract data from ID",
+     *   "debug": {}
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "image": ["The image field is required."]
+     *   }
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An unexpected error occurred while processing the ID.",
+     *   "error": null
+     * }
      */
     public function scanIdFront(Request $request)
     {

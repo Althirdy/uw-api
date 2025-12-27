@@ -22,7 +22,54 @@ class OtpController extends Controller
     }
 
     /**
-     * Send OTP to email
+     * Send OTP
+     * 
+     * Send a One-Time Password (OTP) to the specified email address. OTPs are valid for 10 minutes.
+     * Rate limited to 3 requests per email per 10 minutes.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam email string required The email address to send OTP to. Example: john.doe@example.com
+     * @bodyParam type string required Type of OTP: registration, forgot_password, email_verification. Example: registration
+     * @bodyParam name string optional Name of the recipient for email personalization. Example: John Doe
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "message": "OTP sent successfully",
+     *   "data": {
+     *     "email": "john.doe@example.com",
+     *     "expires_in": 10
+     *   }
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Email already registered"
+     * }
+     * 
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Email not found"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "email": ["The email field is required."]
+     *   }
+     * }
+     * 
+     * @response 429 {
+     *   "success": false,
+     *   "message": "Too many OTP requests. Please try again in 10 minutes."
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Failed to send OTP email. Please try again."
+     * }
      */
     public function send(Request $request): JsonResponse
     {
@@ -117,6 +164,49 @@ class OtpController extends Controller
 
     /**
      * Verify OTP
+     * 
+     * Verify the OTP code sent to the email. For forgot_password type, returns a reset token.
+     * Rate limited to 5 verification attempts per email per 10 minutes.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam email string required The email address the OTP was sent to. Example: john.doe@example.com
+     * @bodyParam otp string required The 6-digit OTP code received via email. Example: 123456
+     * @bodyParam type string required Type of OTP: registration, forgot_password, email_verification. Example: registration
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "message": "OTP verified successfully",
+     *   "data": {
+     *     "email": "john.doe@example.com",
+     *     "type": "forgot_password",
+     *     "token": "abcdefghijklmnopqrstuvwxyz1234567890"
+     *   }
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Invalid or expired OTP"
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Incorrect OTP"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "otp": ["The otp field is required."]
+     *   }
+     * }
+     * 
+     * @response 429 {
+     *   "success": false,
+     *   "message": "Too many verification attempts. Please request a new OTP."
+     * }
      */
     public function verify(Request $request): JsonResponse
     {
@@ -204,6 +294,29 @@ class OtpController extends Controller
 
     /**
      * Resend OTP
+     * 
+     * Resend the OTP to the specified email. Uses the same logic and rate limiting as the send endpoint.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam email string required The email address to resend OTP to. Example: john.doe@example.com
+     * @bodyParam type string required Type of OTP: registration, forgot_password, email_verification. Example: registration
+     * @bodyParam name string optional Name of the recipient for email personalization. Example: John Doe
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "message": "OTP sent successfully",
+     *   "data": {
+     *     "email": "john.doe@example.com",
+     *     "expires_in": 10
+     *   }
+     * }
+     * 
+     * @response 429 {
+     *   "success": false,
+     *   "message": "Too many OTP requests. Please try again in 10 minutes."
+     * }
      */
     public function resend(Request $request): JsonResponse
     {
@@ -212,7 +325,34 @@ class OtpController extends Controller
     }
 
     /**
-     * Check if OTP is still valid
+     * Check OTP Status
+     * 
+     * Check if a valid OTP exists for the given email and type, and when it expires.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam email string required The email address to check. Example: john.doe@example.com
+     * @bodyParam type string required Type of OTP: registration, forgot_password, email_verification. Example: registration
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "has_valid_otp": true,
+     *   "expires_at": "2023-12-27T10:30:00.000000Z",
+     *   "expires_in_seconds": 450
+     * }
+     * 
+     * @response 200 {
+     *   "success": false,
+     *   "message": "No valid OTP found",
+     *   "has_valid_otp": false
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {}
+     * }
      */
     public function check(Request $request): JsonResponse
     {

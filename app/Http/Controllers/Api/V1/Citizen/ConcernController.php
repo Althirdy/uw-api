@@ -26,7 +26,49 @@ class ConcernController extends BaseApiController
     }
 
     /**
-     * Display a listing of the resource.
+     * List My Concerns
+     * 
+     * Retrieve all concerns submitted by the authenticated citizen user.
+     * Includes media attachments, distribution status, and history.
+     *
+     * @group Citizen
+     * @authenticated
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "concerns": [
+     *       {
+     *         "id": 1,
+     *         "type": "manual",
+     *         "tracking_code": "CN-20231227-ABCD",
+     *         "title": "Broken Streetlight",
+     *         "description": "The streetlight on Main St is broken",
+     *         "category": "infrastructure",
+     *         "severity": "low",
+     *         "status": "pending",
+     *         "latitude": 16.4023,
+     *         "longitude": 120.5960,
+     *         "address": "Main St, Baguio City",
+     *         "created_at": "2023-12-27T10:00:00.000000Z",
+     *         "media": [],
+     *         "distribution": {
+     *           "status": "assigned",
+     *           "purok_leader": {
+     *             "name": "Juan Dela Cruz"
+     *           }
+     *         },
+     *         "histories": []
+     *       }
+     *     ]
+     *   },
+     *   "message": "Manual concerns retrieved successfully"
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while retrieving concerns: error details"
+     * }
      */
     public function index()
     {
@@ -58,7 +100,68 @@ class ConcernController extends BaseApiController
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Submit New Concern
+     * 
+     * Submit a new concern (manual or voice) with optional media attachments and location information.
+     * Automatically generates a tracking code and assigns to Purok Leader.
+     * Voice concerns will be transcribed in the background.
+     *
+     * @group Citizen
+     * @authenticated
+     * 
+     * @bodyParam type string required Concern type (manual, voice). Example: manual
+     * @bodyParam title string required (for manual) Concern title (max 100 chars). Example: Broken Streetlight
+     * @bodyParam description string required (for manual) Detailed description. Example: The streetlight on Main St is broken and needs repair.
+     * @bodyParam category string required Category (safety, security, infrastructure, environment, noise, other). Example: infrastructure
+     * @bodyParam severity string optional Severity level (low, medium, high). Default: low. Example: medium
+     * @bodyParam transcript_text string optional Transcribed text for voice concerns. Example: There is a broken streetlight
+     * @bodyParam longitude number optional Longitude coordinate (-180 to 180). Example: 120.5960
+     * @bodyParam latitude number optional Latitude coordinate (-90 to 90). Example: 16.4023
+     * @bodyParam address string optional Full address. Example: Main St, Baguio City
+     * @bodyParam custom_location string optional Custom location description. Example: Near the park
+     * @bodyParam files file[] optional Media files (images or audio, max 3 files, 10MB each). Example: ["image1.jpg", "audio.mp3"]
+     * 
+     * @response 201 {
+     *   "success": true,
+     *   "data": {
+     *     "concern": {
+     *       "id": 1,
+     *       "type": "manual",
+     *       "tracking_code": "CN-20231227-ABCD",
+     *       "title": "Broken Streetlight",
+     *       "description": "The streetlight on Main St is broken",
+     *       "category": "infrastructure",
+     *       "severity": "medium",
+     *       "status": "pending",
+     *       "created_at": "2023-12-27T10:00:00.000000Z",
+     *       "media": [
+     *         {
+     *           "id": 1,
+     *           "media_type": "image",
+     *           "original_path": "https://example.com/image.jpg"
+     *         }
+     *       ],
+     *       "distribution": {
+     *         "status": "assigned",
+     *         "assigned_at": "2023-12-27T10:00:00.000000Z"
+     *       }
+     *     }
+     *   },
+     *   "message": "Concern submitted successfully!"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "title": ["Title is required."]
+     *   }
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while submitting concern: error details"
+     * }
      */
     public function store(StoreConcernRequest $request)
     {
@@ -201,7 +304,70 @@ class ConcernController extends BaseApiController
     }
 
     /**
-     * Display the specified resource.
+     * Get Concern Details
+     * 
+     * Retrieve detailed information about a specific concern submitted by the authenticated user.
+     * Includes media, distribution status, and action history.
+     *
+     * @group Citizen
+     * @authenticated
+     * 
+     * @urlParam id integer required The ID of the concern. Example: 1
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "concern": {
+     *       "id": 1,
+     *       "type": "manual",
+     *       "tracking_code": "CN-20231227-ABCD",
+     *       "title": "Broken Streetlight",
+     *       "description": "The streetlight on Main St is broken",
+     *       "category": "infrastructure",
+     *       "severity": "medium",
+     *       "status": "pending",
+     *       "latitude": 16.4023,
+     *       "longitude": 120.5960,
+     *       "address": "Main St, Baguio City",
+     *       "created_at": "2023-12-27T10:00:00.000000Z",
+     *       "media": [
+     *         {
+     *           "id": 1,
+     *           "media_type": "image",
+     *           "original_path": "https://example.com/image.jpg"
+     *         }
+     *       ],
+     *       "distribution": {
+     *         "status": "assigned",
+     *         "purok_leader": {
+     *           "name": "Juan Dela Cruz",
+     *           "officialDetails": {
+     *             "position": "Purok Leader"
+     *           }
+     *         }
+     *       },
+     *       "histories": [
+     *         {
+     *           "id": 1,
+     *           "status": "pending",
+     *           "remarks": "Concern submitted and automatically distributed to Purok Leader.",
+     *           "created_at": "2023-12-27T10:00:00.000000Z"
+     *         }
+     *       ]
+     *     }
+     *   },
+     *   "message": "Manual concern retrieved successfully"
+     * }
+     * 
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Manual concern not found or you do not have permission to view it"
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while retrieving concern: error details"
+     * }
      */
     public function show(string $id)
     {
@@ -237,7 +403,45 @@ class ConcernController extends BaseApiController
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update Concern
+     * 
+     * Update the title and description of a concern. Only concerns belonging to the authenticated user can be updated.
+     *
+     * @group Citizen
+     * @authenticated
+     * 
+     * @urlParam id integer required The ID of the concern. Example: 1
+     * @bodyParam title string optional Updated concern title. Example: Updated Streetlight Issue
+     * @bodyParam description string optional Updated description. Example: Updated description text
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "concern": {
+     *       "id": 1,
+     *       "title": "Updated Streetlight Issue",
+     *       "description": "Updated description text",
+     *       "updated_at": "2023-12-27T11:00:00.000000Z"
+     *     }
+     *   },
+     *   "message": "Manual concern updated successfully"
+     * }
+     * 
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Manual concern not found or you do not have permission to update it"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {}
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while updating concern: error details"
+     * }
      */
     public function update(UpdateConcernRequest $request, string $id)
     {
@@ -281,7 +485,32 @@ class ConcernController extends BaseApiController
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Delete Concern
+     * 
+     * Soft delete a concern. Only concerns belonging to the authenticated user can be deleted.
+     *
+     * @group Citizen
+     * @authenticated
+     * 
+     * @urlParam id integer required The ID of the concern to delete. Example: 1
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "concern_id": "1"
+     *   },
+     *   "message": "Manual concern deleted successfully"
+     * }
+     * 
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Manual concern not found or you do not have permission to delete it"
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while deleting concern: error details"
+     * }
      */
     public function destroy(string $id)
     {

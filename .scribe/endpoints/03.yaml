@@ -1,0 +1,408 @@
+name: Operator
+description: ''
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/contacts/heatmap
+    metadata:
+      custom: []
+      groupName: Operator
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Contacts for Heatmap'
+      description: 'Retrieve all active emergency contacts for displaying on a heatmap visualization.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "contacts": [
+                {
+                  "id": 1,
+                  "branch_unit_name": "BCPC",
+                  "responder_type": "Fire",
+                  "location": "Baguio City Hall",
+                  "latitude": 16.4023,
+                  "longitude": 120.5960,
+                  "active": true
+                },
+                {
+                  "id": 2,
+                  "branch_unit_name": "BDRRM",
+                  "responder_type": "Emergency",
+                  "location": "Emergency Center",
+                  "latitude": 16.4100,
+                  "longitude": 120.5980,
+                  "active": true
+                }
+              ]
+            },
+            "message": "Contacts retrieved successfully for heatmap"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 500
+        content: |-
+          {
+            "success": false,
+            "message": "An error occurred while retrieving contacts: error details"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/accidents
+    metadata:
+      custom: []
+      groupName: Operator
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List Accidents'
+      description: |-
+        Retrieve a paginated list of accidents/reports detected by YOLO AI system.
+        Supports searching, filtering by accident type, and status.
+      authenticated: true
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters:
+      search:
+        custom: []
+        name: search
+        description: 'optional Search term for title, description, or accident type.'
+        required: false
+        example: fire
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      accident_type:
+        custom: []
+        name: accident_type
+        description: 'optional Filter by accident type.'
+        required: false
+        example: fire
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      status:
+        custom: []
+        name: status
+        description: 'optional Filter by status (pending, ongoing, resolved, archived).'
+        required: false
+        example: pending
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      per_page:
+        custom: []
+        name: per_page
+        description: 'optional Number of results per page (default: 10).'
+        required: false
+        example: 20
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      search: fire
+      accident_type: fire
+      status: pending
+      per_page: 20
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "accidents": [
+                {
+                  "id": 1,
+                  "title": "Fire Incident",
+                  "description": "Fire detected at location",
+                  "accident_type": "fire",
+                  "status": "pending",
+                  "created_at": "2023-12-27T10:00:00.000000Z",
+                  "media": []
+                }
+              ],
+              "meta": {
+                "current_page": 1,
+                "last_page": 5,
+                "per_page": 10,
+                "total": 50
+              }
+            },
+            "message": "Accidents retrieved successfully"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 500
+        content: |-
+          {
+            "success": false,
+            "message": "An error occurred while retrieving accidents: error details"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/accidents/{accident_id}'
+    metadata:
+      custom: []
+      groupName: Operator
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get Accident Details'
+      description: 'Retrieve detailed information about a specific accident including associated media.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      accident_id:
+        custom: []
+        name: accident_id
+        description: 'The ID of the accident.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      accident:
+        custom: []
+        name: accident
+        description: 'The ID of the accident.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      accident_id: 1
+      accident: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "accident": {
+                "id": 1,
+                "title": "Fire Incident",
+                "description": "Fire detected at location",
+                "accident_type": "fire",
+                "status": "pending",
+                "latitude": 16.4023,
+                "longitude": 120.5960,
+                "created_at": "2023-12-27T10:00:00.000000Z",
+                "media": [
+                  {
+                    "id": 1,
+                    "media_type": "image",
+                    "original_path": "https://example.com/image.jpg"
+                  }
+                ]
+              }
+            },
+            "message": "Accident retrieved successfully"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+            "success": false,
+            "message": "Accident not found"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 500
+        content: |-
+          {
+            "success": false,
+            "message": "An error occurred while retrieving the accident: error details"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/accidents/{accident_id}/status'
+    metadata:
+      custom: []
+      groupName: Operator
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update Accident Status'
+      description: 'Update the status of an accident (e.g., pending, ongoing, resolved, archived).'
+      authenticated: true
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      accident_id:
+        custom: []
+        name: accident_id
+        description: 'The ID of the accident.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      accident:
+        custom: []
+        name: accident
+        description: 'The ID of the accident.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      accident_id: 1
+      accident: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      status:
+        custom: []
+        name: status
+        description: 'New status (pending, ongoing, resolved, archived).'
+        required: true
+        example: resolved
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      status: resolved
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "data": {
+              "accident": {
+                "id": 1,
+                "title": "Fire Incident",
+                "status": "resolved",
+                "updated_at": "2023-12-27T11:00:00.000000Z"
+              }
+            },
+            "message": "Accident status updated successfully"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "success": false,
+            "message": "Validation failed",
+            "errors": {
+              "status": ["The selected status is invalid."]
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 500
+        content: |-
+          {
+            "success": false,
+            "message": "An error occurred while updating the accident status: error details"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null

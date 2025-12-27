@@ -24,8 +24,53 @@ class AuthController extends BaseApiController
         $this->authService = $authService;
     }
 
-    // ****LOGIN METHODD */
-
+    /**
+     * Login
+     * 
+     * Authenticate a user with email and password. Returns access token, refresh token, and user details.
+     * Supports Operators (role_id 1, 2) and Citizens (role_id 3).
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam email string required The user's email address. Example: john.doe@example.com
+     * @bodyParam password string required The user's password. Example: password123
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "token": "1|abcdefghijklmnopqrstuvwxyz",
+     *     "refreshToken": "2|zyxwvutsrqponmlkjihgfedcba",
+     *     "user": {
+     *       "id": 1,
+     *       "email": "john.doe@example.com",
+     *       "role": {
+     *         "id": 3,
+     *         "name": "Citizen"
+     *       }
+     *     }
+     *   },
+     *   "message": "Success"
+     * }
+     * 
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Invalid credentials"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "email": ["Email address is required."]
+     *   }
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Invalid Credentials"
+     * }
+     */
     public function login(LoginRequest $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validated();
@@ -62,7 +107,38 @@ class AuthController extends BaseApiController
         }
     }
 
-    // Login for Purok Leader
+    /**
+     * Login for Purok Leader
+     * 
+     * Authenticate a Purok Leader using their PIN code. Returns access token, refresh token, and user details.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam pin string required The Purok Leader's PIN code. Example: 123456
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "token": "1|abcdefghijklmnopqrstuvwxyz",
+     *     "refreshToken": "2|zyxwvutsrqponmlkjihgfedcba",
+     *     "user": {
+     *       "id": 2,
+     *       "email": "purok.leader@example.com",
+     *       "role": {
+     *         "id": 2,
+     *         "name": "Purok Leader"
+     *       }
+     *     }
+     *   },
+     *   "message": "Login successful"
+     * }
+     * 
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Invalid PIN"
+     * }
+     */
     public function loginPurokLeader(PurokLeaderLoginRequest $request): \Illuminate\Http\JsonResponse
     {
         $validated = $request->validated();
@@ -91,7 +167,23 @@ class AuthController extends BaseApiController
     }
 
     /**
-     * Logout user (revoke token).
+     * Logout
+     * 
+     * Revoke the current user's access token and all refresh tokens, effectively logging them out.
+     *
+     * @group Auth
+     * @authenticated
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": null,
+     *   "message": "Logout successful"
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred during logout"
+     * }
      */
     public function logout(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -106,6 +198,38 @@ class AuthController extends BaseApiController
         }
     }
 
+    /**
+     * Get Authenticated User
+     * 
+     * Retrieve the authenticated user's details including role, and either officialDetails or citizenDetails.
+     *
+     * @group Auth
+     * @authenticated
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "user": {
+     *       "id": 1,
+     *       "email": "john.doe@example.com",
+     *       "role": {
+     *         "id": 3,
+     *         "name": "Citizen"
+     *       },
+     *       "citizenDetails": {
+     *         "first_name": "John",
+     *         "last_name": "Doe"
+     *       }
+     *     }
+     *   },
+     *   "message": "Success"
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while retrieving user details"
+     * }
+     */
     public function user(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
@@ -131,6 +255,33 @@ class AuthController extends BaseApiController
         }
     }
 
+    /**
+     * Refresh Access Token
+     * 
+     * Generate a new access token using a valid refresh token. The refresh token must have 'refresh-token' ability.
+     *
+     * @group Auth
+     * @authenticated
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "token": "3|newAccessTokenString",
+     *     "refreshToken": "4|newRefreshTokenString"
+     *   },
+     *   "message": "Token refreshed successfully"
+     * }
+     * 
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Invalid token type. Please use refresh token."
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while refreshing the token"
+     * }
+     */
     public function refreshToken(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
@@ -148,7 +299,44 @@ class AuthController extends BaseApiController
     }
 
     /**
-     * Verify registration information availability (name and email)
+     * Verify Registration Information
+     * 
+     * Check if an email or name combination is already registered in the system. Used during registration to prevent duplicates.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam email string optional The email to check for availability. Example: john.doe@example.com
+     * @bodyParam first_name string optional The first name to check. Example: John
+     * @bodyParam middle_name string optional The middle name to check. Example: Michael
+     * @bodyParam last_name string optional The last name to check. Example: Doe
+     * @bodyParam suffix string optional The name suffix to check. Example: Jr.
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "email": {
+     *       "available": true,
+     *       "message": "Email is available."
+     *     },
+     *     "name": {
+     *       "available": false,
+     *       "message": "A user with this name is already registered."
+     *     }
+     *   },
+     *   "message": "Verification completed"
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Please provide email or name information to verify"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {}
+     * }
      */
     public function verifyRegistrationInfo(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -209,7 +397,57 @@ class AuthController extends BaseApiController
     }
 
     /**
-     * Register a new citizen user
+     * Register New Citizen
+     * 
+     * Create a new citizen user account with personal details and address information.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam email string required The user's email address. Example: john.doe@example.com
+     * @bodyParam password string required Password (minimum 8 characters). Example: SecurePass123
+     * @bodyParam password_confirmation string required Password confirmation. Example: SecurePass123
+     * @bodyParam first_name string required First name. Example: John
+     * @bodyParam middle_name string optional Middle name. Example: Michael
+     * @bodyParam last_name string required Last name. Example: Doe
+     * @bodyParam suffix string optional Name suffix. Example: Jr.
+     * @bodyParam date_of_birth date required Date of birth (must be in the past). Example: 1990-05-15
+     * @bodyParam phone_number string required Contact phone number. Example: 09171234567
+     * @bodyParam address string required Street address. Example: 123 Main St
+     * @bodyParam barangay string required Barangay name. Example: Barangay 1
+     * @bodyParam city string required City name. Example: Baguio City
+     * @bodyParam province string required Province name. Example: Benguet
+     * @bodyParam postal_code string required Postal code. Example: 2600
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "token": "1|abcdefghijklmnopqrstuvwxyz",
+     *     "refreshToken": "2|zyxwvutsrqponmlkjihgfedcba",
+     *     "user": {
+     *       "id": 1,
+     *       "email": "john.doe@example.com",
+     *       "role": {
+     *         "id": 3,
+     *         "name": "Citizen"
+     *       }
+     *     }
+     *   },
+     *   "message": "Registration successful"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "email": ["This email address is already registered"]
+     *   }
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Registration failed: error details"
+     * }
      */
     public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
     {
@@ -226,6 +464,37 @@ class AuthController extends BaseApiController
         }
     }
 
+    /**
+     * Scan National ID Front
+     * 
+     * Extract text data from the front of a Philippine National ID using OCR service.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam image file required National ID front image (jpeg, png, jpg, gif, max 2MB). Example: id_front.jpg
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "last_name": "Doe",
+     *     "first_name": "John",
+     *     "middle_name": "Michael",
+     *     "date_of_birth": "1990-05-15"
+     *   }
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Validation Error.",
+     *   "errors": {}
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "Service configuration error."
+     * }
+     */
     public function scanFrontId(Request $request): \Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(), [

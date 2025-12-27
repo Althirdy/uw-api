@@ -11,7 +11,47 @@ use Illuminate\Support\Facades\Log;
 class AccidentController extends BaseApiController
 {
     /**
-     * Display a listing of the accidents/reports.
+     * List Accidents
+     * 
+     * Retrieve a paginated list of accidents/reports detected by YOLO AI system.
+     * Supports searching, filtering by accident type, and status.
+     *
+     * @group Operator
+     * @authenticated
+     * 
+     * @queryParam search string optional Search term for title, description, or accident type. Example: fire
+     * @queryParam accident_type string optional Filter by accident type. Example: fire
+     * @queryParam status string optional Filter by status (pending, ongoing, resolved, archived). Example: pending
+     * @queryParam per_page integer optional Number of results per page (default: 10). Example: 20
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "accidents": [
+     *       {
+     *         "id": 1,
+     *         "title": "Fire Incident",
+     *         "description": "Fire detected at location",
+     *         "accident_type": "fire",
+     *         "status": "pending",
+     *         "created_at": "2023-12-27T10:00:00.000000Z",
+     *         "media": []
+     *       }
+     *     ],
+     *     "meta": {
+     *       "current_page": 1,
+     *       "last_page": 5,
+     *       "per_page": 10,
+     *       "total": 50
+     *     }
+     *   },
+     *   "message": "Accidents retrieved successfully"
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while retrieving accidents: error details"
+     * }
      */
     public function index(Request $request)
     {
@@ -62,7 +102,48 @@ class AccidentController extends BaseApiController
     }
 
     /**
-     * Display the specified accident.
+     * Get Accident Details
+     * 
+     * Retrieve detailed information about a specific accident including associated media.
+     *
+     * @group Operator
+     * @authenticated
+     * 
+     * @urlParam accident integer required The ID of the accident. Example: 1
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "accident": {
+     *       "id": 1,
+     *       "title": "Fire Incident",
+     *       "description": "Fire detected at location",
+     *       "accident_type": "fire",
+     *       "status": "pending",
+     *       "latitude": 16.4023,
+     *       "longitude": 120.5960,
+     *       "created_at": "2023-12-27T10:00:00.000000Z",
+     *       "media": [
+     *         {
+     *           "id": 1,
+     *           "media_type": "image",
+     *           "original_path": "https://example.com/image.jpg"
+     *         }
+     *       ]
+     *     }
+     *   },
+     *   "message": "Accident retrieved successfully"
+     * }
+     * 
+     * @response 404 {
+     *   "success": false,
+     *   "message": "Accident not found"
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while retrieving the accident: error details"
+     * }
      */
     public function show(Accident $accident)
     {
@@ -84,7 +165,41 @@ class AccidentController extends BaseApiController
     }
 
     /**
-     * Update the status of the specified accident.
+     * Update Accident Status
+     * 
+     * Update the status of an accident (e.g., pending, ongoing, resolved, archived).
+     *
+     * @group Operator
+     * @authenticated
+     * 
+     * @urlParam accident integer required The ID of the accident. Example: 1
+     * @bodyParam status string required New status (pending, ongoing, resolved, archived). Example: resolved
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "data": {
+     *     "accident": {
+     *       "id": 1,
+     *       "title": "Fire Incident",
+     *       "status": "resolved",
+     *       "updated_at": "2023-12-27T11:00:00.000000Z"
+     *     }
+     *   },
+     *   "message": "Accident status updated successfully"
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "status": ["The selected status is invalid."]
+     *   }
+     * }
+     * 
+     * @response 500 {
+     *   "success": false,
+     *   "message": "An error occurred while updating the accident status: error details"
+     * }
      */
     public function updateStatus(Request $request, Accident $accident)
     {

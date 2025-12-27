@@ -13,7 +13,41 @@ use Illuminate\Support\Facades\Hash;
 class PasswordResetController extends Controller
 {
     /**
-     * Reset password using verified OTP
+     * Reset Password
+     * 
+     * Reset the user's password using a verified OTP token. The token must be obtained from the OTP verification endpoint.
+     * All existing user tokens will be revoked for security.
+     *
+     * @group Auth
+     * @unauthenticated
+     * 
+     * @bodyParam token string required The reset token obtained from OTP verification. Example: abcdefghijklmnopqrstuvwxyz1234567890
+     * @bodyParam email string required The user's email address. Example: john.doe@example.com
+     * @bodyParam password string required New password (minimum 8 characters). Example: NewSecurePass123
+     * @bodyParam password_confirmation string required Password confirmation. Example: NewSecurePass123
+     * 
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Password has been successfully reset."
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Invalid or expired reset token."
+     * }
+     * 
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Reset token expired."
+     * }
+     * 
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "password": ["Password must be at least 8 characters"]
+     *   }
+     * }
      */
     public function reset(ResetPasswordRequest $request): JsonResponse
     {
