@@ -8,6 +8,7 @@ export type reports_T = {
     description: string;
     latitute: string;
     longtitude: string;
+    location_name?: string | null;
     is_acknowledge: boolean;
     acknowledge_by?: number;
     user?: users_T;

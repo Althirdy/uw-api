@@ -57,8 +57,6 @@ class YoloAccidentService
     /**
      * Fetch CCTV device with location relationship and validate.
      *
-     * @param  int  $deviceId
-     * @return cctvDevices
      *
      * @throws \Exception
      */

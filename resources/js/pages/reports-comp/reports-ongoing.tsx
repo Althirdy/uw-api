@@ -116,20 +116,22 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
 
             <CardHeader className="p-3 pb-1">
                 <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-0.5">
-                        <h3 className="text-base font-bold leading-tight text-foreground">
+                    <div className="space-y-1">
+                        <h3 className="line-clamp-1 text-base font-extrabold leading-tight tracking-tight text-foreground">
                             {report.transcript || 'Incident Detected'}
                         </h3>
-                        <div className="flex items-center text-xs text-muted-foreground">
-                            <LocateFixed className="mr-1 h-3 w-3 text-primary" />
-                            {report.latitute}, {report.longtitude}
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <LocateFixed className="h-3.5 w-3.5 text-primary" />
+                            <span className="truncate">
+                                {report.location_name || `${report.latitute}, ${report.longtitude}`}
+                            </span>
                         </div>
                     </div>
                 </div>
             </CardHeader>
 
-            <CardContent className="flex-1 p-3 pt-0 pb-1">
-                <p className="line-clamp-2 text-xs leading-normal text-muted-foreground">
+            <CardContent className="flex-1 p-3 pt-1 pb-1">
+                <p className="line-clamp-2 text-xs font-medium leading-relaxed text-muted-foreground/90">
                     {report.description}
                 </p>
             </CardContent>

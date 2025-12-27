@@ -43,7 +43,6 @@ class YoloAccidentController extends BaseApiController
     /**
      * Process snapshot from YOLO detection system.
      *
-     * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function ProcessSnapShot(Request $request)

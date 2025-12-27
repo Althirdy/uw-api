@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::table('accidents', function (Blueprint $table) {
             $table->unsignedBigInteger('cctv_device_id')->nullable()->after('id');
             $table->foreign('cctv_device_id')
-                  ->references('id')
-                  ->on('cctv_devices')
-                  ->onDelete('set null');
+                ->references('id')
+                ->on('cctv_devices')
+                ->onDelete('set null');
         });
     }
 

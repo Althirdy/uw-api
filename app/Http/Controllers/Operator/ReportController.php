@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Accident;
+use App\Models\Locations;
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -43,8 +44,34 @@ class ReportController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        // Fetch all locations for nearest neighbor search
+        $locations = Locations::all(['location_name', 'latitude', 'longitude']);
+
         // Transform accidents data to match reports structure
-        $accidents->getCollection()->transform(function ($accident) {
+        $accidents->getCollection()->transform(function ($accident) use ($locations) {
+            // Find nearest location
+            $nearestLocationName = null;
+            $shortestDistance = PHP_FLOAT_MAX;
+
+            foreach ($locations as $location) {
+                $distance = $this->calculateDistance(
+                    $accident->latitude,
+                    $accident->longitude,
+                    $location->latitude,
+                    $location->longitude
+                );
+
+                if ($distance < $shortestDistance) {
+                    $shortestDistance = $distance;
+                    $nearestLocationName = $location->location_name;
+                }
+            }
+
+            // Only assign location name if within a reasonable distance (e.g., 500 meters)
+            // If distance is too far, we might just keep it as coordinates or null.
+            // For now, let's just use the nearest one if it's within 1km (1000m)
+            $displayLocation = ($shortestDistance <= 1000) ? $nearestLocationName : null;
+
             return [
                 'id' => $accident->id,
                 'report_type' => ucfirst($accident->accident_type),
@@ -52,6 +79,7 @@ class ReportController extends Controller
                 'description' => $accident->description,
                 'latitute' => $accident->latitude,
                 'longtitude' => $accident->longitude,
+                'location_name' => $displayLocation, // Added field
                 'is_acknowledge' => $accident->status !== 'pending',
                 'status' => ucfirst($accident->status),
                 'created_at' => $accident->created_at,
@@ -70,6 +98,31 @@ class ReportController extends Controller
             'reportTypes' => ['Accident', 'Fire', 'Flood'], // Accident types
             'statusOptions' => ['Pending', 'Ongoing', 'Resolved', 'Archived'],
         ]);
+    }
+
+    /**
+     * Calculate distance between two coordinates using Haversine formula.
+     * Returns distance in meters.
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // Earth's radius in meters
+
+        $lat1 = deg2rad((float) $lat1);
+        $lon1 = deg2rad((float) $lon1);
+        $lat2 = deg2rad((float) $lat2);
+        $lon2 = deg2rad((float) $lon2);
+
+        $dLat = $lat2 - $lat1;
+        $dLon = $lon2 - $lon1;
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos($lat1) * cos($lat2) *
+            sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     public function create(): Response
