@@ -32,5 +32,4 @@ export type ReportsProps = {
         acknowledged?: string;
     };
     reportTypes: string[];
-    statusOptions: { value: string; label: string }[];
 };

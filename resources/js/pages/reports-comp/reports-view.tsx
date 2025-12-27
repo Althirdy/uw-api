@@ -1,3 +1,4 @@
+import { ImagePreview } from '@/components/image-preview';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +29,7 @@ import {
 
 type ViewReportDetailsProps = {
     report: reports_T;
-    children: React.ReactNode;
+    children?: React.ReactNode;
 };
 
 type DetailItem = {
@@ -101,22 +102,24 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         </p>
                         <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                             {firstImage ? (
-                                <>
-                                    <img
-                                        src={firstImage}
-                                        alt="Accident snapshot"
-                                        className="h-full w-full object-cover"
-                                    />
-                                    <div className="absolute top-2 right-2">
-                                        <Badge
-                                            variant="destructive"
-                                            className="text-xs"
-                                        >
-                                            <Camera className="mr-1 h-3 w-3" />
-                                            YOLO Detection
-                                        </Badge>
+                                <ImagePreview src={firstImage} alt="Accident snapshot">
+                                    <div className="relative h-full w-full">
+                                        <img
+                                            src={firstImage}
+                                            alt="Accident snapshot"
+                                            className="h-full w-full object-cover"
+                                        />
+                                        <div className="absolute top-2 right-2">
+                                            <Badge
+                                                variant="destructive"
+                                                className="text-xs"
+                                            >
+                                                <Camera className="mr-1 h-3 w-3" />
+                                                YOLO Detection
+                                            </Badge>
+                                        </div>
                                     </div>
-                                </>
+                                </ImagePreview>
                             ) : (
                                 <div className="relative flex h-full w-full items-center justify-center bg-muted">
                                     <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
