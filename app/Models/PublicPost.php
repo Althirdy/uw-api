@@ -11,9 +11,15 @@ class PublicPost extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'report_id',
+        'postable_id',
+        'postable_type',
+        'title',
+        'content',
+        'image_path',
+        'category',
         'published_by',
         'published_at',
+        'status',
     ];
 
     protected $casts = [
@@ -24,11 +30,11 @@ class PublicPost extends Model
     ];
 
     /**
-     * Get the report associated with this public post.
+     * Get the parent postable model (Accident, Report, etc.).
      */
-    public function report(): BelongsTo
+    public function postable(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
-        return $this->belongsTo(Report::class);
+        return $this->morphTo();
     }
 
     /**

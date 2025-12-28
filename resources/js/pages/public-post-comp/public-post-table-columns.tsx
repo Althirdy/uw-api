@@ -72,7 +72,7 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
         cell: ({ row }) => <div>#{row.getValue('id')}</div>,
     },
     {
-        accessorKey: 'report.report_type',
+        accessorKey: 'category',
         header: ({ column }) => {
             return (
                 <Button
@@ -82,46 +82,46 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
                     }
                     className="cursor-pointer transition-colors duration-200 ease-in-out"
                 >
-                    Report Type
+                    Category
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             );
         },
         cell: ({ row }) => {
             const post = row.original;
-            const reportType = post.report?.report_type || 'Unknown';
+            const category = post.category || 'General';
             const colorClass =
-                reportTypeColors[reportType] || 'bg-gray-100 text-gray-800';
+                reportTypeColors[category] || 'bg-gray-100 text-gray-800';
 
             return (
                 <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorClass}`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase ${colorClass}`}
                 >
-                    {reportType}
+                    {category}
                 </span>
             );
         },
     },
     {
-        id: 'report_content',
-        header: 'Report Content',
+        id: 'content',
+        header: 'Post Content',
         cell: ({ row }) => {
             const post = row.original;
             return (
                 <div className="max-w-xs text-left">
                     <div className="ellipsis flex flex-col truncate">
                         <span className="text-md font-semibold">
-                            {post.report?.transcript}
+                            {post.title}
                         </span>
                         <span
                             className="mt-1 block truncate text-xs text-muted-foreground"
-                            title={post.report?.description}
+                            title={post.content}
                         >
-                            {post.report?.description &&
-                            post.report.description.length > 100
-                                ? post.report.description.substring(0, 100) +
+                            {post.content &&
+                            post.content.length > 100
+                                ? post.content.substring(0, 100) +
                                   '...'
-                                : post.report?.description}
+                                : post.content}
                         </span>
                     </div>
                 </div>
@@ -129,11 +129,11 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
         },
     },
     {
-        accessorKey: 'report.user.name',
-        header: 'Reporter',
+        accessorKey: 'publishedBy.name',
+        header: 'Published By',
         cell: ({ row }) => {
             const post = row.original;
-            return <div>{post.report?.user?.name || 'Unknown'}</div>;
+            return <div>{post.publishedBy?.name || 'Unknown'}</div>;
         },
     },
     {

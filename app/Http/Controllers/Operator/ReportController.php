@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Operator;
 use App\Http\Controllers\Controller;
 use App\Models\Accident;
 use App\Models\Locations;
+use App\Models\PublicPost;
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -288,6 +289,25 @@ class ReportController extends Controller
                 // Update status to ongoing when acknowledged
                 $accident->update([
                     'status' => 'ongoing',
+                ]);
+
+                // Create a PublicPost for this accident
+                $imagePath = null;
+                $firstMedia = $accident->media()->first();
+                if ($firstMedia) {
+                    $imagePath = $firstMedia->original_path;
+                }
+
+                PublicPost::create([
+                    'postable_id' => $accident->id,
+                    'postable_type' => Accident::class,
+                    'title' => 'PAUNAWA: ' . $accident->title,
+                    'content' => $accident->description,
+                    'image_path' => $imagePath,
+                    'category' => 'emergency',
+                    'status' => 'published',
+                    'published_by' => auth()->id(),
+                    'published_at' => now(),
                 ]);
 
                 DB::commit();

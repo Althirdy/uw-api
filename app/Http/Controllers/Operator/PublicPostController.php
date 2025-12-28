@@ -26,9 +26,7 @@ class PublicPostController extends Controller
 
             // For web requests, return Inertia response
             $query = PublicPost::with([
-                'report' => function ($query) {
-                    $query->with('user');
-                },
+                'postable',
                 'publishedBy',
             ])->orderBy('created_at', 'desc');
 
@@ -58,10 +56,10 @@ class PublicPostController extends Controller
             // Search functionality
             if ($request->has('search')) {
                 $search = $request->search;
-                $query->whereHas('report', function ($q) use ($search) {
-                    $q->where('transcript', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('report_type', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%");
                 });
             }
 
@@ -82,9 +80,7 @@ class PublicPostController extends Controller
     {
         try {
             $query = PublicPost::with([
-                'report' => function ($query) {
-                    $query->with('user');
-                },
+                'postable',
                 'publishedBy',
             ])->orderBy('created_at', 'desc');
 
@@ -114,10 +110,10 @@ class PublicPostController extends Controller
             // Search functionality
             if ($request->has('search')) {
                 $search = $request->search;
-                $query->whereHas('report', function ($q) use ($search) {
-                    $q->where('transcript', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('report_type', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%");
                 });
             }
 
@@ -144,8 +140,14 @@ class PublicPostController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'report_id' => 'required|exists:reports,id',
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'image_path' => 'nullable|string',
+                'category' => 'nullable|string',
+                'postable_id' => 'nullable|integer',
+                'postable_type' => 'nullable|string',
                 'published_at' => 'nullable|date|after_or_equal:now',
+                'status' => 'nullable|string|in:draft,published,scheduled',
             ]);
 
             if ($validator->fails()) {
@@ -156,21 +158,31 @@ class PublicPostController extends Controller
                 ], 422);
             }
 
-            // Check if public post already exists for this report
-            if (PublicPost::where('report_id', $request->report_id)->exists()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'A public post already exists for this report',
-                ], 409);
+            // Check if public post already exists for this postable object (if provided)
+            if ($request->postable_id && $request->postable_type) {
+                if (PublicPost::where('postable_id', $request->postable_id)
+                    ->where('postable_type', $request->postable_type)
+                    ->exists()) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'A public post already exists for this item',
+                    ], 409);
+                }
             }
 
             $publicPost = PublicPost::create([
-                'report_id' => $request->report_id,
+                'title' => $request->title,
+                'content' => $request->content,
+                'image_path' => $request->image_path,
+                'category' => $request->category ?? 'general',
+                'postable_id' => $request->postable_id,
+                'postable_type' => $request->postable_type,
                 'published_by' => Auth::id(),
                 'published_at' => $request->published_at,
+                'status' => $request->status ?? ($request->published_at ? 'scheduled' : 'published'),
             ]);
 
-            $publicPost->load(['report.user', 'publishedBy']);
+            $publicPost->load(['postable', 'publishedBy']);
 
             return response()->json([
                 'status' => 'success',
@@ -192,7 +204,7 @@ class PublicPostController extends Controller
     public function show(PublicPost $publicPost): JsonResponse
     {
         try {
-            $publicPost->load(['report.user', 'publishedBy']);
+            $publicPost->load(['postable', 'publishedBy']);
 
             return response()->json([
                 'status' => 'success',
@@ -215,9 +227,12 @@ class PublicPostController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'title' => 'nullable|string|max:255',
+                'content' => 'nullable|string',
+                'image_path' => 'nullable|string',
+                'category' => 'nullable|string',
                 'published_at' => 'nullable|date',
-                'transcript' => 'nullable|string|max:1000',
-                'description' => 'nullable|string|max:2000',
+                'status' => 'nullable|string|in:draft,published,scheduled',
             ]);
 
             if ($validator->fails()) {
@@ -232,15 +247,17 @@ class PublicPostController extends Controller
                 return back()->withErrors($validator->errors());
             }
 
-            // Update the public post
-            $publicPost->update($request->only(['published_at']));
+            // Update the public post fields
+            $publicPost->update($request->only([
+                'title',
+                'content',
+                'image_path',
+                'category',
+                'published_at',
+                'status',
+            ]));
 
-            // Update the associated report if transcript or description are provided
-            if ($request->has('transcript') || $request->has('description')) {
-                $publicPost->report->update($request->only(['transcript', 'description']));
-            }
-
-            $publicPost->load(['report.user', 'publishedBy']);
+            $publicPost->load(['postable', 'publishedBy']);
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -300,7 +317,7 @@ class PublicPostController extends Controller
     {
         try {
             $publicPost->publish();
-            $publicPost->load(['report.user', 'publishedBy']);
+            $publicPost->load(['postable', 'publishedBy']);
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -331,7 +348,7 @@ class PublicPostController extends Controller
     {
         try {
             $publicPost->update(['published_at' => null]);
-            $publicPost->load(['report.user', 'publishedBy']);
+            $publicPost->load(['postable', 'publishedBy']);
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -412,7 +429,7 @@ class PublicPostController extends Controller
                 'posts_this_month' => PublicPost::whereMonth('created_at', now()->month)
                     ->whereYear('created_at', now()->year)
                     ->count(),
-                'recent_posts' => PublicPost::with(['report.user', 'publishedBy'])
+                'recent_posts' => PublicPost::with(['postable', 'publishedBy'])
                     ->published()
                     ->limit(5)
                     ->latest('published_at')

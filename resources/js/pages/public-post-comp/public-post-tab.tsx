@@ -25,36 +25,35 @@ interface PublicPostTabProps {
 }
 
 const PublicPostTab = ({ posts, setFilteredPosts }: PublicPostTabProps) => {
-    const [reportTypeOpen, setReportTypeOpen] = useState(false);
+    const [categoryOpen, setCategoryOpen] = useState(false);
     const [statusOpen, setStatusOpen] = useState(false);
-    const [reportTypeValue, setReportTypeValue] = useState<string | null>(null);
+    const [categoryValue, setCategoryValue] = useState<string | null>(null);
     const [statusValue, setStatusValue] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [searchableReportTypes, setSearchableReportTypes] = useState<
-        string[]
-    >([]);
+    const [searchableCategories, setSearchableCategories] = useState<string[]>(
+        [],
+    );
 
-    // Extract unique report types from posts data
+    // Extract unique categories from posts data
     useEffect(() => {
-        const reportTypes = posts
-            .map((post: PublicPost_T) => post.report?.report_type)
-            .filter((reportType): reportType is string => Boolean(reportType))
+        const categories = posts
+            .map((post: PublicPost_T) => post.category)
+            .filter((category): category is string => Boolean(category))
             .filter(
                 (value: string, index: number, self: string[]) =>
                     self.indexOf(value) === index,
             );
-        setSearchableReportTypes(reportTypes);
+        setSearchableCategories(categories);
     }, [posts]);
 
-    // Filter displayed posts based on selected report type, status, and search query
+    // Filter displayed posts based on selected category, status, and search query
     useEffect(() => {
         let filteredResults = posts;
 
-        // Filter by report type if selected
-        if (reportTypeValue) {
+        // Filter by category if selected
+        if (categoryValue) {
             filteredResults = filteredResults.filter(
-                (post: PublicPost_T) =>
-                    post.report?.report_type === reportTypeValue,
+                (post: PublicPost_T) => post.category === categoryValue,
             );
         }
 
@@ -81,29 +80,25 @@ const PublicPostTab = ({ posts, setFilteredPosts }: PublicPostTabProps) => {
             });
         }
 
-        // Filter by search query (report content or description)
+        // Filter by search query (title or content)
         if (searchQuery.trim()) {
             filteredResults = filteredResults.filter((post: PublicPost_T) => {
-                const transcript = post.report?.transcript?.toLowerCase() || '';
-                const description =
-                    post.report?.description?.toLowerCase() || '';
-                const reporterName =
-                    post.report?.user?.name?.toLowerCase() || '';
+                const title = post.title?.toLowerCase() || '';
+                const content = post.content?.toLowerCase() || '';
                 const publisherName =
                     post.publishedBy?.name?.toLowerCase() || '';
                 const query = searchQuery.toLowerCase();
 
                 return (
-                    transcript.includes(query) ||
-                    description.includes(query) ||
-                    reporterName.includes(query) ||
+                    title.includes(query) ||
+                    content.includes(query) ||
                     publisherName.includes(query)
                 );
             });
         }
 
         setFilteredPosts(filteredResults);
-    }, [reportTypeValue, statusValue, searchQuery, posts, setFilteredPosts]);
+    }, [categoryValue, statusValue, searchQuery, posts, setFilteredPosts]);
 
     const statusOptions = [
         { value: 'published', label: 'Published' },
@@ -112,73 +107,71 @@ const PublicPostTab = ({ posts, setFilteredPosts }: PublicPostTabProps) => {
     ];
 
     return (
-        <div className="flex max-w-4xl flex-wrap gap-4">
+        <div className="flex w-full flex-wrap gap-4">
             <Input
-                placeholder="Search by content, reporter, or publisher"
+                placeholder="Search by title, content, or publisher"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-12 min-w-[300px] flex-1"
             />
 
-            <Popover open={reportTypeOpen} onOpenChange={setReportTypeOpen}>
+            <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
                 <PopoverTrigger asChild className="h-12">
                     <Button
                         variant="outline"
                         role="combobox"
-                        aria-expanded={reportTypeOpen}
+                        aria-expanded={categoryOpen}
                         className="w-[180px] cursor-pointer justify-between"
                     >
-                        {reportTypeValue || 'Select report type...'}
+                        {categoryValue || 'Select category...'}
                         <ChevronsUpDown className="opacity-50" />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[180px] p-0">
                     <Command>
                         <CommandInput
-                            placeholder="Search report type..."
+                            placeholder="Search category..."
                             className="h-9"
                         />
                         <CommandList>
-                            <CommandEmpty>No report type found.</CommandEmpty>
+                            <CommandEmpty>No category found.</CommandEmpty>
                             <CommandGroup>
-                                {/* Add "All Report Types" option */}
                                 <CommandItem
-                                    key="all-report-types"
+                                    key="all-categories"
                                     value=""
                                     onSelect={() => {
-                                        setReportTypeValue(null);
-                                        setReportTypeOpen(false);
+                                        setCategoryValue(null);
+                                        setCategoryOpen(false);
                                     }}
                                 >
-                                    All Report Types
+                                    All Categories
                                     <Check
                                         className={cn(
                                             'ml-auto',
-                                            reportTypeValue === null
+                                            categoryValue === null
                                                 ? 'opacity-100'
                                                 : 'opacity-0',
                                         )}
                                     />
                                 </CommandItem>
-                                {/* Use searchableReportTypes for dropdown options */}
-                                {searchableReportTypes.map((reportType) => (
+                                {searchableCategories.map((category) => (
                                     <CommandItem
-                                        key={reportType}
-                                        value={reportType}
+                                        key={category}
+                                        value={category}
                                         onSelect={(currentValue) => {
-                                            setReportTypeValue(
-                                                currentValue === reportTypeValue
+                                            setCategoryValue(
+                                                currentValue === categoryValue
                                                     ? null
                                                     : currentValue,
                                             );
-                                            setReportTypeOpen(false);
+                                            setCategoryOpen(false);
                                         }}
                                     >
-                                        {reportType}
+                                        {category}
                                         <Check
                                             className={cn(
                                                 'ml-auto',
-                                                reportTypeValue === reportType
+                                                categoryValue === category
                                                     ? 'opacity-100'
                                                     : 'opacity-0',
                                             )}
@@ -215,7 +208,6 @@ const PublicPostTab = ({ posts, setFilteredPosts }: PublicPostTabProps) => {
                         <CommandList>
                             <CommandEmpty>No status found.</CommandEmpty>
                             <CommandGroup>
-                                {/* Add "All Statuses" option */}
                                 <CommandItem
                                     key="all-status"
                                     value=""
@@ -234,7 +226,6 @@ const PublicPostTab = ({ posts, setFilteredPosts }: PublicPostTabProps) => {
                                         )}
                                     />
                                 </CommandItem>
-                                {/* Status options */}
                                 {statusOptions.map((status) => (
                                     <CommandItem
                                         key={status.value}

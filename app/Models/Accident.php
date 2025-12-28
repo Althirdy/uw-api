@@ -33,6 +33,14 @@ class Accident extends Model
     }
 
     /**
+     * Get the public post associated with the accident.
+     */
+    public function publicPost(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(PublicPost::class, 'postable');
+    }
+
+    /**
      * Get location coordinates from the related CCTV device.
      *
      * @return array|null Returns ['latitude' => string, 'longitude' => string] or null
