@@ -38,11 +38,41 @@ type ReportsCardProps = {
 
 const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
     const handleAcknowledge = (id: number) => {
+        console.log('Acknowledging report:', id);
         router.patch(
             `/report/${id}/acknowledge`,
             {},
             {
                 preserveScroll: true,
+                onSuccess: () => {
+                    console.log('Successfully acknowledged');
+                },
+                onError: (errors) => {
+                    console.error('Failed to acknowledge:', errors);
+                    // You might want to show a toast here
+                    alert('Failed to acknowledge report. Check console for details.');
+                },
+                onFinish: () => {
+                    console.log('Request finished');
+                }
+            },
+        );
+    };
+
+    const handleResolve = (id: number) => {
+        console.log('Resolving report:', id);
+        router.patch(
+            `/report/${id}/resolve`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    console.log('Successfully resolved');
+                },
+                onError: (errors) => {
+                    console.error('Failed to resolve:', errors);
+                    alert('Failed to resolve report. Check console for details.');
+                },
             },
         );
     };
@@ -188,7 +218,7 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
                                                 </CardContent>
 
                         <CardFooter className="flex flex-col gap-2 p-3 pt-1 pb-3">
-                            {report.is_acknowledge == false ? (
+                            {!report.is_acknowledge ? (
                                 <Button
                                     size="sm"
                                     className="h-8 w-full text-xs font-bold"
@@ -196,6 +226,26 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
                                 >
                                     <Check className="mr-1.5 h-3.5 w-3.5" />
                                     Acknowledge
+                                </Button>
+                            ) : report.status === 'Ongoing' ? (
+                                <Button
+                                    variant="default" // or a specific variant like 'destructive' if appropriate
+                                    size="sm"
+                                    className="h-8 w-full text-xs font-bold bg-green-600 hover:bg-green-700"
+                                    onClick={() => handleResolve(report.id)}
+                                >
+                                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                                    Mark as Resolved
+                                </Button>
+                            ) : report.status === 'Resolved' ? (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled
+                                    className="h-8 w-full cursor-not-allowed text-xs opacity-70"
+                                >
+                                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                                    Resolved
                                 </Button>
                             ) : (
                                 <Button
@@ -205,7 +255,7 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
                                     className="h-8 w-full cursor-not-allowed text-xs opacity-70"
                                 >
                                     <Check className="mr-1.5 h-3.5 w-3.5" />
-                                    Acknowledged
+                                    {report.status}
                                 </Button>
                             )}
 

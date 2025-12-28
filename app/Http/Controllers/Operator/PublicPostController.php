@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Operator\StorePublicPostRequest;
 use App\Models\PublicPost;
 use App\Models\Report;
+use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +15,13 @@ use Inertia\Inertia;
 
 class PublicPostController extends Controller
 {
+    protected $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+    }
+
     /**
      * Display a listing of public posts.
      */
@@ -136,32 +145,33 @@ class PublicPostController extends Controller
     /**
      * Store a newly created public post.
      */
-    public function store(Request $request): JsonResponse
+    public function store(StorePublicPostRequest $request): JsonResponse
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'title' => 'required|string|max:255',
-                'content' => 'required|string',
-                'image_path' => 'nullable|string',
-                'category' => 'nullable|string',
-                'postable_id' => 'nullable|integer',
-                'postable_type' => 'nullable|string',
-                'published_at' => 'nullable|date|after_or_equal:now',
-                'status' => 'nullable|string|in:draft,published,scheduled',
-            ]);
+            $data = $request->validated();
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors(),
-                ], 422);
+            // Handle Image Upload
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $uploadResult = $this->fileUploadService->uploadSingle($request->file('image'), 'public_posts');
+                $imagePath = $uploadResult['public_url']; // Storing the full URL or relative path depending on your preference. Usually relative path 'storage_path' or full url 'public_url'.
+                // Based on model 'image_path', let's store the relative path if preferred, or public_url if that's how it's used.
+                // Looking at other parts, typically public_url is convenient.
+                // However, let's use public_url as it was returned.
             }
 
-            // Check if public post already exists for this postable object (if provided)
-            if ($request->postable_id && $request->postable_type) {
-                if (PublicPost::where('postable_id', $request->postable_id)
-                    ->where('postable_type', $request->postable_type)
+            // Handle Published At
+            $publishedAt = null;
+            if ($data['status'] === 'published') {
+                $publishedAt = now();
+            } elseif ($data['status'] === 'scheduled') {
+                $publishedAt = $data['published_at'];
+            }
+
+            // Check duplicate for postable (if provided)
+            if (! empty($data['postable_id']) && ! empty($data['postable_type'])) {
+                if (PublicPost::where('postable_id', $data['postable_id'])
+                    ->where('postable_type', $data['postable_type'])
                     ->exists()) {
                     return response()->json([
                         'status' => 'error',
@@ -171,24 +181,37 @@ class PublicPostController extends Controller
             }
 
             $publicPost = PublicPost::create([
-                'title' => $request->title,
-                'content' => $request->content,
-                'image_path' => $request->image_path,
-                'category' => $request->category ?? 'general',
-                'postable_id' => $request->postable_id,
-                'postable_type' => $request->postable_type,
+                'title' => $data['title'],
+                'content' => $data['content'],
+                'image_path' => $imagePath, // Save the image path
+                'category' => $data['category'] ?? 'General',
+                'postable_id' => $data['postable_id'] ?? null,
+                'postable_type' => $data['postable_type'] ?? null,
                 'published_by' => Auth::id(),
-                'published_at' => $request->published_at,
-                'status' => $request->status ?? ($request->published_at ? 'scheduled' : 'published'),
+                'published_at' => $publishedAt,
+                'status' => $data['status'],
             ]);
 
             $publicPost->load(['postable', 'publishedBy']);
+
+            // Return success response (Inertia handles redirects usually, but for modals often JSON is returned or Inertia visit)
+            // Since the user asked for "manual post", and usually this is a form submission,
+            // returning a redirect with flash message is standard for Inertia,
+            // BUT the existing controller was returning JSON for store.
+            // I will keep returning JSON as the frontend might expect it or I can change the frontend to use router.post
+            // The existing store method returned JSON. I'll stick to that to be safe, or I can update it to support both.
+
+            // Actually, for Inertia apps, we usually redirect back.
+            // But if the frontend uses axios manually, JSON is good.
+            // Let's return JSON as before, but if it's an Inertia request, we might want to redirect.
+            // The previous code returned JSON. I will continue to return JSON.
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Public post created successfully',
                 'data' => $publicPost,
             ], 201);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
@@ -499,6 +522,55 @@ class PublicPostController extends Controller
                 'message' => 'Bulk action failed',
                 'error' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    /**
+     * Resolve the accident associated with a public post
+     */
+    public function resolve(PublicPost $publicPost)
+    {
+        try {
+            // Check if the post is associated with an accident
+            if (! $publicPost->postable || ! ($publicPost->postable instanceof \App\Models\Accident)) {
+                return back()->with('error', 'This post is not associated with an accident.');
+            }
+
+            $accident = $publicPost->postable;
+
+            // Check if already resolved
+            if ($accident->status === 'resolved') {
+                return back()->with('error', 'This accident is already resolved.');
+            }
+
+            // Check if status is ongoing
+            if ($accident->status !== 'ongoing') {
+                return back()->with('error', 'Only ongoing accidents can be resolved.');
+            }
+
+            \Illuminate\Support\Facades\DB::beginTransaction();
+            try {
+                // Update accident status to resolved
+                $accident->update([
+                    'status' => 'resolved',
+                ]);
+
+                // Update the public post title to indicate it's resolved
+                $publicPost->update([
+                    'title' => str_contains($publicPost->title, '[RESOLVED]')
+                        ? $publicPost->title
+                        : '[RESOLVED] '.$publicPost->title,
+                ]);
+
+                \Illuminate\Support\Facades\DB::commit();
+
+                return back()->with('success', 'Accident resolved successfully.');
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\DB::rollBack();
+                throw $e;
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to resolve accident: '.$e->getMessage());
         }
     }
 }

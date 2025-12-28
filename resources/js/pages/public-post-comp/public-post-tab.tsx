@@ -18,6 +18,7 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { PublicPost_T } from '@/types/public-post-types';
+import CreatePublicPostModal from './create-public-post-modal';
 
 interface PublicPostTabProps {
     posts: PublicPost_T[];
@@ -108,6 +109,8 @@ const PublicPostTab = ({ posts, setFilteredPosts }: PublicPostTabProps) => {
 
     return (
         <div className="flex w-full flex-wrap gap-4">
+            <CreatePublicPostModal />
+
             <Input
                 placeholder="Search by title, content, or publisher"
                 value={searchQuery}

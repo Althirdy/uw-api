@@ -37,7 +37,12 @@ export type PublicPost_T = {
     created_at: string;
     updated_at: string;
     deleted_at?: string;
-    postable?: any;
+    postable?: {
+        id: number;
+        status: 'pending' | 'ongoing' | 'resolved' | 'archived';
+        accident_type?: string;
+        [key: string]: any;
+    };
     publishedBy: User_T;
 };
 

@@ -37,11 +37,19 @@ class ReportController extends Controller
 
         // Filter by status
         if ($request->has('acknowledged') && $request->acknowledged !== '') {
-            $statusFilter = $request->acknowledged === 'true' ? 'resolved' : 'pending';
+            $statusFilter = $request->acknowledged === 'true' ? 'Resolved' : 'Pending';
             $query->where('status', $statusFilter);
         }
 
-        $accidents = $query->orderBy('created_at', 'desc')
+        // Order by status (Pending first, then In Progress, then Resolved last) and then by created_at
+        $accidents = $query
+            ->orderByRaw("CASE 
+                WHEN status = 'Pending' THEN 1 
+                WHEN status = 'In Progress' THEN 2 
+                WHEN status = 'Resolved' THEN 3 
+                ELSE 4 
+            END")
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -81,7 +89,7 @@ class ReportController extends Controller
                 'latitute' => $accident->latitude,
                 'longtitude' => $accident->longitude,
                 'location_name' => $displayLocation, // Added field
-                'is_acknowledge' => $accident->status !== 'pending',
+                'is_acknowledge' => strtolower($accident->status) !== 'pending',
                 'status' => ucfirst($accident->status),
                 'created_at' => $accident->created_at,
                 'updated_at' => $accident->updated_at,
@@ -217,7 +225,7 @@ class ReportController extends Controller
                 'description' => 'required|string|max:1000',
                 'latitute' => 'required|numeric|between:-90,90',
                 'longtitude' => 'required|numeric|between:-180,180',
-                'status' => 'nullable|string|in:pending,ongoing,resolved,archived',
+                'status' => 'nullable|string|in:Pending,In Progress,Resolved',
             ]);
 
             DB::beginTransaction();
@@ -279,17 +287,26 @@ class ReportController extends Controller
         try {
             $accident = Accident::findOrFail($id);
 
-            // Check if already acknowledged (not pending)
-            if ($accident->status !== 'pending') {
+            \Log::info('Acknowledging accident', [
+                'id' => $id,
+                'current_status' => $accident->status,
+            ]);
+
+            // Check if already acknowledged (not Pending)
+            if ($accident->status !== 'Pending') {
+                \Log::warning('Accident already acknowledged', ['status' => $accident->status]);
+
                 return back()->with('error', 'Report is already acknowledged.');
             }
 
             DB::beginTransaction();
             try {
-                // Update status to ongoing when acknowledged
+                // Update status to In Progress when acknowledged
                 $accident->update([
-                    'status' => 'ongoing',
+                    'status' => 'In Progress',
                 ]);
+
+                \Log::info('Accident status updated', ['new_status' => $accident->fresh()->status]);
 
                 // Create a PublicPost for this accident
                 $imagePath = null;
@@ -301,7 +318,7 @@ class ReportController extends Controller
                 PublicPost::create([
                     'postable_id' => $accident->id,
                     'postable_type' => Accident::class,
-                    'title' => 'PAUNAWA: ' . $accident->title,
+                    'title' => 'PAUNAWA: '.$accident->title,
                     'content' => $accident->description,
                     'image_path' => $imagePath,
                     'category' => 'emergency',
@@ -327,20 +344,38 @@ class ReportController extends Controller
         }
     }
 
-    public function resolve(Report $report)
+    public function resolve($id)
     {
         try {
-            if ($report->status === 'Resolved') {
+            $accident = Accident::findOrFail($id);
+
+            if ($accident->status === 'Resolved') {
                 return back()->with('error', 'Report is already resolved.');
             }
 
-            if ($report->status !== 'Ongoing') {
+            if ($accident->status !== 'In Progress') {
                 return back()->with('error', 'Only ongoing reports can be resolved.');
             }
 
             DB::beginTransaction();
             try {
-                $report->resolve();
+                $accident->update([
+                    'status' => 'Resolved',
+                ]);
+
+                // Update the associated PublicPost if it exists
+                $publicPost = PublicPost::where('postable_id', $accident->id)
+                    ->where('postable_type', Accident::class)
+                    ->first();
+
+                if ($publicPost) {
+                    $publicPost->update([
+                        'title' => '[RESOLVED] '.$publicPost->title,
+                        // Optional: Unpublish it or keep it visible
+                        // 'status' => 'archived',
+                    ]);
+                }
+
                 DB::commit();
 
                 return redirect()->route('reports')

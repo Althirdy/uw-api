@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('public_posts', function (Blueprint $table) {
-            // Remove the old foreign key and column
+            // Remove the old foreign key, index, and column
             $table->dropForeign(['report_id']);
+            $table->dropIndex('public_posts_report_id_index');
             $table->dropColumn('report_id');
 
             // Add polymorphic columns
