@@ -47,7 +47,7 @@ function getStatusBadge(publishedAt: string | null) {
     }
 
     return (
-        <span className="inline-flex items-center rounded-[var(--radius)] bg-green-800 px-2.5 py-0.5 text-xs font-medium text-white">
+        <span className="inline-flex items-center rounded-[var(--radius)] bg-green-800 px-2.5 py-0.5 text-xs font-medium text-foreground">
             Published
         </span>
     );
@@ -112,7 +112,7 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
                 <div className="max-w-xs text-left">
                     <div className="ellipsis flex flex-col truncate">
                         <span
-                            className="mt-1 block truncate text-md text-muted-foreground"
+                            className="text-md mt-1 block truncate text-muted-foreground"
                             title={post.report?.description}
                         >
                             {post.report?.description &&

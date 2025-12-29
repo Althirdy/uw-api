@@ -20,9 +20,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/use-toast';
 import { router } from '@inertiajs/react';
-import { Camera, SquarePen } from 'lucide-react';
+import { Camera, MoveLeft, Save, SquarePen } from 'lucide-react';
 import React, { useState } from 'react';
 import {
     cctv_T,
@@ -378,7 +379,8 @@ function EditUWDevice({
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -386,6 +388,11 @@ function EditUWDevice({
                                 className="flex-2"
                                 disabled={isSubmitting}
                             >
+                                {isSubmitting ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
                                 {isSubmitting ? 'Updating...' : 'Update Device'}
                             </Button>
                         </div>

@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -12,7 +13,6 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {Badge} from '@/components/ui/badge';
 import { Archive, ExternalLink as Open, SquarePen } from 'lucide-react';
 
 import { PublicPost_T } from '@/types/public-post-types';
@@ -42,7 +42,7 @@ function getStatusInfo(publishedAt: string | null) {
         };
     }
 
-    return { label: 'Published', className: 'text-white bg-green-800' };
+    return { label: 'Published', className: ' text-foreground bg-green-800' };
 }
 
 const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
@@ -68,21 +68,21 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                     >
                         <CardHeader>
                             <CardTitle> Post ID: #{post.id}</CardTitle>
-                            <CardDescription className='flex flex-row gap-2'>
+                            <CardDescription className="flex flex-row gap-2">
                                 <Badge
                                     className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}
                                 >
                                     {statusInfo.label}
                                 </Badge>
                                 <Badge
-                                        className={` inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${
-                                            reportTypeColors[
-                                                post.report?.report_type || ''
-                                            ] || 'bg-zinc-600'
-                                        }`}
-                                    >
-                                        {post.report?.report_type}
-                                    </Badge>
+                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${
+                                        reportTypeColors[
+                                            post.report?.report_type || ''
+                                        ] || 'bg-zinc-600'
+                                    }`}
+                                >
+                                    {post.report?.report_type}
+                                </Badge>
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -90,11 +90,9 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                                 <p className="text-sm font-medium">
                                     Report Content
                                 </p>
-                                <div className="rounded-lg border bg-muted/30 p-3 flex flex-col gap-2">
-                                    
-                                    <p className="text-sm text-muted-foreground ">
-                                        {post.report?.transcript ||
-                                            null}
+                                <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3">
+                                    <p className="text-sm text-muted-foreground">
+                                        {post.report?.transcript || null}
                                     </p>
                                     {post.report?.description && (
                                         <p className="text-sm text-muted-foreground">

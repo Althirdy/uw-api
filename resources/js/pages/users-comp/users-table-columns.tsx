@@ -1,5 +1,11 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Archive, ArrowUpDown, ExternalLink, SquarePen } from 'lucide-react';
+import {
+    Archive,
+    ArrowUpDown,
+    BadgeAlert,
+    ExternalLink,
+    SquarePen,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +20,7 @@ import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
 import ArchiveUser from './users-archive';
 import EditUser from './users-edit';
+import SuspensionUser from './users-suspension';
 import ViewUser from './users-view';
 
 const roleColors: Record<string, string> = {
@@ -73,7 +80,7 @@ export const columns = (
 
             return (
                 <Badge
-                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${bgColor}`}
+                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-foreground ${bgColor}`}
                 >
                     {roleName}
                 </Badge>
@@ -108,10 +115,10 @@ export const columns = (
 
             return (
                 <Badge
-                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${
+                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-foreground ${
                         statusText === 'Active'
                             ? 'bg-green-800 dark:bg-green-900'
-                            : 'bg-gray-800'
+                            : 'bg-zinc-700'
                     }`}
                 >
                     {statusText}
@@ -166,6 +173,24 @@ export const columns = (
                             <p>Edit User</p>
                         </TooltipContent>
                     </Tooltip>
+                    <Tooltip>
+                        <SuspensionUser user={user}>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <BadgeAlert className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                        </SuspensionUser>
+                        <TooltipContent>
+                            <p>Suspend User</p>
+                        </TooltipContent>
+                    </Tooltip>
+
                     <Tooltip>
                         <ArchiveUser user={user}>
                             <TooltipTrigger asChild>

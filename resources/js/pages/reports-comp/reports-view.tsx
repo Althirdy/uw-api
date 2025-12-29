@@ -188,7 +188,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                                 }
                             >
                                 {!report.is_acknowledge && (
-                                    <MoveLeft className="mr-2 inline h-4 w-4" />
+                                    <MoveLeft className="inline h-4 w-4" />
                                 )}
                                 Close
                             </Button>
@@ -199,7 +199,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                                 onClick={handleAcknowledge}
                                 className="flex-2"
                             >
-                                <Check className="mr-2 inline h-4 w-4" />
+                                <Check className="inline h-4 w-4" />
                                 Acknowledge
                             </Button>
                         )}

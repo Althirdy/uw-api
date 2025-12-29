@@ -27,8 +27,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('reports', function (Blueprint $table) {
-            $table->string('latitude')->nullable(false)->change();
-            $table->string('longtitude')->nullable(false)->change();
+            $table->string('latitude')->nullable()->change();
+            $table->string('longtitude')->nullable()->change();
         });
         
         Schema::table('reports', function (Blueprint $table) {

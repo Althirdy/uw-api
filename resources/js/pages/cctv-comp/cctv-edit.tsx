@@ -25,10 +25,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/use-toast';
 import { useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { ChevronDownIcon, SquarePen } from 'lucide-react';
+import { ChevronDownIcon, MoveLeft, Save, SquarePen } from 'lucide-react';
 import React, { useState } from 'react';
 import { cctv_T, location_T } from '../../types/cctv-location-types';
 
@@ -403,7 +404,8 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -411,6 +413,11 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Updating...' : 'Update CCTV'}
                             </Button>
                         </div>

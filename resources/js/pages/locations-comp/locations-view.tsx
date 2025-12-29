@@ -84,7 +84,7 @@ function ViewLocation({ location, children }: ViewLocationProps) {
                         </div>
 
                         <div className="flex flex-col">
-                            <span className="text-sm text-white">
+                            <span className="text-sm text-foreground">
                                 GPS Coordinates{' '}
                             </span>
                             <div className="flex w-full flex-row justify-between gap-3">

@@ -9,6 +9,7 @@ use App\Models\Locations;
 use App\Models\OfficialsDetails;
 use App\Models\Roles;
 use App\Models\User;
+use App\Models\UserSuspension;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,8 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = User::with(['role', 'officialDetails', 'citizenDetails']);
+        $query = User::with(['role', 'officialDetails', 'citizenDetails'])
+            ->where('id', '!=', auth()->id()); // Exclude logged-in user
 
         // Search functionality
         if ($request->has('search') && $request->search) {
@@ -297,6 +299,177 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return back()
                 ->with('error', 'Failed to delete user. Please try again.');
+        }
+    }
+
+    /**
+     * Get available punishments for a user
+     */
+    public function getAvailablePunishments(User $user)
+    {
+        try {
+            $availablePunishments = UserSuspension::getAvailablePunishments($user->id);
+            
+            // Get suspension history
+            $suspensionHistory = UserSuspension::where('user_id', $user->id)
+                ->with('suspendedBy:id,name,email')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($suspension) {
+                    return [
+                        'id' => $suspension->id,
+                        'punishment_type' => $suspension->punishment_type,
+                        'duration_days' => $suspension->duration_days,
+                        'suspended_at' => $suspension->suspended_at->format('Y-m-d H:i:s'),
+                        'expires_at' => $suspension->expires_at?->format('Y-m-d H:i:s'),
+                        'status' => $suspension->status,
+                        'reason' => $suspension->reason,
+                        'suspended_by' => $suspension->suspendedBy->name,
+                        'is_active' => $suspension->isActive(),
+                    ];
+                });
+
+            // Check if user is currently suspended
+            $isCurrentlySuspended = UserSuspension::isUserSuspended($user->id);
+            $activeSuspension = UserSuspension::getActiveSuspension($user->id);
+
+            return response()->json([
+                'available_punishments' => $availablePunishments,
+                'suspension_history' => $suspensionHistory,
+                'is_suspended' => $isCurrentlySuspended,
+                'active_suspension' => $activeSuspension ? [
+                    'type' => $activeSuspension->punishment_type,
+                    'expires_at' => $activeSuspension->expires_at?->format('Y-m-d H:i:s'),
+                    'reason' => $activeSuspension->reason,
+                ] : null,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch available punishments.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Apply suspension to a user
+     */
+    public function applySuspension(Request $request, User $user)
+    {
+        try {
+           
+            $validated = $request->validate([
+                'punishment_type' => 'required|in:warning_1,warning_2,suspension',
+                'reason' => 'nullable|string|max:1000',
+            ]);
+
+            \Log::info('Validation passed', ['validated' => $validated]);
+
+            // Verify that the punishment type is allowed for this user
+            $availablePunishments = UserSuspension::getAvailablePunishments($user->id);
+            \Log::info('Available punishments', ['punishments' => $availablePunishments]);
+            
+            $allowedTypes = array_column($availablePunishments, 'type');
+            \Log::info('Allowed types', ['allowed' => $allowedTypes, 'requested' => $validated['punishment_type']]);
+
+            if (!in_array($validated['punishment_type'], $allowedTypes)) {
+                \Log::warning('Punishment type not allowed');
+                return back()->withErrors(['error' => 'This punishment type is not available for this user.']);
+            }
+
+            DB::beginTransaction();
+            
+            \Log::info('About to apply suspension');
+            
+            // Apply the suspension
+            $suspension = UserSuspension::applySuspension(
+                $user->id,
+                $validated['punishment_type'],
+                auth()->id(),
+                $validated['reason'] ?? null
+            );
+
+            \Log::info('Suspension created', [
+                'suspension_id' => $suspension->id,
+                'suspension_data' => $suspension->toArray()
+            ]);
+
+            // Update user status to suspended for all punishment types
+            if ($user->role_id == 1 || $user->role_id == 2) {
+                $updated = $user->officialDetails()->update(['status' => 'suspended']);
+                \Log::info('Updated official details status', ['rows_affected' => $updated]);
+            } elseif ($user->role_id == 3) {
+                $updated = $user->citizenDetails()->update(['status' => 'suspended']);
+                \Log::info('Updated citizen details status', ['rows_affected' => $updated]);
+            }
+
+            DB::commit();
+            \Log::info('Transaction committed successfully');
+
+            $punishmentLabel = match($validated['punishment_type']) {
+                'warning_1' => 'Warning 1 (3 days)',
+                'warning_2' => 'Warning 2 (7 days)',
+                'suspension' => 'Permanent Suspension',
+            };
+
+            \Log::info('About to redirect with success message');
+
+            return redirect()->route('users')
+                ->with('success', "User suspended successfully with {$punishmentLabel}.");
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', ['errors' => $e->errors()]);
+            throw $e;
+        } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            \Log::error('Suspension failed with exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return back()->withErrors(['error' => 'Failed to apply suspension: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Revoke an active suspension
+     */
+    public function revokeSuspension(User $user)
+    {
+        try {
+            $activeSuspension = UserSuspension::getActiveSuspension($user->id);
+
+            if (!$activeSuspension) {
+                return back()->with('error', 'No active suspension found for this user.');
+            }
+
+            DB::beginTransaction();
+            try {
+                // Mark suspension as revoked
+                $activeSuspension->update(['status' => 'revoked']);
+
+                // Restore user status
+                if ($user->role_id == 1 || $user->role_id == 2) {
+                    $user->officialDetails()->update(['status' => 'active']);
+                } elseif ($user->role_id == 3) {
+                    $user->citizenDetails()->update(['status' => 'active']);
+                }
+
+                DB::commit();
+
+                return redirect()->route('users')
+                    ->with('success', 'Suspension revoked successfully. User has been restored.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()
+                    ->with('error', 'Failed to revoke suspension. Please try again.');
+            }
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', 'Failed to revoke suspension.');
         }
     }
 }

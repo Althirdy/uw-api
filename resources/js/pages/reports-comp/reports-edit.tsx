@@ -18,11 +18,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDateTime } from '@/lib/utils';
 import { reports_T } from '@/types/report-types';
 import { useForm } from '@inertiajs/react';
-import { Globe, LocateFixed, TriangleAlert, User } from 'lucide-react';
+import {
+    Globe,
+    LocateFixed,
+    MoveLeft,
+    Save,
+    TriangleAlert,
+    User,
+} from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type EditReportProps = {
@@ -388,7 +396,8 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                     data-dialog-close
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -396,6 +405,11 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>

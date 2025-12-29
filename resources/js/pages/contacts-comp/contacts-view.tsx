@@ -30,12 +30,12 @@ const networkColors: Record<
 > = {
     Globe: {
         bg: 'bg-[#23308F]',
-        text: 'text-white',
+        text: ' text-foreground',
         border: 'border-[#23308F]',
     },
     Smart: {
         bg: 'bg-[#099343]',
-        text: 'text-white',
+        text: ' text-foreground',
         border: 'border-[#099343]',
     },
     TNT: {
@@ -50,7 +50,7 @@ const networkColors: Record<
     },
     DITO: {
         bg: 'bg-[#CD1025]',
-        text: 'text-white',
+        text: ' text-foreground',
         border: 'border-[#CD1025]',
     },
     Unknown: {
@@ -61,12 +61,12 @@ const networkColors: Record<
 };
 
 const responderTypeColors: Record<string, string> = {
-    Fire: 'bg-red-600 text-white',
+    Fire: 'bg-red-600  text-foreground',
     Emergency: 'bg-yellow-500 text-black',
-    Crime: 'bg-zinc-800 text-white',
+    Crime: 'bg-zinc-800  text-foreground',
     Traffic: 'bg-orange-500 text-black',
-    Barangay: 'bg-blue-500 text-white',
-    Others: 'bg-gray-600 text-white',
+    Barangay: 'bg-blue-500  text-foreground',
+    Others: 'bg-gray-600  text-foreground',
 };
 
 export default function ViewContacts({ contact, children }: ViewContactsProps) {
@@ -129,7 +129,7 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
                             </div>
                             <div className="flex flex-col items-end gap-2">
                                 <Badge
-                                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium text-white ${
+                                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium text-foreground ${
                                         contact.active
                                             ? 'bg-green-800 dark:bg-green-900'
                                             : 'bg-gray-800'
@@ -172,7 +172,7 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
                         {/* GPS Coordinates */}
                         {contact.latitude && contact.longitude && (
                             <div className="flex flex-col">
-                                <span className="text-sm text-white">
+                                <span className="text-sm text-foreground">
                                     GPS Coordinates
                                 </span>
                                 <div className="flex w-full flex-row justify-between gap-3">
@@ -228,7 +228,7 @@ export default function ViewContacts({ contact, children }: ViewContactsProps) {
 
                         {/* Contact Numbers in a row */}
                         <div className="flex flex-col">
-                            <span className="text-sm text-white">
+                            <span className="text-sm text-foreground">
                                 Contact Information
                             </span>
                             <div className="flex w-full flex-row justify-between gap-3">

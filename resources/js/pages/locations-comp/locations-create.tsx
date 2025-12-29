@@ -21,11 +21,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/use-toast';
-import { LocationCategory_T } from '@/types/location-types';
 import { useForm } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { MapPin, MoveLeft, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 
 const barangay = [{ id: 5, name: 'Brgy 176 - E' }];
@@ -41,17 +41,11 @@ type Package = {
 };
 
 type SelectionState = {
-    value: Barangay | LocationCategory_T | Package | null;
+    value: Barangay | Package | null;
     open: boolean;
 };
 
-function CreateLocation({
-    locationCategory = [],
-    packages = [],
-}: {
-    locationCategory?: LocationCategory_T[];
-    packages?: Package[];
-}) {
+function CreateLocation({ packages = [] }: { packages?: Package[] }) {
     // Dialog control state
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -397,7 +391,8 @@ function CreateLocation({
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -405,6 +400,11 @@ function CreateLocation({
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <MapPin className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Creating...' : 'Add Location'}
                             </Button>
                         </div>

@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -68,7 +67,7 @@ function getStatusBadge(publishedAt: string | null) {
     }
 
     return (
-        <span className="inline-flex items-center rounded-full text-white bg-green-800 px-2.5 py-0.5 text-xs font-medium">
+        <span className="inline-flex items-center rounded-full bg-green-800 px-2.5 py-0.5 text-xs font-medium text-foreground">
             Published
         </span>
     );
@@ -82,7 +81,6 @@ const reportTypeColors: Record<string, string> = {
 };
 
 function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
-
     const handlePublish = () => {
         router.patch(
             `/public-post/${post.id}/publish`,
@@ -110,11 +108,13 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                 className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
                 showCloseButton={false}
             >
-                <DialogHeader className="flex-shrink-0 px-6 pt-6 ">
+                <DialogHeader className="flex-shrink-0 px-6 pt-6">
                     <DialogTitle>Public Post Details</DialogTitle>
                     <DialogDescription className="flex flex-col gap-1">
                         <span>Post ID: #{post.id}</span>
-                        <div className="w-fit">{getStatusBadge(post.published_at)}</div>
+                        <div className="w-fit">
+                            {getStatusBadge(post.published_at)}
+                        </div>
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex w-full flex-1 flex-col justify-start gap-4 overflow-y-auto px-6 py-4">
@@ -132,8 +132,9 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                         <div className="rounded-lg border bg-muted/30 p-3">
                             <span
                                 className={`mb-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                    reportTypeColors[post.report?.report_type || ''] ||
-                                    'bg-gray-100 text-gray-800'
+                                    reportTypeColors[
+                                        post.report?.report_type || ''
+                                    ] || 'bg-gray-100 text-gray-800'
                                 }`}
                             >
                                 {post.report?.report_type}
@@ -206,7 +207,7 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                                 size="sm"
                                 className="flex-1 cursor-pointer py-4"
                             >
-                                <MoveLeft className="mr-2 inline h-4 w-4" />
+                                <MoveLeft className="inline h-4 w-4" />
                                 Close
                             </Button>
                         </DialogClose>
@@ -217,7 +218,7 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                                 onClick={handlePublish}
                                 className="flex-2 cursor-pointer py-4"
                             >
-                                <Globe className="mr-2 inline h-4 w-4" />
+                                <Globe className="inline h-4 w-4" />
                                 Publish Now
                             </Button>
                         ) : (
@@ -227,7 +228,7 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                                 onClick={handleUnpublish}
                                 className="flex-2 cursor-pointer py-4"
                             >
-                                <Eye className="mr-2 inline h-4 w-4" />
+                                <Eye className="inline h-4 w-4" />
                                 Unpublish
                             </Button>
                         )}

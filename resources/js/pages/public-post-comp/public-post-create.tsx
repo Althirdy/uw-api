@@ -17,13 +17,16 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/use-toast';
-import { useForm, router } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { format } from 'date-fns';
 import {
     Calendar as CalendarIcon,
     ChevronDownIcon,
+    FileText,
     Globe,
+    MoveLeft,
     Plus,
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
@@ -274,7 +277,8 @@ function CreatePublicPost() {
                                     variant="outline"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -282,6 +286,11 @@ function CreatePublicPost() {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <FileText className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Creating...' : 'Create Post'}
                             </Button>
                         </div>

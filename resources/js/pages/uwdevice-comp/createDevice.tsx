@@ -1,15 +1,6 @@
 import { MapModal } from '@/components/map-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import {
     Dialog,
     DialogClose,
@@ -19,10 +10,21 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/components/ui/dialog';import { toast } from '@/components/use-toast';
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import { toast } from '@/components/use-toast';
 import { router } from '@inertiajs/react';
 import { Select } from '@radix-ui/react-select';
-import { Camera, Plus } from 'lucide-react';
+import { Camera, CircuitBoard, MoveLeft, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import { cctv_T, location_T } from '../../types/cctv-location-types';
 
@@ -682,7 +684,8 @@ function AddUWDevice({
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -690,6 +693,11 @@ function AddUWDevice({
                                 className="flex-2"
                                 disabled={isSubmitting}
                             >
+                                {isSubmitting ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <CircuitBoard className="inline h-4 w-4" />
+                                )}
                                 {isSubmitting ? 'Creating...' : 'Add Device'}
                             </Button>
                         </div>

@@ -24,11 +24,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/use-toast';
 import { useForm } from '@inertiajs/react';
 import { Select } from '@radix-ui/react-select';
 import { format } from 'date-fns'; // Add this import
-import { ChevronDownIcon, Plus } from 'lucide-react';
+import { Camera, ChevronDownIcon, MoveLeft, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import { location_T } from '../../types/cctv-location-types';
 
@@ -394,7 +395,8 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -402,6 +404,11 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Camera className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Saving...' : 'Add CCTV'}
                             </Button>
                         </div>
