@@ -31,9 +31,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('user_suspensions', function (Blueprint $table) {
-            // Drop indexes first
-            $table->dropIndex(['user_suspensions_phone_number_index']);
-            $table->dropIndex(['user_suspensions_first_name_last_name_index']);
+            // Drop indexes first (use the column names, not the index names)
+            $table->dropIndex(['phone_number']);
+            $table->dropIndex(['first_name', 'last_name']);
 
             // Drop columns
             $table->dropColumn(['phone_number', 'first_name', 'middle_name', 'last_name', 'suffix']);
