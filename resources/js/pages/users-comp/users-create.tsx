@@ -1,4 +1,14 @@
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -8,20 +18,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
-import { useForm } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { Spinner } from '@/components/ui/spinner';
+import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
+import { useForm } from '@inertiajs/react';
+import { MoveLeft, Plus, UserPlus } from 'lucide-react';
+import { FormEvent, useState } from 'react';
 
 type CreateUserForm = {
     first_name: string;
@@ -39,7 +41,13 @@ type CreateUserForm = {
     longitude?: string;
 };
 
-function CreateUsers({ roles }: { roles: roles_T[] }) {
+function CreateUsers({
+    roles,
+    locations,
+}: {
+    roles: roles_T[];
+    locations: location_T[];
+}) {
     const { data, setData, post, processing, errors, reset } =
         useForm<CreateUserForm>({
             first_name: '',
@@ -97,11 +105,11 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
     const validatePassword = (value: string, roleId?: string) => {
         const isPurokLeader = (roleId || data.role_id) === '2';
         const fieldName = isPurokLeader ? 'PIN' : 'Password';
-        
+
         if (!value) {
-            return 'Password is required';
+            return `${fieldName} is required`;
         }
-        
+
         // Different validation for PIN (Purok Leader) vs Password
         if (isPurokLeader) {
             // PIN should only contain numbers
@@ -129,15 +137,19 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
         return '';
     };
 
-    const validatePasswordConfirmation = (value: string, password: string, roleId?: string) => {
+    const validatePasswordConfirmation = (
+        value: string,
+        password: string,
+        roleId?: string,
+    ) => {
         const isPurokLeader = (roleId || data.role_id) === '2';
         const fieldName = isPurokLeader ? 'PIN' : 'Password';
-        
+
         if (!value) {
-            return 'Password confirmation is required';
+            return `${fieldName} confirmation is required`;
         }
         if (value !== password) {
-            return 'Passwords do not match';
+            return `${fieldName}s do not match`;
         }
         return '';
     };
@@ -219,7 +231,7 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
             validationErrors.role_id = 'Please select a role';
         }
         if (!data.assigned_brgy) {
-            validationErrors.assigned_brgy = 'Please select a barangay';
+            validationErrors.assigned_brgy = 'Please select a location';
         }
 
         // Remove undefined values
@@ -252,194 +264,231 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
             },
             onError: (errors) => {
                 console.log('Server validation errors:', errors);
-                console.error('Full error object:', JSON.stringify(errors, null, 2));
+                console.error(
+                    'Full error object:',
+                    JSON.stringify(errors, null, 2),
+                );
             },
         });
     };
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>
+        <Dialog>
+            <DialogTrigger asChild>
                 <Button className="cursor-pointer px-4 py-2">
                     <Plus /> Add User
                 </Button>
-            </SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
-                        <SheetTitle>Add New User</SheetTitle>
-                        <SheetDescription>
+            </DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                        <DialogTitle>Add New User</DialogTitle>
+                        <DialogDescription>
                             Create a new user account with their personal
                             information and role assignment.
-                        </SheetDescription>
-                    </SheetHeader>
-                    <div className="grid flex-1 auto-rows-min gap-4 px-4 py-2">
-                        <div className="grid flex-1 auto-rows-min gap-2">
-                            <div className="grid gap-3">
-                                <p className="text-sm font-medium text-[var(--gray)]">
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-2">
+                        <div className="grid flex-1 auto-rows-min gap-4">
+                            <div className="grid pb-2">
+                                <p className="text-sm font-medium text-muted-foreground">
                                     Personal Information
                                 </p>
                             </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="first-name">First Name</Label>
-                                <div>
-                                    <Input
-                                        id="first-name"
-                                        value={data.first_name}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                'first_name',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder=""
-                                        className={
-                                            errors.first_name ||
-                                            clientErrors.first_name
-                                                ? 'border-[var(--destructive)] focus:ring-[var(--ring)]'
-                                                : ''
-                                        }
-                                    />
-                                    {(errors.first_name ||
-                                        clientErrors.first_name) && (
-                                        <span className="mt-1 block text-xs text-[var(--destructive)]">
-                                            {errors.first_name ||
-                                                clientErrors.first_name}
-                                        </span>
-                                    )}
+                            {/* First Name and Middle Name */}
+                            <div className="grid w-full grid-cols-5 gap-4">
+                                <div className="col-span-3 grid gap-2">
+                                    <Label htmlFor="first-name">
+                                        First Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="first-name"
+                                            value={data.first_name}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    'first_name',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Enter first name"
+                                            className={
+                                                errors.first_name ||
+                                                clientErrors.first_name
+                                                    ? 'border-[var(--destructive)] focus:ring-[var(--ring)]'
+                                                    : ''
+                                            }
+                                        />
+                                        {(errors.first_name ||
+                                            clientErrors.first_name) && (
+                                            <span className="absolute -bottom-5 left-0 text-xs text-[var(--destructive)]">
+                                                {errors.first_name ||
+                                                    clientErrors.first_name}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="col-span-2 grid gap-2">
+                                    <Label htmlFor="middle-name">
+                                        Middle Name
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="middle-name"
+                                            value={data.middle_name}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    'middle_name',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Enter middle name (optional)"
+                                            className={
+                                                clientErrors.middle_name
+                                                    ? 'border-red-500 focus:ring-red-500'
+                                                    : ''
+                                            }
+                                        />
+                                        {clientErrors.middle_name && (
+                                            <span className="absolute -bottom-5 left-0 text-xs text-red-500">
+                                                {clientErrors.middle_name}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="middle-name">Middle Name</Label>
-                                <div>
-                                    <Input
-                                        id="middle-name"
-                                        value={data.middle_name}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                'middle_name',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder=""
-                                        className={
-                                            clientErrors.middle_name
-                                                ? 'border-red-500 focus:ring-red-500'
-                                                : ''
-                                        }
-                                    />
-                                    {clientErrors.middle_name && (
-                                        <span className="mt-1 block text-xs text-red-500">
-                                            {clientErrors.middle_name}
-                                        </span>
-                                    )}
+                            {/* Last Name and Suffix */}
+                            <div className="grid w-full grid-cols-4 gap-4">
+                                <div className="col-span-3 grid gap-2">
+                                    <Label htmlFor="last-name">Last Name</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="last-name"
+                                            value={data.last_name}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    'last_name',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Enter last name"
+                                            className={
+                                                errors.last_name ||
+                                                clientErrors.last_name
+                                                    ? 'border-red-500 focus:ring-red-500'
+                                                    : ''
+                                            }
+                                        />
+                                        {(errors.last_name ||
+                                            clientErrors.last_name) && (
+                                            <span className="absolute -bottom-5 left-0 text-xs text-red-500">
+                                                {errors.last_name ||
+                                                    clientErrors.last_name}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="last-name">Last Name</Label>
-                                <div>
+                                <div className="col-span-1 grid gap-2">
+                                    <Label htmlFor="suffix">
+                                        Suffix (Optional)
+                                    </Label>
                                     <Input
-                                        id="last-name"
-                                        value={data.last_name}
+                                        id="suffix"
+                                        value={data.suffix}
                                         onChange={(e) =>
-                                            handleInputChange(
-                                                'last_name',
-                                                e.target.value,
-                                            )
+                                            setData('suffix', e.target.value)
                                         }
-                                        placeholder=""
-                                        className={
-                                            errors.last_name ||
-                                            clientErrors.last_name
-                                                ? 'border-red-500 focus:ring-red-500'
-                                                : ''
-                                        }
+                                        placeholder="Jr., Sr., III, etc."
                                     />
-                                    {(errors.last_name ||
-                                        clientErrors.last_name) && (
-                                        <span className="mt-1 block text-xs text-red-500">
-                                            {errors.last_name ||
-                                                clientErrors.last_name}
-                                        </span>
-                                    )}
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid flex-1 auto-rows-min gap-2">
-                            <div className="grid gap-3">
-                                <p className="text-sm font-medium text-[var(--gray)]">
+                            <div className="grid">
+                                <p className="text-sm font-medium text-muted-foreground">
                                     Contact Information
                                 </p>
                             </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="email">Email</Label>
-                                <div>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                'email',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder=""
-                                        className={
-                                            errors.email || clientErrors.email
-                                                ? 'border-red-500 focus:ring-red-500'
-                                                : ''
-                                        }
-                                    />
-                                    {(errors.email || clientErrors.email) && (
-                                        <span className="mt-1 block text-xs text-red-500">
-                                            {errors.email || clientErrors.email}
-                                        </span>
-                                    )}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <div>
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            value={data.email}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    'email',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder=""
+                                            className={
+                                                errors.email ||
+                                                clientErrors.email
+                                                    ? 'border-red-500 focus:ring-red-500'
+                                                    : ''
+                                            }
+                                        />
+                                        {(errors.email ||
+                                            clientErrors.email) && (
+                                            <span className="mt-1 block text-xs text-red-500">
+                                                {errors.email ||
+                                                    clientErrors.email}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="phone-number">
-                                    Phone Number
-                                </Label>
-                                <div>
-                                    <Input
-                                        id="phone-number"
-                                        value={data.phone_number}
-                                        onChange={(e) =>
-                                            handleInputChange(
-                                                'phone_number',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder=""
-                                        className={
-                                            errors.phone_number ||
-                                            clientErrors.phone_number
-                                                ? 'border-red-500 focus:ring-red-500'
-                                                : ''
-                                        }
-                                    />
-                                    {(errors.phone_number ||
-                                        clientErrors.phone_number) && (
-                                        <span className="mt-1 block text-xs text-red-500">
-                                            {errors.phone_number ||
-                                                clientErrors.phone_number}
-                                        </span>
-                                    )}
+                                <div className="grid gap-2">
+                                    <Label htmlFor="phone-number">
+                                        Phone Number
+                                    </Label>
+                                    <div>
+                                        <Input
+                                            id="phone-number"
+                                            value={data.phone_number}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    'phone_number',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder=""
+                                            className={
+                                                errors.phone_number ||
+                                                clientErrors.phone_number
+                                                    ? 'border-red-500 focus:ring-red-500'
+                                                    : ''
+                                            }
+                                        />
+                                        {(errors.phone_number ||
+                                            clientErrors.phone_number) && (
+                                            <span className="mt-1 block text-xs text-red-500">
+                                                {errors.phone_number ||
+                                                    clientErrors.phone_number}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid flex-1 auto-rows-min gap-2">
-                            <div className="grid gap-3">
-                                <p className="text-sm font-medium text-[var(--gray)]">
+                            <div className="grid">
+                                <p className="text-sm font-medium text-muted-foreground">
                                     Role & Location
                                 </p>
                             </div>
-                            <div className="flex w-full flex-row gap-4">
-                                <div className="grid flex-1 gap-3">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid flex-1 gap-2">
                                     <Label htmlFor="role">Role</Label>
                                     <div>
                                         <Select
@@ -452,20 +501,30 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                                 }));
                                                 // Revalidate password when role changes
                                                 if (data.password) {
-                                                    const passwordError = validatePassword(data.password);
+                                                    const passwordError =
+                                                        validatePassword(
+                                                            data.password,
+                                                        );
                                                     setClientErrors((prev) => ({
                                                         ...prev,
-                                                        password: passwordError || undefined,
+                                                        password:
+                                                            passwordError ||
+                                                            undefined,
                                                     }));
                                                 }
-                                                if (data.password_confirmation) {
-                                                    const confirmError = validatePasswordConfirmation(
-                                                        data.password_confirmation,
-                                                        data.password
-                                                    );
+                                                if (
+                                                    data.password_confirmation
+                                                ) {
+                                                    const confirmError =
+                                                        validatePasswordConfirmation(
+                                                            data.password_confirmation,
+                                                            data.password,
+                                                        );
                                                     setClientErrors((prev) => ({
                                                         ...prev,
-                                                        password_confirmation: confirmError || undefined,
+                                                        password_confirmation:
+                                                            confirmError ||
+                                                            undefined,
                                                     }));
                                                 }
                                             }}
@@ -481,14 +540,20 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                                 <SelectValue placeholder="" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {roles.map((role) => (
-                                                    <SelectItem
-                                                        key={role.id}
-                                                        value={role.id.toString()}
-                                                    >
-                                                        {role.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {roles
+                                                    .filter(
+                                                        (role) =>
+                                                            role.name !==
+                                                            'Citizen',
+                                                    )
+                                                    .map((role) => (
+                                                        <SelectItem
+                                                            key={role.id}
+                                                            value={role.id.toString()}
+                                                        >
+                                                            {role.name}
+                                                        </SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                         {(errors.role_id ||
@@ -500,8 +565,8 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                         )}
                                     </div>
                                 </div>
-                                <div className="grid flex-1 gap-3">
-                                    <Label htmlFor="barangay">Barangay</Label>
+                                <div className="grid flex-1 gap-2">
+                                    <Label htmlFor="location">Location</Label>
                                     <div>
                                         <Select
                                             value={data.assigned_brgy}
@@ -521,27 +586,19 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                                         : ''
                                                 }
                                             >
-                                                <SelectValue placeholder="" />
+                                                <SelectValue placeholder="Select location" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="Barangay 176-A">
-                                                    Barangay 176-A
-                                                </SelectItem>
-                                                <SelectItem value="Barangay 176-B">
-                                                    Barangay 176-B
-                                                </SelectItem>
-                                                <SelectItem value="Barangay 176-C">
-                                                    Barangay 176-C
-                                                </SelectItem>
-                                                <SelectItem value="Barangay 176-D">
-                                                    Barangay 176-D
-                                                </SelectItem>
-                                                <SelectItem value="Barangay 176-E">
-                                                    Barangay 176-E
-                                                </SelectItem>
-                                                <SelectItem value="Barangay 176-F">
-                                                    Barangay 176-F
-                                                </SelectItem>
+                                                {locations.map((location) => (
+                                                    <SelectItem
+                                                        key={location.id}
+                                                        value={
+                                                            location.location_name
+                                                        }
+                                                    >
+                                                        {location.location_name}
+                                                    </SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                         {(errors.assigned_brgy ||
@@ -558,12 +615,14 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
 
                         <div className="grid flex-1 auto-rows-min gap-2">
                             <div className="grid">
-                                <p className="text-sm font-medium text-[var(--gray)]">
-                                    Account Security
+                                <p className="text-sm font-medium text-muted-foreground">
+                                    Security
                                 </p>
                             </div>
-                            <div className="grid gap-3">
-                                <Label htmlFor="password">Password</Label>
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">
+                                    {data.role_id === '2' ? 'PIN' : 'Password'}
+                                </Label>
                                 <div>
                                     <Input
                                         id="password"
@@ -592,9 +651,11 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                                     )}
                                 </div>
                             </div>
-                            <div className="grid gap-3">
+                            <div className="grid gap-2">
                                 <Label htmlFor="password-confirmation">
-                                    Confirm Password
+                                    {data.role_id === '2'
+                                        ? 'Confirm PIN'
+                                        : 'Confirm Password'}
                                 </Label>
                                 <div>
                                     <Input
@@ -626,30 +687,36 @@ function CreateUsers({ roles }: { roles: roles_T[] }) {
                             </div>
                         </div>
                     </div>
-                    <SheetFooter className="px-4">
-                        <div className="flex w-full flex-row justify-end gap-2">
-                            <SheetClose asChild>
+                    <DialogFooter className="flex-shrink-0 bg-background px-6 py-4">
+                        <div className="flex w-full gap-2">
+                            <DialogClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    data-sheet-close
-                                    className="cursor-pointer"
+                                    data-dialog-close
+                                    className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="cursor-pointer"
+                                className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <UserPlus className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Creating...' : 'Create User'}
                             </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

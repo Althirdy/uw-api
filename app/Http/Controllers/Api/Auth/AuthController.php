@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\LoginRequest;
+use App\Http\Requests\Api\Auth\PurokLeaderLoginRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Models\CitizenDetails;
 use App\Models\User;
+use App\Models\UserSuspension;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -93,9 +95,59 @@ class AuthController extends BaseApiController
     }
 
     // Login for Purok Leader
-    public function loginPurokLeader(Request $request): \Illuminate\Http\JsonResponse
+    public function loginPurokLeader(PurokLeaderLoginRequest $request): \Illuminate\Http\JsonResponse
     {
-        return $this->sendError('Not implemented yet');
+        $validated = $request->validated();
+
+        try {
+            // Get all Purok Leaders (role_id = 2)
+            $purokLeaders = User::with(['role', 'officialDetails'])
+                ->where('role_id', 2)
+                ->get();
+
+            // Find the user with matching PIN
+            $user = null;
+            foreach ($purokLeaders as $leader) {
+                if (Hash::check($validated['pin'], $leader->password)) {
+                    $user = $leader;
+                    break;
+                }
+            }
+
+            if (!$user) {
+                return $this->sendUnauthorized('Invalid PIN');
+            }
+
+            // Create access token with 'access-api' ability
+            $access_token = $user->createToken('mobile-app', ['access-api'], Carbon::now()->addMinutes(config('sanctum.access_token_expiration')))->plainTextToken;
+            
+            // Create refresh token with 'refresh-token' ability
+            $refresh_token = $user->createToken('mobile-app-refresh', ['refresh-token'], Carbon::now()->addMinutes(config('sanctum.refresh_token_expiration')))->plainTextToken;
+
+            $officialDetails = $user->officialDetails;
+
+            if (!$officialDetails) {
+                return $this->sendError('Official details not found for this user');
+            }
+
+            return $this->sendResponse([
+                'token' => $access_token,
+                'refreshToken' => $refresh_token,
+                'user' => [
+                    'id' => $user->id,
+                    'firstName' => $officialDetails->first_name,
+                    'lastName' => $officialDetails->last_name,
+                    'middleName' => $officialDetails->middle_name,
+                    'suffix' => $officialDetails->suffix,
+                    'email' => $user->email,
+                    'role' => $user->role->name,
+                    'officeAddress' => $officialDetails->office_address,
+                    'phoneNumber' => $officialDetails->contact_number,
+                ]
+            ], 'Login successful');
+        } catch (\Exception $e) {
+            return $this->sendUnauthorized('Invalid PIN');
+        }
     }
     /**
      * Logout user (revoke token).
@@ -211,6 +263,7 @@ class AuthController extends BaseApiController
                 'middle_name' => 'nullable|string|max:255',
                 'last_name' => 'nullable|string|max:255',
                 'suffix' => 'nullable|string|max:10',
+                'phone_number' => 'nullable|string|max:20',
             ]);
 
             $results = [];
@@ -224,6 +277,28 @@ class AuthController extends BaseApiController
                         ? 'This email is already registered.' 
                         : 'Email is available.'
                 ];
+            }
+
+            // Check if identity is banned (requires name and phone)
+            if (!empty($validated['first_name']) && 
+                !empty($validated['last_name']) && 
+                !empty($validated['phone_number'])) {
+                
+                $isBanned = UserSuspension::isIdentityBanned(
+                    $validated['phone_number'],
+                    $validated['first_name'],
+                    $validated['middle_name'] ?? null,
+                    $validated['last_name'],
+                    $validated['suffix'] ?? null
+                );
+
+                if ($isBanned) {
+                    $results['identity'] = [
+                        'available' => false,
+                        'banned' => true,
+                        'message' => 'This identity has been permanently banned from the system.'
+                    ];
+                }
             }
 
             // Check name availability if first_name and last_name are provided
@@ -268,6 +343,23 @@ class AuthController extends BaseApiController
         $validated = $request->validated();
 
         try {
+            // Check if the identity is banned
+            $isBanned = UserSuspension::isIdentityBanned(
+                $validated['phone_number'],
+                $validated['first_name'],
+                $validated['middle_name'] ?? null,
+                $validated['last_name'],
+                $validated['suffix'] ?? null
+            );
+
+            if ($isBanned) {
+                return $this->sendError(
+                    'This identity has been permanently banned from the system. If you believe this is an error, please contact support.',
+                    null,
+                    403
+                );
+            }
+
             DB::beginTransaction();
 
             // Concatenate full name

@@ -1,30 +1,29 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetDescription,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { formatDateTime } from '@/lib/utils';
 import { reports_T } from '@/types/report-types';
 import { router } from '@inertiajs/react';
 import {
+    Camera,
     Check,
-    Globe,
+    Clock,
     LocateFixed,
     Mail,
     MoveLeft,
     Phone,
     TriangleAlert,
     User,
-    Camera,
-    Clock,
 } from 'lucide-react';
 
 type ViewReportDetailsProps = {
@@ -61,54 +60,67 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
     };
 
     // Get first image from media
-    const firstImage = report.media && report.media.length > 0 
-        ? report.media[0].original_path 
-        : null;
+    const firstImage =
+        report.media && report.media.length > 0 ? report.media[0] : null;
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <SheetHeader>
-                    <SheetTitle>Incident Details</SheetTitle>
-                    <SheetDescription className="flex flex-col gap-2">
-                        <span className="text-base font-semibold">Report ID: #{report.id}</span>
-                        <div className="flex gap-2 flex-wrap">
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                    <DialogTitle>Incident Details</DialogTitle>
+                    <DialogDescription className="flex flex-col gap-2">
+                        <span className="text-base font-semibold">
+                            Report ID: #{report.id}
+                        </span>
+                        <div className="flex flex-wrap gap-2">
                             <Badge variant="default" className="text-xs">
                                 {report.report_type}
                             </Badge>
-                            <Badge 
-                                variant={report.status === 'Pending' ? 'destructive' : 'default'} 
+                            <Badge
+                                variant={
+                                    report.status === 'Pending'
+                                        ? 'destructive'
+                                        : 'default'
+                                }
                                 className="text-xs"
                             >
                                 {report.status.toUpperCase()}
                             </Badge>
                         </div>
-                    </SheetDescription>
-                </SheetHeader>
-                <div className="flex w-full flex-col justify-start gap-4 px-4 py-2">
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="flex w-full flex-1 flex-col justify-start gap-4 overflow-y-auto px-6 py-4">
                     {/* Accident Image */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md font-semibold">Incident Snapshot</p>
+                        <p className="text-md font-semibold">
+                            Incident Snapshot
+                        </p>
                         <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                             {firstImage ? (
                                 <>
-                                    <img 
-                                        src={firstImage} 
-                                        alt="Accident snapshot" 
+                                    <img
+                                        src={firstImage}
+                                        alt="Accident snapshot"
                                         className="h-full w-full object-cover"
                                     />
                                     <div className="absolute top-2 right-2">
-                                        <Badge variant="destructive" className="text-xs">
+                                        <Badge
+                                            variant="destructive"
+                                            className="text-xs"
+                                        >
                                             <Camera className="mr-1 h-3 w-3" />
                                             YOLO Detection
                                         </Badge>
                                     </div>
                                 </>
                             ) : (
-                                <div className="relative h-full w-full bg-muted flex items-center justify-center">
+                                <div className="relative flex h-full w-full items-center justify-center bg-muted">
                                     <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                                    <Camera className="h-16 w-16 text-muted-foreground/20 relative z-10" />
+                                    <Camera className="relative z-10 h-16 w-16 text-muted-foreground/20" />
                                 </div>
                             )}
                         </div>
@@ -116,7 +128,9 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
 
                     {/* Incident Description */}
                     <div className="flex flex-col gap-1">
-                        <p className="text-md font-semibold">Incident Description</p>
+                        <p className="text-md font-semibold">
+                            Incident Description
+                        </p>
                         <p className="text-sm text-muted-foreground">
                             {report.description}
                         </p>
@@ -128,7 +142,7 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                         {renderDetailItems([
                             {
                                 icon: LocateFixed,
-                                text: `${report.latitute}, ${report.longtitude}`,
+                                text: `${Number(report.latitude).toFixed(2)}, ${Number(report.longtitude).toFixed(2)}`,
                             },
                             {
                                 icon: TriangleAlert,
@@ -143,7 +157,9 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
 
                     {/* Report Information - Show "Unknown" for YOLO detections */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md font-semibold">Report Information</p>
+                        <p className="text-md font-semibold">
+                            Report Information
+                        </p>
                         {renderDetailItems([
                             {
                                 icon: User,
@@ -155,38 +171,42 @@ function ViewReportDetails({ report, children }: ViewReportDetailsProps) {
                             },
                             {
                                 icon: Phone,
-                                text: report.user?.official_details?.contact_number || 'undefined',
+                                text:
+                                    report.user?.official_details
+                                        ?.contact_number || 'undefined',
                             },
                         ])}
                     </div>
                 </div>
-                <SheetFooter>
-                    <SheetClose asChild>
-                        <div className="flex w-full flex-col items-end justify-end gap-2">
-                            {!report.is_acknowledge && (
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={handleAcknowledge}
-                                    className="w-1/3 cursor-pointer py-6"
-                                >
-                                    <Check className="mr-2 inline h-4 w-4" />
-                                    Acknowledge
-                                </Button>
-                            )}
+                <DialogFooter className="flex-shrink-0 px-6 py-4">
+                    <div className="flex w-full gap-2">
+                        <DialogClose asChild>
                             <Button
                                 variant="outline"
-                                size="sm"
-                                className="w-1/4 cursor-pointer py-4"
+                                className={
+                                    !report.is_acknowledge ? 'flex-1' : 'w-full'
+                                }
                             >
-                                <MoveLeft className="mr-2 inline h-4 w-4" />
-                                Return
+                                {!report.is_acknowledge && (
+                                    <MoveLeft className="inline h-4 w-4" />
+                                )}
+                                Close
                             </Button>
-                        </div>
-                    </SheetClose>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
+                        </DialogClose>
+                        {!report.is_acknowledge && (
+                            <Button
+                                variant="default"
+                                onClick={handleAcknowledge}
+                                className="flex-2"
+                            >
+                                <Check className="inline h-4 w-4" />
+                                Acknowledge
+                            </Button>
+                        )}
+                    </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 export default ViewReportDetails;

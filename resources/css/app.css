@@ -62,98 +62,192 @@
 }
 
 :root {
+    /* Mobile App Color Scheme - Primary Colors */
+    --color-primary-main: #007aff;
+    --color-primary-background: #ffffff;
+
+    /* Secondary Colors */
+    --color-secondary-main: #666666;
+    --color-secondary-light: #999999;
+
+    /* Status Colors */
+    --color-status-success: #4caf50;
+    --color-status-warning: #ff9800;
+    --color-status-error: #f44336;
+
+    /* Background Colors */
+    --color-bg-primary: #ffffff;
+    --color-bg-card: #f5f5f5;
+    --color-bg-modal-backdrop: rgba(0, 0, 0, 0.5);
+
+    /* Border Colors */
+    --color-border-main: #e0e0e0;
+
+    /* Text Colors */
+    --color-text-primary: #000000;
+    --color-text-secondary: #666666;
+    --color-text-tertiary: #999999;
+    --color-text-muted: #888888;
+
+    /* Accent Colors */
+    --color-accent-blue: #007aff;
+    --color-accent-red: #ff0000;
+
+    /* Overlay Colors */
+    --color-overlay-dark: rgba(0, 0, 0, 0.5);
+    --color-overlay-light: rgba(0, 0, 0, 0.1);
+
+    /* Component Colors */
+    --color-waveform-active: #007aff;
+    --color-waveform-inactive: #cccccc;
+    --color-progress-bg: #e0e0e0;
+    --color-progress-fill: #007aff;
+
+    /* Design System Mapping */
     --background: rgb(255, 255, 255);
-    --foreground: rgb(51, 51, 51);
-    --card: rgb(255, 255, 255);
-    --card-foreground: rgb(51, 51, 51);
+    --foreground: rgb(0, 0, 0);
+    --card: rgb(245, 245, 245);
+    --card-foreground: rgb(0, 0, 0);
     --popover: rgb(255, 255, 255);
-    --popover-foreground: rgb(51, 51, 51);
-    --primary: rgb(59, 130, 246);
+    --popover-foreground: rgb(0, 0, 0);
+    --primary: rgb(0, 122, 255);
     --primary-foreground: rgb(255, 255, 255);
-    --secondary: rgb(243, 244, 246);
-    --secondary-foreground: rgb(75, 85, 99);
-    --muted: rgb(249, 250, 251);
-    --muted-foreground: rgb(107, 114, 128);
-    --accent: rgb(224, 242, 254);
-    --accent-foreground: rgb(30, 58, 138);
-    --destructive: rgb(239, 68, 68);
+    --secondary: rgb(102, 102, 102);
+    --secondary-foreground: rgb(255, 255, 255);
+    --muted: rgb(245, 245, 245);
+    --muted-foreground: rgb(136, 136, 136);
+    --accent: rgb(0, 122, 255);
+    --accent-foreground: rgb(255, 255, 255);
+    --destructive: rgb(244, 67, 54);
     --destructive-foreground: rgb(255, 255, 255);
-    --border: rgb(229, 231, 235);
-    --input: rgb(229, 231, 235);
-    --ring: rgb(59, 130, 246);
-    --chart-1: rgb(59, 130, 246);
-    --chart-2: rgb(37, 99, 235);
-    --chart-3: rgb(29, 78, 216);
-    --chart-4: rgb(30, 64, 175);
-    --chart-5: rgb(30, 58, 138);
-    --sidebar: rgb(249, 250, 251);
-    --sidebar-foreground: rgb(51, 51, 51);
-    --sidebar-primary: rgb(59, 130, 246);
+    --border: rgb(224, 224, 224);
+    --input: rgb(224, 224, 224);
+    --ring: rgb(0, 122, 255);
+    --chart-1: rgb(0, 122, 255);
+    --chart-2: rgb(76, 175, 80);
+    --chart-3: rgb(255, 152, 0);
+    --chart-4: rgb(244, 67, 54);
+    --chart-5: rgb(102, 102, 102);
+    --sidebar: rgb(255, 255, 255);
+    --sidebar-foreground: rgb(0, 0, 0);
+    --sidebar-primary: rgb(0, 122, 255);
     --sidebar-primary-foreground: rgb(255, 255, 255);
     --sidebar-accent: rgb(224, 242, 254);
-    --sidebar-accent-foreground: rgb(30, 58, 138);
-    --sidebar-border: rgb(229, 231, 235);
-    --sidebar-ring: rgb(59, 130, 246);
+    --sidebar-accent-foreground: rgb(0, 122, 255);
+    --sidebar-border: rgb(224, 224, 224);
+    --sidebar-ring: rgb(0, 122, 255);
     --font-sans: Inter, sans-serif;
     --font-serif: Source Serif 4, serif;
     --font-mono: JetBrains Mono, monospace;
     --radius: 0.375rem;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+    --shadow-sm:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
 }
 
 .dark {
+    /* Mobile App Color Scheme - Dark Mode */
+    --color-primary-main: #007aff;
+    --color-primary-background: #171717;
+
+    /* Secondary Colors */
+    --color-secondary-main: #999999;
+    --color-secondary-light: #cccccc;
+
+    /* Status Colors */
+    --color-status-success: #4caf50;
+    --color-status-warning: #ff9800;
+    --color-status-error: #f44336;
+
+    /* Background Colors */
+    --color-bg-primary: #171717;
+    --color-bg-card: #262626;
+    --color-bg-modal-backdrop: rgba(0, 0, 0, 0.7);
+
+    /* Border Colors */
+    --color-border-main: #404040;
+
+    /* Text Colors */
+    --color-text-primary: #e5e5e5;
+    --color-text-secondary: #999999;
+    --color-text-tertiary: #666666;
+    --color-text-muted: #888888;
+
+    /* Accent Colors */
+    --color-accent-blue: #007aff;
+    --color-accent-red: #ff0000;
+
+    /* Overlay Colors */
+    --color-overlay-dark: rgba(0, 0, 0, 0.7);
+    --color-overlay-light: rgba(0, 0, 0, 0.3);
+
+    /* Component Colors */
+    --color-waveform-active: #007aff;
+    --color-waveform-inactive: #666666;
+    --color-progress-bg: #404040;
+    --color-progress-fill: #007aff;
+
+    /* Design System Mapping */
     --background: rgb(23, 23, 23);
     --foreground: rgb(229, 229, 229);
     --card: rgb(38, 38, 38);
     --card-foreground: rgb(229, 229, 229);
     --popover: rgb(38, 38, 38);
     --popover-foreground: rgb(229, 229, 229);
-    --primary: rgb(59, 130, 246);
+    --primary: rgb(0, 122, 255);
     --primary-foreground: rgb(255, 255, 255);
-    --secondary: rgb(38, 38, 38);
+    --secondary: rgb(153, 153, 153);
     --secondary-foreground: rgb(229, 229, 229);
     --muted: rgb(38, 38, 38);
-    --muted-foreground: rgb(163, 163, 163);
-    --accent: rgb(30, 58, 138);
-    --accent-foreground: rgb(191, 219, 254);
-    --destructive: rgb(239, 68, 68);
+    --muted-foreground: rgb(136, 136, 136);
+    --accent: rgb(0, 122, 255);
+    --accent-foreground: rgb(229, 229, 229);
+    --destructive: rgb(244, 67, 54);
     --destructive-foreground: rgb(255, 255, 255);
     --border: rgb(64, 64, 64);
     --input: rgb(64, 64, 64);
-    --ring: rgb(59, 130, 246);
-    --chart-1: rgb(96, 165, 250);
-    --chart-2: rgb(59, 130, 246);
-    --chart-3: rgb(37, 99, 235);
-    --chart-4: rgb(29, 78, 216);
-    --chart-5: rgb(30, 64, 175);
+    --ring: rgb(0, 122, 255);
+    --chart-1: rgb(0, 122, 255);
+    --chart-2: rgb(76, 175, 80);
+    --chart-3: rgb(255, 152, 0);
+    --chart-4: rgb(244, 67, 54);
+    --chart-5: rgb(153, 153, 153);
     --sidebar: rgb(23, 23, 23);
     --sidebar-foreground: rgb(229, 229, 229);
-    --sidebar-primary: rgb(59, 130, 246);
+    --sidebar-primary: rgb(0, 122, 255);
     --sidebar-primary-foreground: rgb(255, 255, 255);
-    --sidebar-accent: rgb(30, 58, 138);
-    --sidebar-accent-foreground: rgb(191, 219, 254);
+    --sidebar-accent: rgb(38, 38, 38);
+    --sidebar-accent-foreground: rgb(0, 122, 255);
     --sidebar-border: rgb(64, 64, 64);
-    --sidebar-ring: rgb(59, 130, 246);
+    --sidebar-ring: rgb(0, 122, 255);
     --font-sans: Inter, sans-serif;
     --font-serif: Source Serif 4, serif;
     --font-mono: JetBrains Mono, monospace;
-    --radius: 0.375rem;
+    --radius: 0.5rem;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 1px 2px -1px hsl(0 0% 0% / 0.10);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 2px 4px -1px hsl(0 0% 0% / 0.10);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 4px 6px -1px hsl(0 0% 0% / 0.10);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.10), 0 8px 10px -1px hsl(0 0% 0% / 0.10);
+    --shadow-sm:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl:
+        0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
 }
 

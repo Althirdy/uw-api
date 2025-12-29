@@ -16,6 +16,7 @@ Route::prefix('otp')->group(function () {
 //========Auth Routes========//
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login/purok-leader', [AuthController::class, 'loginPurokLeader']);
 Route::post('/verify-registration-info', [AuthController::class, 'verifyRegistrationInfo']);
 
 // Logout requires access token

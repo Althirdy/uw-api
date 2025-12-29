@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -5,10 +6,10 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from "@/components/ui/dialog"
-import { MapPin } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import MapSelector from "./map-selector"
+} from '@/components/ui/dialog';
+import { MapPin } from 'lucide-react';
+import { useState } from 'react';
+import MapSelector from './map-selector';
 
 interface MapModalProps {
     onLocationSelect: (location: { lat: number; lng: number }) => void;
@@ -19,14 +20,21 @@ interface MapModalProps {
 }
 
 export function MapModal({ onLocationSelect, coordinates }: MapModalProps) {
+    const [open, setOpen] = useState(false);
+
+    const handleLocationSelect = (location: { lat: number; lng: number }) => {
+        onLocationSelect(location);
+        setOpen(false); // Close the dialog after selection
+    };
+
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="w-full">
-                    <MapPin className="mr-2 h-4 w-4" />
+                    <MapPin className="h-4 w-4" />
                     {coordinates.latitude && coordinates.longitude
                         ? `${coordinates.latitude.slice(0, 8) + '...'}, ${coordinates.longitude.slice(0, 8) + '...'}`
-                        : "Select Location"}
+                        : 'Select Location'}
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
@@ -37,9 +45,9 @@ export function MapModal({ onLocationSelect, coordinates }: MapModalProps) {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="h-[500px]">
-                    <MapSelector onLocationSelect={onLocationSelect} />
+                    <MapSelector onLocationSelect={handleLocationSelect} />
                 </div>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

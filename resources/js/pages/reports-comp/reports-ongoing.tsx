@@ -10,7 +10,13 @@ import {
 } from '@/components/ui/card';
 import { formatRelativeTime } from '@/lib/utils';
 import { router } from '@inertiajs/react';
-import { Check, Clock, LocateFixed, ExternalLink as Open, Camera } from 'lucide-react';
+import {
+    Camera,
+    Check,
+    Clock,
+    LocateFixed,
+    ExternalLink as Open,
+} from 'lucide-react';
 
 import { reports_T } from '@/types/report-types';
 import ViewReportDetails from './reports-view';
@@ -43,18 +49,17 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
     };
 
     // Get first image from media
-    const firstImage = report.media && report.media.length > 0 
-        ? report.media[0]
-        : null;
+    const firstImage =
+        report.media && report.media.length > 0 ? report.media[0] : null;
 
     return (
-        <Card className="flex h-full flex-col rounded-[var(--radius)] overflow-hidden">
+        <Card className="flex h-full flex-col overflow-hidden rounded-[var(--radius)]">
             {/* Accident Image - Full width at top */}
             {firstImage ? (
                 <div className="relative h-48 w-full overflow-hidden bg-muted">
-                    <img 
-                        src={firstImage} 
-                        alt="Accident detection" 
+                    <img
+                        src={firstImage}
+                        alt="Accident detection"
                         className="h-full w-full object-cover"
                     />
                     <div className="absolute top-2 right-2">
@@ -65,7 +70,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                     </div>
                 </div>
             ) : (
-                <div className="relative h-48 w-full bg-muted flex items-center justify-center">
+                <div className="relative flex h-48 w-full items-center justify-center bg-muted">
                     <Camera className="h-12 w-12 text-muted-foreground/20" />
                 </div>
             )}
@@ -73,12 +78,16 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
             <CardHeader className="pb-3">
                 <CardTitle className="line-clamp-2 text-base">
                     <div className="flex flex-col gap-2">
-                        <div className="flex flex-row items-center gap-2 flex-wrap">
+                        <div className="flex flex-row flex-wrap items-center gap-2">
                             <Badge variant="default" className="text-xs">
                                 {report.report_type.toLocaleUpperCase()}
                             </Badge>
-                            <Badge 
-                                variant={report.status === 'Pending' ? 'destructive' : 'default'} 
+                            <Badge
+                                variant={
+                                    report.status === 'Pending'
+                                        ? 'destructive'
+                                        : 'default'
+                                }
                                 className="text-xs"
                             >
                                 {report.status.toLocaleUpperCase()}
@@ -92,13 +101,13 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                 </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 space-y-2 pb-3">
-                <CardDescription className="text-sm line-clamp-2">
+                <CardDescription className="line-clamp-2 text-sm">
                     {report.description}
                 </CardDescription>
                 <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                     <span className="flex flex-row items-center gap-1">
                         <LocateFixed className="h-3 w-3" />
-                        {report.latitute}, {report.longtitude}
+                        {report.latitude}, {report.longtitude}
                     </span>
                     <span className="flex flex-row items-center gap-1">
                         <Clock className="h-3 w-3" />
@@ -133,7 +142,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                     <Button
                         variant="default"
                         size="sm"
-                        className="w-1/4 cursor-pointer bg-green-600 hover:bg-green-700"
+                        className="cursor-pointer bg-green-600 hover:bg-green-700"
                         onClick={handleResolve}
                     >
                         <Check className="mr-1 inline h-4 w-4" />

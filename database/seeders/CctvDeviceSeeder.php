@@ -13,48 +13,13 @@ class CctvDeviceSeeder extends Seeder
      */
     public function run(): void
     {
-        // First, ensure we have locations to link to
-        // If no locations exist, create some sample locations
-        if (Locations::count() === 0) {
-            Locations::insert([
-                [
-                    'location_category' => 1, // Government
-                    'location_name' => 'Barangay 176-E Hall',
-                    'landmark' => 'Main Entrance',
-                    'barangay' => 'Barangay 176-E',
-                    'latitude' => 14.7730,
-                    'longitude' => 121.0540,
-                    'description' => 'Main barangay hall building',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'location_category' => 2, // Commercial
-                    'location_name' => 'Dali Store',
-                    'landmark' => 'Shopping Center',
-                    'barangay' => 'Barangay 176-E',
-                    'latitude' => 14.7751,
-                    'longitude' => 121.0448,
-                    'description' => 'Commercial shopping area',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'location_category' => 6, // Transportation
-                    'location_name' => 'Main Road Junction',
-                    'landmark' => 'Traffic Light',
-                    'barangay' => 'Barangay 176-E',
-                    'latitude' => 14.7740,
-                    'longitude' => 121.0530,
-                    'description' => 'Major road intersection',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-            ]);
-        }
-
         // Get location IDs to use in CCTV devices
         $locations = Locations::all();
+        
+        if ($locations->isEmpty()) {
+            $this->command->error('No locations found! Please run LocationSeeder first.');
+            return;
+        }
 
         // Sample CCTV devices data
         $cctvDevices = [

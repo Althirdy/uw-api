@@ -141,12 +141,13 @@ class PublicPostController extends Controller
     /**
      * Store a newly created public post.
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
-                'report_id' => 'required|exists:reports,id',
-                'published_at' => 'nullable|date|after_or_equal:now',
+                'report_id' => 'nullable|exists:reports,id',
+                'description' => 'required_without:report_id|string',
+                'published_at' => 'nullable|date',
             ]);
 
             if ($validator->fails()) {
@@ -158,32 +159,50 @@ class PublicPostController extends Controller
             }
 
             // Check if public post already exists for this report
-            if (PublicPost::where('report_id', $request->report_id)->exists()) {
+            if ($request->report_id && PublicPost::where('report_id', $request->report_id)->exists()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'A public post already exists for this report'
                 ], 409);
             }
 
+            $currentUserId = Auth::id();
+
+            // If manual post (no report_id), create a minimal report entry
+            if (!$request->report_id) {
+                $report = \App\Models\Report::create([
+                    'user_id' => $currentUserId,
+                    'report_type' => 'Announcement',
+                    'description' => $request->description ?? 'Manual public post',
+                    'is_acknowledge' => true,
+                    'acknowledge_by' => $currentUserId,
+                    'status' => 'Ongoing',
+                ]);
+                $reportId = $report->id;
+            } else {
+                $reportId = $request->report_id;
+            }
+
+            // Normalize empty string to null for published_at
+            $publishedAt = $request->published_at;
+            if ($publishedAt === '' || $publishedAt === null) {
+                $publishedAt = null;
+            } else {
+                // Use current timestamp for immediate publishing
+                $publishedAt = now();
+            }
+
             $publicPost = PublicPost::create([
-                'report_id' => $request->report_id,
-                'published_by' => Auth::id(),
-                'published_at' => $request->published_at,
+                'report_id' => $reportId,
+                'published_by' => $currentUserId,
+                'published_at' => $publishedAt,
             ]);
 
             $publicPost->load(['report.user', 'publishedBy']);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Public post created successfully',
-                'data' => $publicPost
-            ], 201);
+            return redirect()->back()->with('success', 'Public post created successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to create public post',
-                'error' => $e->getMessage()
-            ], 500);
+            return redirect()->back()->with('error', 'Failed to create public post: ' . $e->getMessage());
         }
     }
 

@@ -1,179 +1,220 @@
+import {
+    ColumnFiltersState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    SortingState,
+    useReactTable,
+    VisibilityState,
+} from '@tanstack/react-table';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import * as React from 'react';
+
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Archive, ExternalLink as Open, SquarePen } from 'lucide-react';
 
-import { formatDateTime } from '@/lib/utils';
 import { PublicPost_T } from '@/types/public-post-types';
-import ArchivePublicPost from './public-post-archive';
-import EditPublicPost from './public-post-edit';
-import ViewPublicPostDetails from './public-post-view';
+import { columns } from './public-post-table-columns';
 
-function PublicPostsTable({ posts }: { posts: PublicPost_T[] }) {
-    function getStatusBadge(publishedAt: string | null) {
-        if (!publishedAt) {
-            return <span className="uppercase">Draft</span>;
+function PublicPostsTable({
+    posts,
+    isLoading = false,
+}: {
+    posts: PublicPost_T[];
+    isLoading?: boolean;
+}) {
+    const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
+    const [isPageChanging, setIsPageChanging] = React.useState(false);
+
+    const table = useReactTable({
+        data: posts,
+        columns: columns(),
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+        },
+    });
+
+    const handlePageSizeChange = (value: string) => {
+        setIsPageChanging(true);
+        table.setPageSize(Number(value));
+        setTimeout(() => setIsPageChanging(false), 200);
+    };
+
+    const handlePageChange = (direction: 'next' | 'prev') => {
+        setIsPageChanging(true);
+        if (direction === 'next') {
+            table.nextPage();
+        } else {
+            table.previousPage();
         }
+        setTimeout(() => setIsPageChanging(false), 300);
+    };
 
-        const publishDate = new Date(publishedAt);
-        const now = new Date();
-
-        if (publishDate > now) {
-            return <span className="uppercase">Scheduled</span>;
-        }
-
-        return <span className="uppercase">Published</span>;
-    }
+    const showLoading = isLoading || isPageChanging;
 
     return (
-        <div className="overflow-hidden rounded-[var(--radius)] bg-[var(--sidebar)]">
-            <Table className="m-0 border">
-                <TableCaption className="m-0 border-t py-4">
-                    Showing {posts.length} Public Posts
-                </TableCaption>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Post ID
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Report Type
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Report Content
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Reporter
-                        </TableHead>
-
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Status
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Published Date
-                        </TableHead>
-                        <TableHead className="py-4 text-center font-semibold">
-                            Actions
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {posts.map((post) => (
-                        <TableRow
-                            key={post.id}
-                            className="text-center text-muted-foreground"
+        <div className="w-full">
+            <div className="overflow-hidden rounded-[var(--radius)] border">
+                <Table>
+                    <TableHeader className="bg-muted">
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => {
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            className="border-r px-2 py-2 text-center font-semibold last:border-r-0"
+                                        >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext(),
+                                                  )}
+                                        </TableHead>
+                                    );
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {showLoading ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns().length}
+                                    className="h-48 text-center"
+                                >
+                                    <div className="text-md flex items-center justify-center gap-2 text-muted-foreground">
+                                        <Spinner className="h-6 w-6" />
+                                        <span>Processing...</span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            className="text-center"
+                                        >
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns().length}
+                                    className="h-24 text-center text-muted-foreground"
+                                >
+                                    No posts found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            <div className="flex items-center justify-between space-x-2 py-4">
+                <div className="text-sm text-muted-foreground">
+                    Showing {table.getFilteredRowModel().rows.length} post(s).
+                </div>
+                <div className="flex items-center space-x-6 lg:space-x-8">
+                    <div className="flex items-center space-x-2">
+                        <p className="text-sm text-muted-foreground">
+                            Rows per page:
+                        </p>
+                        <Select
+                            value={`${table.getState().pagination.pageSize}`}
+                            onValueChange={handlePageSizeChange}
                         >
-                            <TableCell className="py-3 font-medium">
-                                #{post.id}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                {post.report?.report_type || 'Unknown'}
-                            </TableCell>
-                            <TableCell className="max-w-xs py-3 text-left">
-                                <div className="ellipsis flex flex-col truncate">
-                                    <span className="text-md font-semibold">
-                                        {post.report?.transcript}
-                                    </span>
-
-                                    <span
-                                        className="mt-1 block truncate text-xs text-muted-foreground"
-                                        title={post.report.description}
+                            <SelectTrigger className="h-8 w-[70px]">
+                                <SelectValue
+                                    placeholder={
+                                        table.getState().pagination.pageSize
+                                    }
+                                />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                                    <SelectItem
+                                        key={pageSize}
+                                        value={`${pageSize}`}
                                     >
-                                        {post.report.description.length > 100
-                                            ? post.report.description.substring(
-                                                  0,
-                                                  100,
-                                              ) + '...'
-                                            : post.report.description}
-                                    </span>
-                                </div>
-                            </TableCell>
-                            <TableCell className="py-3">
-                                {post.report?.user?.name || 'Unknown'}
-                            </TableCell>
-
-                            <TableCell className="py-3">
-                                {getStatusBadge(post.published_at)}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                {post.published_at ? (
-                                    <span>
-                                        {formatDateTime(post.published_at)}
-                                    </span>
-                                ) : (
-                                    <span>Not published</span>
-                                )}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                <div className="flex justify-center gap-2">
-                                    <Tooltip>
-                                        <ViewPublicPostDetails post={post}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Open className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </ViewPublicPostDetails>
-                                        <TooltipContent>
-                                            <p>View Details</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                        <EditPublicPost post={post}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <SquarePen className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </EditPublicPost>
-                                        <TooltipContent>
-                                            <p>Edit Post</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                        <ArchivePublicPost post={post}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Archive className="h-4 w-4 text-[var(--destructive)]" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </ArchivePublicPost>
-                                        <TooltipContent>
-                                            <p>Archive Post</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                                        {pageSize}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex w-fit items-center justify-center text-sm font-medium text-muted-foreground">
+                        Page {table.getState().pagination.pageIndex + 1} of{' '}
+                        {table.getPageCount()}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handlePageChange('prev')}
+                            disabled={
+                                !table.getCanPreviousPage() || isPageChanging
+                            }
+                        >
+                            <span className="sr-only">Go to previous page</span>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handlePageChange('next')}
+                            disabled={!table.getCanNextPage() || isPageChanging}
+                        >
+                            <span className="sr-only">Go to next page</span>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

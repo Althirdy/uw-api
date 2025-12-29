@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\CheckUserSuspension;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            CheckUserSuspension::class, // Check if user is suspended
         ]);
 
         $middleware->api(prepend: [
@@ -31,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom middleware aliases
         $middleware->alias([
             'ability.access' => \App\Http\Middleware\CheckAccessTokenAbility::class,
+            'check.suspension' => CheckUserSuspension::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

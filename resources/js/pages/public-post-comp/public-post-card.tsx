@@ -20,28 +20,42 @@ import ArchivePublicPost from './public-post-archive';
 import EditPublicPost from './public-post-edit';
 import ViewPublicPostDetails from './public-post-view';
 
+const reportTypeColors: Record<string, string> = {
+    CCTV: 'bg-blue-800',
+    'Citizen Concern': 'bg-purple-800',
+    Emergency: 'bg-red-800',
+    Announcement: 'bg-yellow-800',
+};
+
 function getStatusInfo(publishedAt: string | null) {
     if (!publishedAt) {
-        return { label: 'Draft', variant: 'outline' as const };
+        return { label: 'Draft', className: 'bg-zinc-600' };
     }
 
     const publishDate = new Date(publishedAt);
     const now = new Date();
 
     if (publishDate > now) {
-        return { label: 'Scheduled', variant: 'secondary' as const };
+        return {
+            label: 'Scheduled',
+            className: 'bg-yellow-800',
+        };
     }
 
-    return { label: 'Published', variant: 'default' as const };
+    return { label: 'Published', className: ' text-foreground bg-green-800' };
 }
 
 const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
     return (
         <div className="grid auto-rows-min gap-4 md:grid-cols-4">
             {posts.length === 0 && (
-                <div className="py-8 text-center text-gray-500">
-                    No posts found matching your selection.
-                </div>
+                <Card className="col-span-full rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border">
+                    <CardContent className="flex items-center justify-center py-12">
+                        <p className="text-muted-foreground">
+                            No posts found matching your selection.
+                        </p>
+                    </CardContent>
+                </Card>
             )}
 
             {posts.map((post) => {
@@ -54,12 +68,20 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                     >
                         <CardHeader>
                             <CardTitle> Post ID: #{post.id}</CardTitle>
-                            <CardDescription>
+                            <CardDescription className="flex flex-row gap-2">
                                 <Badge
-                                    variant={statusInfo.variant}
-                                    className="w-fit text-sm"
+                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}
                                 >
                                     {statusInfo.label}
+                                </Badge>
+                                <Badge
+                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${
+                                        reportTypeColors[
+                                            post.report?.report_type || ''
+                                        ] || 'bg-zinc-600'
+                                    }`}
+                                >
+                                    {post.report?.report_type}
                                 </Badge>
                             </CardDescription>
                         </CardHeader>
@@ -68,13 +90,9 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                                 <p className="text-sm font-medium">
                                     Report Content
                                 </p>
-                                <div className="rounded-lg border bg-muted/30 p-3">
-                                    <p className="mb-2 text-sm font-medium">
-                                        {post.report?.report_type}
-                                    </p>
-                                    <p className="mb-2 text-sm text-muted-foreground">
-                                        {post.report?.transcript ||
-                                            'No transcript available'}
+                                <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3">
+                                    <p className="text-sm text-muted-foreground">
+                                        {post.report?.transcript || null}
                                     </p>
                                     {post.report?.description && (
                                         <p className="text-sm text-muted-foreground">

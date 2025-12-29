@@ -39,15 +39,45 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('incident_media', function (Blueprint $table) {
-            $table->dropIndex(['source_type', 'source_id']);
-            $table->dropColumn([
-                'source_type',
-                'source_id', 
-                'source_category',
-                'detection_metadata',
-                'device_identifier',
-                'captured_at'
-            ]);
+            // Drop index if exists using raw SQL
+            \DB::statement('DROP INDEX IF EXISTS `incident_media_source_type_source_id_index` ON `incident_media`');
         });
+        
+        // Check and drop columns individually if they exist
+        if (Schema::hasColumn('incident_media', 'source_type')) {
+            Schema::table('incident_media', function (Blueprint $table) {
+                $table->dropColumn('source_type');
+            });
+        }
+        
+        if (Schema::hasColumn('incident_media', 'source_id')) {
+            Schema::table('incident_media', function (Blueprint $table) {
+                $table->dropColumn('source_id');
+            });
+        }
+        
+        if (Schema::hasColumn('incident_media', 'source_category')) {
+            Schema::table('incident_media', function (Blueprint $table) {
+                $table->dropColumn('source_category');
+            });
+        }
+        
+        if (Schema::hasColumn('incident_media', 'detection_metadata')) {
+            Schema::table('incident_media', function (Blueprint $table) {
+                $table->dropColumn('detection_metadata');
+            });
+        }
+        
+        if (Schema::hasColumn('incident_media', 'device_identifier')) {
+            Schema::table('incident_media', function (Blueprint $table) {
+                $table->dropColumn('device_identifier');
+            });
+        }
+        
+        if (Schema::hasColumn('incident_media', 'captured_at')) {
+            Schema::table('incident_media', function (Blueprint $table) {
+                $table->dropColumn('captured_at');
+            });
+        }
     }
 };

@@ -1,144 +1,226 @@
+import {
+    ColumnFiltersState,
+    flexRender,
+    getCoreRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    getSortedRowModel,
+    SortingState,
+    useReactTable,
+    VisibilityState,
+} from '@tanstack/react-table';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import * as React from 'react';
+
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Archive, ExternalLink as Open, SquarePen } from 'lucide-react';
 
+import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
-import ArchiveUser from './users-archive';
-import EditUser from './users-edit';
-import ViewUser from './users-view';
+import { columns } from './users-table-columns';
 
 const UserTable = ({
     users,
     roles,
+    locations,
+    isLoading = false,
 }: {
     users: users_T[];
     roles: roles_T[];
+    locations: location_T[];
+    isLoading?: boolean;
 }) => {
+    const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] =
+        React.useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] =
+        React.useState<VisibilityState>({});
+    const [isPageChanging, setIsPageChanging] = React.useState(false);
+
+    const table = useReactTable({
+        data: users,
+        columns: columns(roles, locations),
+        onSortingChange: setSorting,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        onColumnVisibilityChange: setColumnVisibility,
+        state: {
+            sorting,
+            columnFilters,
+            columnVisibility,
+        },
+    });
+
+    const handlePageSizeChange = (value: string) => {
+        setIsPageChanging(true);
+        table.setPageSize(Number(value));
+        setTimeout(() => setIsPageChanging(false), 200);
+    };
+
+    const handlePageChange = (direction: 'next' | 'prev') => {
+        setIsPageChanging(true);
+        if (direction === 'next') {
+            table.nextPage();
+        } else {
+            table.previousPage();
+        }
+        setTimeout(() => setIsPageChanging(false), 300);
+    };
+
+    const showLoading = isLoading || isPageChanging;
+
     return (
-        <div className="overflow-hidden rounded-[var(--radius)] bg-[var(--sidebar)]">
-            <Table className="m-0 border">
-                <TableCaption className="m-0 border-t py-4">
-                    Showing {users.length} Users
-                </TableCaption>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            User ID
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Name
-                        </TableHead>
-
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Role
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Assigned Barangay
-                        </TableHead>
-                        <TableHead className="border-r py-4 text-center font-semibold">
-                            Status
-                        </TableHead>
-                        <TableHead className="py-4 text-center font-semibold">
-                            Actions
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {users.map((user) => (
-                        <TableRow
-                            key={user.id}
-                            className="text-center text-muted-foreground"
+        <div className="w-full">
+            <div className="overflow-hidden rounded-[var(--radius)] border">
+                <Table>
+                    <TableHeader className="bg-muted">
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => {
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            className="border-r px-2 py-2 text-center font-semibold last:border-r-0"
+                                        >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext(),
+                                                  )}
+                                        </TableHead>
+                                    );
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {showLoading ? (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns(roles, locations).length}
+                                    className="h-48 text-center"
+                                >
+                                    <div className="text-md flex items-center justify-center gap-2 text-muted-foreground">
+                                        <Spinner className="h-6 w-6" />
+                                        <span>Processing...</span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            className="text-center"
+                                        >
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns(roles, locations).length}
+                                    className="h-24 text-center"
+                                >
+                                    No users found.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
+            <div className="flex items-center justify-between space-x-2 py-4">
+                <div className="text-sm text-muted-foreground">
+                    Showing {table.getFilteredRowModel().rows.length} user(s).
+                </div>
+                <div className="flex items-center space-x-6 lg:space-x-8">
+                    <div className="flex items-center space-x-2">
+                        <p className="text-sm text-muted-foreground">
+                            Rows per page:
+                        </p>
+                        <Select
+                            value={`${table.getState().pagination.pageSize}`}
+                            onValueChange={handlePageSizeChange}
                         >
-                            <TableCell className="py-3">#{user.id}</TableCell>
-                            <TableCell className="py-3">{user.name}</TableCell>
-
-                            <TableCell className="py-3">
-                                {user.role ? user.role.name : 'N/A'}
-                            </TableCell>
-
-                            <TableCell className="py-3">
-                                {user.citizen_details?.barangay ||
-                                    user.official_details?.assigned_brgy ||
-                                    'N/A'}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                {(
-                                    user.citizen_details?.status ||
-                                    user.official_details?.status ||
-                                    'ACTIVE'
-                                ).toLocaleUpperCase()}
-                            </TableCell>
-                            <TableCell className="py-3">
-                                <div className="flex justify-center gap-2">
-                                    <Tooltip>
-                                        <ViewUser user={user}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Open className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </ViewUser>
-                                        <TooltipContent>
-                                            <p>View Details</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                    <Tooltip>
-                                        <EditUser user={user} roles={roles}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <SquarePen className="h-4 w-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </EditUser>
-                                        <TooltipContent>
-                                            <p>Edit User</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-
-                                    <Tooltip>
-                                        <ArchiveUser user={user}>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Archive className="h-4 w-4 text-[var(--destructive)]" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                        </ArchiveUser>
-                                        <TooltipContent>
-                                            <p>Archive User</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                            <SelectTrigger className="h-8 w-[70px]">
+                                <SelectValue
+                                    placeholder={
+                                        table.getState().pagination.pageSize
+                                    }
+                                />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                                    <SelectItem
+                                        key={pageSize}
+                                        value={`${pageSize}`}
+                                    >
+                                        {pageSize}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex w-fit items-center justify-center text-sm font-medium text-muted-foreground">
+                        Page {table.getState().pagination.pageIndex + 1} of{' '}
+                        {table.getPageCount()}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Button
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handlePageChange('prev')}
+                            disabled={
+                                !table.getCanPreviousPage() || isPageChanging
+                            }
+                        >
+                            <span className="sr-only">Go to previous page</span>
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handlePageChange('next')}
+                            disabled={!table.getCanNextPage() || isPageChanging}
+                        >
+                            <span className="sr-only">Go to next page</span>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

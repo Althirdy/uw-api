@@ -60,3 +60,33 @@ export type PaginatedUsers = {
     per_page: number;
     last_page: number;
 };
+
+export type PunishmentOption = {
+    type: string;
+    label: string;
+    duration: number | null;
+    description: string;
+};
+
+export type SuspensionHistory = {
+    id: number;
+    punishment_type: string;
+    duration_days: number | null;
+    suspended_at: string;
+    expires_at: string | null;
+    status: string;
+    reason: string | null;
+    suspended_by: string;
+    is_active: boolean;
+};
+
+export type AvailablePunishmentsData = {
+    available_punishments: PunishmentOption[];
+    suspension_history: SuspensionHistory[];
+    is_suspended: boolean;
+    active_suspension: {
+        type: string;
+        expires_at: string | null;
+        reason: string | null;
+    } | null;
+};

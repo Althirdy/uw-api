@@ -84,4 +84,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\Citizen\Concern::class, 'citizen_id');
     }
+
+    public function suspensions()
+    {
+        return $this->hasMany(UserSuspension::class);
+    }
+
+    public function activeSuspension()
+    {
+        return $this->hasOne(UserSuspension::class)
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc');
+    }
 }

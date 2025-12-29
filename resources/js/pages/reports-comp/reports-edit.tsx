@@ -1,6 +1,14 @@
 import { MapModal } from '@/components/map-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,14 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import {
-    Sheet,
-    SheetClose,
-    SheetContent,
-    SheetFooter,
-    SheetHeader,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDateTime } from '@/lib/utils';
 import { reports_T } from '@/types/report-types';
@@ -26,6 +27,7 @@ import {
     Globe,
     LocateFixed,
     MoveLeft,
+    Save,
     TriangleAlert,
     User,
 } from 'lucide-react';
@@ -41,7 +43,7 @@ type EditReportForm = {
     report_type: string;
     description: string;
     transcript: string;
-    latitute: string;
+    latitude: string;
     longtitude: string;
     is_acknowledge: boolean;
 };
@@ -52,13 +54,13 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
             report_type: report.report_type,
             description: report.description,
             transcript: report.transcript || '',
-            latitute: report.latitute,
+            latitude: report.latitude,
             longtitude: report.longtitude,
             is_acknowledge: report.is_acknowledge,
         });
 
     const [coordinates, setCoordinates] = useState({
-        latitude: report.latitute,
+        latitude: report.latitude,
         longitude: report.longtitude,
     });
 
@@ -68,7 +70,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
             longitude: location.lng.toString(),
         };
         setCoordinates(coords);
-        setData('latitute', coords.latitude);
+        setData('latitude', coords.latitude);
         setData('longtitude', coords.longitude);
     };
 
@@ -92,11 +94,17 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
     };
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>{children}</SheetTrigger>
-            <SheetContent className="max-w-none overflow-y-auto p-2 sm:max-w-lg [&>button]:hidden">
-                <form onSubmit={handleSubmit}>
-                    <SheetHeader>
+        <Dialog>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent
+                className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
+                showCloseButton={false}
+            >
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex h-full flex-col overflow-hidden"
+                >
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
                         <div className="flex flex-row items-center gap-4">
                             <div className="text-left">
                                 <h3 className="text-xl font-semibold">
@@ -124,9 +132,9 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                 </div>
                             </div>
                         </div>
-                    </SheetHeader>
+                    </DialogHeader>
 
-                    <div className="flex w-full flex-col justify-start gap-10 px-4 py-2">
+                    <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
                         {/* Report Information */}
                         <div className="flex w-full flex-col gap-6">
                             <div className="grid flex-1 auto-rows-min gap-2">
@@ -244,14 +252,14 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                                     value={coordinates.latitude}
                                                     disabled
                                                     className={
-                                                        errors.latitute
+                                                        errors.latitude
                                                             ? 'border-red-500 focus:ring-red-500'
                                                             : ''
                                                     }
                                                 />
-                                                {errors.latitute && (
+                                                {errors.latitude && (
                                                     <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                        {errors.latitute}
+                                                        {errors.latitude}
                                                     </span>
                                                 )}
                                             </div>
@@ -354,7 +362,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                     <div className="flex flex-row items-center gap-2">
                                         <LocateFixed className="h-4 w-4" />
                                         <span>
-                                            Location: {report.latitute},{' '}
+                                            Location: {report.latitude},{' '}
                                             {report.longtitude}
                                         </span>
                                     </div>
@@ -379,31 +387,36 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                         </div>
                     </div>
 
-                    <SheetFooter className="px-4">
-                        <div className="flex w-full flex-row justify-end gap-2">
-                            <SheetClose asChild>
+                    <DialogFooter className="flex-shrink-0 px-6 py-4">
+                        <div className="flex w-full gap-2">
+                            <DialogClose asChild>
                                 <Button
                                     type="button"
                                     variant="outline"
-                                    data-sheet-close
-                                    className="cursor-pointer"
+                                    data-dialog-close
+                                    className="flex-1"
                                 >
-                                    <MoveLeft className="mr-2 h-4 w-4" />
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
-                            </SheetClose>
+                            </DialogClose>
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="cursor-pointer"
+                                className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
-                    </SheetFooter>
+                    </DialogFooter>
                 </form>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 
