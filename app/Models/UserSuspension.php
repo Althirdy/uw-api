@@ -20,6 +20,11 @@ class UserSuspension extends Model
         'status',
         'reason',
         'suspended_by',
+        'phone_number',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
     ];
 
     protected $casts = [
@@ -146,7 +151,22 @@ class UserSuspension extends Model
 
         $expiresAt = $durationDays ? Carbon::now()->addDays($durationDays) : null;
 
-        return self::create([
+        // Get user's identity information for permanent bans
+        $identityData = [];
+        if ($punishmentType === 'suspension') {
+            $user = User::with('citizenDetails')->find($userId);
+            if ($user && $user->citizenDetails) {
+                $identityData = [
+                    'phone_number' => $user->citizenDetails->phone_number,
+                    'first_name' => $user->citizenDetails->first_name,
+                    'middle_name' => $user->citizenDetails->middle_name,
+                    'last_name' => $user->citizenDetails->last_name,
+                    'suffix' => $user->citizenDetails->suffix,
+                ];
+            }
+        }
+
+        return self::create(array_merge([
             'user_id' => $userId,
             'punishment_type' => $punishmentType,
             'duration_days' => $durationDays,
@@ -155,7 +175,7 @@ class UserSuspension extends Model
             'status' => 'active',
             'reason' => $reason,
             'suspended_by' => $adminId,
-        ]);
+        ], $identityData));
     }
 
     /**
@@ -186,5 +206,57 @@ class UserSuspension extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Check if registration identity matches a permanently banned user
+     * 
+     * @param string $phoneNumber
+     * @param string $firstName
+     * @param string|null $middleName
+     * @param string $lastName
+     * @param string|null $suffix
+     * @return bool
+     */
+    public static function isIdentityBanned(
+        string $phoneNumber,
+        string $firstName,
+        ?string $middleName,
+        string $lastName,
+        ?string $suffix
+    ): bool {
+        // Check for permanent bans (punishment_type = 'suspension') that are active
+        $query = self::where('punishment_type', 'suspension')
+            ->where('status', 'active');
+
+        // Primary check: Phone number match (strongest identifier)
+        $phoneMatch = (clone $query)
+            ->where('phone_number', $phoneNumber)
+            ->exists();
+
+        if ($phoneMatch) {
+            return true;
+        }
+
+        // Secondary check: Exact full name match
+        $nameQuery = (clone $query)
+            ->where('first_name', $firstName)
+            ->where('last_name', $lastName);
+
+        // Match middle name (consider null as different from any value)
+        if ($middleName !== null) {
+            $nameQuery->where('middle_name', $middleName);
+        } else {
+            $nameQuery->whereNull('middle_name');
+        }
+
+        // Match suffix (consider null as different from any value)
+        if ($suffix !== null) {
+            $nameQuery->where('suffix', $suffix);
+        } else {
+            $nameQuery->whereNull('suffix');
+        }
+
+        return $nameQuery->exists();
     }
 }
