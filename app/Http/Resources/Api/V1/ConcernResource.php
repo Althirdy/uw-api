@@ -14,65 +14,64 @@ class ConcernResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        // Determine assigned leader from the distribution relationship
-        $assignedLeader = null;
-        if ($this->relationLoaded('distribution') && $this->distribution) {
-            $assignedLeader = $this->distribution->purokLeader;
-        }
-
         return [
             'id' => $this->id,
             'trackingCode' => $this->tracking_code,
-            'type' => $this->type,
             'title' => $this->title,
-            'description' => $this->description,
-            'category' => $this->category,
-            'severity' => $this->severity,
+            'description' => $this->description, // Shortened key
             'status' => $this->status,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
-            'address' => $this->address, // Add address
-            'customLocation' => $this->custom_location, // Add custom_location
-            'transcriptText' => $this->transcript_text,
-            'citizenId' => $this->citizen_id,
-            'createdAt' => $this->created_at?->toISOString(),
-            'updatedAt' => $this->updated_at?->toISOString(),
+            'severity' => $this->severity,
+            'category' => $this->category,
 
-            // Media
-            'images' => $this->when(
-                $this->relationLoaded('media'),
-                fn () => $this->media->where('media_type', 'image')->pluck('original_path')->values()->toArray()
-            ),
+            // 2. Conditional Location (Only send if latitude exists)
+            // Grouping lat/lng is cleaner for Maps API
+            'location' => $this->when($this->latitude, [
+                'lat' => $this->latitude,
+                'lng' => $this->longitude,
+            ]),
+
+            // 3. Remove Nulls (Only sends 'address' if it actually has text)
+            'address' => $this->whenNotNull($this->address),
+            'customLocation' => $this->whenNotNull($this->custom_location),
+
+            // 4. Media Resources
             'media' => MediaResource::collection($this->whenLoaded('media')),
 
-            // Assigned Leader (Transparency)
-            'assignedTo' => $assignedLeader ? [
-                'id' => $assignedLeader->id,
-                'name' => $assignedLeader->officialDetails
-                    ? trim("{$assignedLeader->officialDetails->first_name} {$assignedLeader->officialDetails->last_name}")
-                    : $assignedLeader->name,
-                'role' => $assignedLeader->role->name ?? 'Purok Leader',
-                // 'avatar' => ...
-            ] : null,
-
-            // Timeline (Audit History)
-            'timeline' => $this->whenLoaded('histories', function () {
-                return $this->histories->map(function ($history) {
-                    return [
-                        'id' => $history->id,
-                        'status' => $history->status,
-                        'remarks' => $history->remarks,
-                        'actedBy' => $history->actor ? [
-                            'id' => $history->actor->id,
-                            'name' => $history->actor->officialDetails
-                                ? trim("{$history->actor->officialDetails->first_name} {$history->actor->officialDetails->last_name}")
-                                : $history->actor->name,
-                        ] : ['name' => 'UrbanWatch System'], // If null, it's UrbanWatch System
-                        'createdAt' => $history->created_at->toISOString(),
-                        'timeAgo' => $history->created_at->diffForHumans(),
-                    ];
-                });
+            // 5. Simplify Relationships
+            'assignedTo' => $this->whenLoaded('distribution', function() {
+                $purokLeader = $this->distribution->purokLeader ?? null;
+                
+                if (!$purokLeader) {
+                    return null;
+                }
+                
+                $officialDetails = $purokLeader->officialDetails ?? null;
+                
+                return [
+                    'name' => $officialDetails 
+                        ? trim("{$officialDetails->first_name} {$officialDetails->last_name}")
+                        : $purokLeader->name,
+                    'role' => 'Purok Leader',
+                ];
             }),
+
+            'timeline' => $this->whenLoaded('histories', fn() => $this->histories->map(fn($history) => [
+                'id' => $history->id,
+                'status' => $history->status,
+                'remarks' => $history->remarks,
+
+                // CLEANER: Just call the accessor we made!
+                // We flatten it to a single string because the UI usually just needs the name.
+                'actor' => $history->actor_display_name,
+
+                // OPTIMIZATION: Remove 'timeAgo'. 
+                // Send the raw date and let React Native's 'date-fns' handle "5 mins ago".
+                // This makes the cache valid for longer.
+                'date' => $history->created_at->toIso8601String(),
+            ])),
+
+
+            'createdAt' => $this->created_at->toIso8601String()
         ];
     }
 }
