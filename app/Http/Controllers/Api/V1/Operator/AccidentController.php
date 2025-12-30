@@ -109,4 +109,72 @@ class AccidentController extends BaseApiController
             return $this->sendError('An error occurred while updating the accident status: '.$e->getMessage());
         }
     }
+
+    /**
+     * Get heatmap data for verified/resolved incidents.
+     * Returns only location, severity, and type for privacy.
+     * Does not include images or personal details.
+     */
+    public function heatmap(Request $request)
+    {
+        try {
+            $query = Accident::query()
+                ->whereIn('status', ['resolved', 'verified']);
+
+            // Optional filter by accident type
+            if ($request->filled('accident_type')) {
+                $query->where('accident_type', $request->accident_type);
+            }
+
+            // Optional filter by severity
+            if ($request->filled('severity')) {
+                $query->where('severity', $request->severity);
+            }
+
+            // Optional date range filter
+            if ($request->filled('from_date')) {
+                $query->where('occurred_at', '>=', $request->from_date);
+            }
+
+            if ($request->filled('to_date')) {
+                $query->where('occurred_at', '<=', $request->to_date);
+            }
+
+            $incidents = $query->select([
+                'id',
+                'latitude',
+                'longitude',
+                'severity',
+                'accident_type',
+                'title',
+                'occurred_at',
+            ])->get();
+
+            // Transform to heatmap-friendly format
+            $heatmapData = $incidents->map(function ($incident) {
+                return [
+                    'id' => $incident->id,
+                    'lat' => (float) $incident->latitude,
+                    'lng' => (float) $incident->longitude,
+                    'severity' => $incident->severity,
+                    'type' => $incident->accident_type,
+                    'title' => $incident->title,
+                    'occurred_at' => $incident->occurred_at,
+                ];
+            });
+
+            return $this->sendResponse([
+                'incidents' => $heatmapData,
+                'total' => $heatmapData->count(),
+            ], 'Heatmap data retrieved successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Error retrieving heatmap data', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->sendError('An error occurred while retrieving heatmap data: '.$e->getMessage());
+        }
+    }
 }
