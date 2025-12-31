@@ -12,6 +12,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 import { PublicPost_T } from '@/types/public-post-types';
 import { router, useForm } from '@inertiajs/react';
@@ -151,20 +158,23 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                             {/* Category Selector */}
                             <div className="grid gap-3">
                                 <Label htmlFor="category">Category</Label>
-                                <select
-                                    id="category"
+                                <Select
                                     value={data.category}
-                                    onChange={(e) =>
-                                        setData('category', e.target.value)
+                                    onValueChange={(value) =>
+                                        setData('category', value)
                                     }
-                                    className="w-full rounded-md border border-input px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
                                 >
-                                    <option value="general">General</option>
-                                    <option value="news">News</option>
-                                    <option value="emergency">Emergency</option>
-                                    <option value="advisory">Advisory</option>
-                                    <option value="event">Event</option>
-                                </select>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="general">General</SelectItem>
+                                        <SelectItem value="news">News</SelectItem>
+                                        <SelectItem value="emergency">Emergency</SelectItem>
+                                        <SelectItem value="advisory">Advisory</SelectItem>
+                                        <SelectItem value="event">Event</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* Editable Title */}
@@ -344,7 +354,7 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                     <User className="h-4 w-4" />
                                     <span>
                                         Published by:{' '}
-                                        {post.publishedBy?.name || 'Unknown'}
+                                        {post.publishedBy?.name || 'Barangay Office'}
                                     </span>
                                 </div>
                                 <div className="flex flex-row items-center gap-2">

@@ -11,20 +11,49 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // First, drop the foreign key and index if they exist
+        if (Schema::hasColumn('public_posts', 'report_id')) {
+            try {
+                Schema::table('public_posts', function (Blueprint $table) {
+                    $table->dropForeign(['report_id']);
+                });
+            } catch (\Exception $e) {
+                // Foreign key doesn't exist, continue
+            }
+
+            try {
+                Schema::table('public_posts', function (Blueprint $table) {
+                    $table->dropIndex('public_posts_report_id_index');
+                });
+            } catch (\Exception $e) {
+                // Index doesn't exist, continue
+            }
+
+            Schema::table('public_posts', function (Blueprint $table) {
+                $table->dropColumn('report_id');
+            });
+        }
+
+        // Now add the new columns
         Schema::table('public_posts', function (Blueprint $table) {
-            // Remove the old foreign key, index, and column
-            $table->dropForeign(['report_id']);
-            $table->dropIndex('public_posts_report_id_index');
-            $table->dropColumn('report_id');
+            // Add polymorphic columns if they don't exist
+            if (! Schema::hasColumn('public_posts', 'postable_id')) {
+                $table->nullableMorphs('postable');
+            }
 
-            // Add polymorphic columns
-            $table->nullableMorphs('postable');
-
-            // Add essential fields
-            $table->string('title')->after('id');
-            $table->text('content')->after('title');
-            $table->string('image_path')->nullable()->after('content');
-            $table->string('category')->default('general')->after('image_path');
+            // Add essential fields if they don't exist
+            if (! Schema::hasColumn('public_posts', 'title')) {
+                $table->string('title')->after('id');
+            }
+            if (! Schema::hasColumn('public_posts', 'content')) {
+                $table->text('content')->after('title');
+            }
+            if (! Schema::hasColumn('public_posts', 'image_path')) {
+                $table->string('image_path')->nullable()->after('content');
+            }
+            if (! Schema::hasColumn('public_posts', 'category')) {
+                $table->string('category')->default('general')->after('image_path');
+            }
         });
     }
 

@@ -8,7 +8,8 @@ class UrbanWatchException extends Exception
 {
     //
 
-    public function render($request){
+    public function render($request)
+    {
         return response()->json([
             'success' => false,
             'message' => $this->getMessage(),

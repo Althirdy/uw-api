@@ -11,6 +11,7 @@ class PublicPost extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'public_id',
         'postable_id',
         'postable_type',
         'title',
@@ -28,6 +29,32 @@ class PublicPost extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->public_id)) {
+                $model->public_id = self::generateUniquePublicId();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique 6-character public ID.
+     */
+    protected static function generateUniquePublicId(): string
+    {
+        do {
+            $publicId = strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        } while (self::where('public_id', $publicId)->exists());
+
+        return $publicId;
+    }
 
     /**
      * Get the parent postable model (Accident, Report, etc.).
