@@ -26,14 +26,15 @@ class ConcernService
     /**
      * Get paginated concerns for the current user.
      * Returns a cursor paginator with simplified data.
+     * Supports filtering by status, category, and severity.
      */
-    public function getUserConcerns(int $userId, int $perPage = 15)
+    public function getUserConcerns(int $userId, int $perPage = 15, array $filters = [])
     {
         if (!User::find($userId)) {
             throw new UrbanWatchException("User not found.");
         }
 
-        $concerns =  Concern::where('citizen_id', $userId)
+        $query = Concern::where('citizen_id', $userId)
             ->select([
                 'id',
                 'tracking_code',
@@ -43,7 +44,22 @@ class ConcernService
                 'status',
                 'category',
                 'created_at'
-            ])
+            ]);
+
+        // Apply filters
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['category'])) {
+            $query->where('category', $filters['category']);
+        }
+
+        if (!empty($filters['severity'])) {
+            $query->where('severity', $filters['severity']);
+        }
+
+        $concerns = $query
             ->with([
                 'distribution.purokLeader.officialDetails'
             ])
@@ -52,6 +68,32 @@ class ConcernService
             ->cursorPaginate($perPage);
 
         return $concerns;
+    }
+
+    public function getConcernsCount(int $userId, array $filters = [])
+    {
+        if (!User::find($userId)) {
+            throw new UrbanWatchException("User not found.");
+        }
+
+        $query = Concern::where('citizen_id', $userId);
+
+        // Apply the same filters as getUserConcerns
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['category'])) {
+            $query->where('category', $filters['category']);
+        }
+
+        if (!empty($filters['severity'])) {
+            $query->where('severity', $filters['severity']);
+        }
+
+        $count = $query->count();
+
+        return $count;
     }
 
     /**

@@ -41,6 +41,7 @@ class ConcernAssigned implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
+            new PrivateChannel('citizen.'.$this->concern->citizen_id),
             new PrivateChannel('purok-leader.'.$this->distribution->purok_leader_id),
         ];
     }

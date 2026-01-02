@@ -22,17 +22,30 @@ class ConcernController extends BaseApiController
     /**
      * Display a listing of the resource.
      * Optimized for FlashList with cursor pagination and simplified data.
+     * Supports filtering by status, category, and severity.
      */
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 4);
+        
+        // Build filters array from request
+        $filters = [];
+        if ($request->filled('status')) {
+            $filters['status'] = $request->input('status');
+        }
+        if ($request->filled('category')) {
+            $filters['category'] = $request->input('category');
+        }
+        if ($request->filled('severity')) {
+            $filters['severity'] = $request->input('severity');
+        }
 
-        $concerns = $this->concernService->getUserConcerns(auth()->id(), $perPage);
-
-        // return $concerns;
+        $concerns = $this->concernService->getUserConcerns(auth()->id(), $perPage, $filters);
+        $concernsCount = $this->concernService->getConcernsCount(auth()->id(), $filters);
 
         return $this->sendResponse([
             'concerns' => ConcernResource::collection($concerns),
+            'concerns_count' => $concernsCount,
             // Manually extract the cursor string
             'next_cursor' => $concerns->nextCursor()?->encode(),
             'prev_cursor' => $concerns->previousCursor()?->encode(),
