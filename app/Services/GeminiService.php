@@ -109,4 +109,148 @@ class GeminiService
             return null;
         }
     }
+
+    /**
+     * Analyze image content to verify emergency validity and extract incident details.
+     *
+     * @param  string  $fileContent  Raw binary content of the image file
+     * @param  string  $mimeType  Mime type of the file (e.g., 'image/jpeg')
+     * @param  array  $context  Additional context like device location, device name
+     * @return array|null Returns array with 'is_valid', 'accident_type', 'severity', 'title', 'description', 'confidence', 'detected_objects', 'reasoning' or null on failure
+     */
+    public function analyzeImage(string $fileContent, string $mimeType, array $context = [])
+    {
+        try {
+            if (! $this->apiKey) {
+                Log::error('Gemini API Key is missing.');
+
+                return null;
+            }
+
+            $base64Data = base64_encode($fileContent);
+
+            // Build context string if provided
+            $contextInfo = '';
+            if (! empty($context)) {
+                $contextInfo = "\n\nContext Information:\n";
+                if (isset($context['device_name'])) {
+                    $contextInfo .= "- Camera: {$context['device_name']}\n";
+                }
+                if (isset($context['location'])) {
+                    $contextInfo .= "- Location: {$context['location']}\n";
+                }
+            }
+
+            $prompt = "You are an emergency detection AI system analyzing CCTV footage for real emergency situations.\n\n".
+                      "Analyze the image and determine if it shows a REAL EMERGENCY that requires immediate response.\n\n".
+                      "VALID EMERGENCIES (is_valid: true):\n".
+                      "- Fire: House/building on fire, vehicle fire, large flames, significant smoke from burning structures\n".
+                      "- Flood: Road flooding, water entering buildings, people stranded in flood water, significant water accumulation\n".
+                      "- Accident: Vehicle collision, overturned vehicles, people injured on the ground, major property damage\n\n".
+                      "FALSE ALARMS to REJECT (is_valid: false):\n".
+                      "- Fire: Candles, lighters, controlled campfires, cooking fires, cigarettes, small controlled flames\n".
+                      "- Flood: Small puddles, light rain, normal water flow, sprinklers, someone washing\n".
+                      "- Accident: Parked vehicles, minor scratches, people walking normally, staged photos\n\n".
+                      "If the image shows a REAL EMERGENCY (is_valid: true):\n".
+                      "1. accident_type: Choose exactly one: 'Fire', 'Flood', or 'Accident'\n".
+                      "2. severity: Choose exactly one: 'Low', 'Medium', or 'High' based on danger level\n".
+                      "3. title: Generate a clear, concise 5-8 word title in Tagalog (Filipino) describing the emergency\n".
+                      "4. description: Generate a detailed 2-3 sentence description in Tagalog (Filipino) explaining what you see, the severity, and potential impact\n".
+                      "5. confidence: Number from 0-100 indicating your confidence this is a real emergency\n".
+                      "6. detected_objects: Array of key objects/elements you detected (e.g., ['flames', 'smoke', 'building'])\n".
+                      "7. reasoning: Brief explanation in English of why this is a real emergency\n\n".
+                      "If the image is a FALSE ALARM (is_valid: false):\n".
+                      "1. Set is_valid to false\n".
+                      "2. Set all other fields to null except reasoning\n".
+                      "3. reasoning: Explain in English why this is NOT a real emergency\n".
+                      $contextInfo."\n".
+                      "Return ONLY valid JSON with this exact structure:\n".
+                      "{\n".
+                      "  \"is_valid\": boolean,\n".
+                      "  \"accident_type\": \"Fire|Flood|Accident\" or null,\n".
+                      "  \"severity\": \"Low|Medium|High\" or null,\n".
+                      "  \"title\": \"string in Tagalog\" or null,\n".
+                      "  \"description\": \"string in Tagalog\" or null,\n".
+                      "  \"confidence\": number (0-100) or null,\n".
+                      "  \"detected_objects\": [\"array\", \"of\", \"strings\"] or null,\n".
+                      "  \"reasoning\": \"explanation in English\"\n".
+                      "}\n\n".
+                      'Do not include markdown formatting (like ```json) in the response.';
+
+            $response = Http::timeout(60)->withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post("{$this->baseUrl}?key={$this->apiKey}", [
+                'contents' => [
+                    [
+                        'parts' => [
+                            [
+                                'inline_data' => [
+                                    'mime_type' => $mimeType,
+                                    'data' => $base64Data,
+                                ],
+                            ],
+                            [
+                                'text' => $prompt,
+                            ],
+                        ],
+                    ],
+                ],
+                'generationConfig' => [
+                    'response_mime_type' => 'application/json',
+                    'temperature' => 0.4, // Lower temperature for more consistent/reliable responses
+                ],
+            ]);
+
+            if ($response->failed()) {
+                Log::error('Gemini API Error (Image Analysis)', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return null;
+            }
+
+            $responseData = $response->json();
+
+            // Extract the text from the response
+            if (! isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+                Log::error('Gemini API: Unexpected response format (Image Analysis)', ['response' => $responseData]);
+
+                return null;
+            }
+
+            $jsonString = $responseData['candidates'][0]['content']['parts'][0]['text'];
+
+            // Clean up any markdown code blocks if present
+            $jsonString = preg_replace('/^```json\s*|\s*```$/', '', trim($jsonString));
+
+            $result = json_decode($jsonString, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('Gemini API: Failed to parse JSON response (Image Analysis)', [
+                    'error' => json_last_error_msg(),
+                    'raw' => $jsonString,
+                ]);
+
+                return null;
+            }
+
+            // Log the analysis result
+            Log::info('Gemini Image Analysis Complete', [
+                'is_valid' => $result['is_valid'] ?? false,
+                'accident_type' => $result['accident_type'] ?? null,
+                'confidence' => $result['confidence'] ?? null,
+            ]);
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('GeminiService Exception (Image Analysis)', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return null;
+        }
+    }
 }

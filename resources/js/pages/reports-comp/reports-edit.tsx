@@ -37,7 +37,7 @@ type EditReportForm = {
     transcript: string;
     latitute: string;
     longtitude: string;
-    is_acknowledge: boolean;
+    status: string;
 };
 
 function EditReport({ report, reportTypes, children }: EditReportProps) {
@@ -48,7 +48,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
             transcript: report.transcript || '',
             latitute: report.latitute,
             longtitude: report.longtitude,
-            is_acknowledge: report.is_acknowledge,
+            status: report.status || 'Pending',
         });
 
     const [coordinates, setCoordinates] = useState({
@@ -106,19 +106,26 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                     {report.report_type}
                                 </p>
                                 <div className="mt-1">
-                                    {!data.is_acknowledge ? (
+                                    {data.status === 'Pending' ? (
                                         <Badge
                                             variant="default"
-                                            className="text-sm"
+                                            className="bg-yellow-500 text-sm"
                                         >
                                             PENDING
+                                        </Badge>
+                                    ) : data.status === 'In Progress' ? (
+                                        <Badge
+                                            variant="default"
+                                            className="bg-blue-500 text-sm"
+                                        >
+                                            IN PROGRESS
                                         </Badge>
                                     ) : (
                                         <Badge
                                             variant="secondary"
-                                            className="text-sm"
+                                            className="bg-green-500 text-sm text-white"
                                         >
-                                            ACKNOWLEDGED
+                                            RESOLVED
                                         </Badge>
                                     )}
                                 </div>
@@ -288,29 +295,21 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                             <div className="flex flex-col gap-2">
                                 <div className="grid">
                                     <p className="text-sm font-medium text-[var(--gray)]">
-                                        Acknowledgment Status
+                                        Status
                                     </p>
                                 </div>
                                 <div className="flex w-auto flex-row gap-4">
                                     <div className="grid flex-2 gap-4">
                                         <div className="relative">
                                             <Select
-                                                value={
-                                                    data.is_acknowledge
-                                                        ? 'acknowledged'
-                                                        : 'pending'
-                                                }
+                                                value={data.status}
                                                 onValueChange={(value) =>
-                                                    setData(
-                                                        'is_acknowledge',
-                                                        value ===
-                                                            'acknowledged',
-                                                    )
+                                                    setData('status', value)
                                                 }
                                             >
                                                 <SelectTrigger
                                                     className={
-                                                        errors.is_acknowledge
+                                                        errors.status
                                                             ? 'border-red-500 focus:ring-red-500'
                                                             : ''
                                                     }
@@ -318,17 +317,27 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="pending">
-                                                        Pending
-                                                    </SelectItem>
-                                                    <SelectItem value="acknowledged">
-                                                        Acknowledged
+                                                    {/* Only show Pending if current status is Pending */}
+                                                    {report.status === 'Pending' && (
+                                                        <SelectItem value="Pending">
+                                                            Pending
+                                                        </SelectItem>
+                                                    )}
+                                                    {/* Show In Progress if current status is Pending or In Progress */}
+                                                    {(report.status === 'Pending' || report.status === 'In Progress') && (
+                                                        <SelectItem value="In Progress">
+                                                            In Progress
+                                                        </SelectItem>
+                                                    )}
+                                                    {/* Resolved is always available */}
+                                                    <SelectItem value="Resolved">
+                                                        Resolved
                                                     </SelectItem>
                                                 </SelectContent>
                                             </Select>
-                                            {errors.is_acknowledge && (
+                                            {errors.status && (
                                                 <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                    {errors.is_acknowledge}
+                                                    {errors.status}
                                                 </span>
                                             )}
                                         </div>

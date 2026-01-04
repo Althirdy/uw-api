@@ -1,11 +1,3 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AppLayout from '@/layouts/app-layout';
-import { reports as reportRoutes } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
-import { List, Table, Wifi, WifiOff } from 'lucide-react';
-import { useState } from 'react';
-import { useAccidentRealtime } from '@/hooks/use-accident-realtime';
 import { Badge } from '@/components/ui/badge';
 import {
     Pagination,
@@ -15,141 +7,157 @@ import {
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
-} from "@/components/ui/pagination";
-
-import { reports_T, ReportsProps } from '@/types/report-types';
+} from '@/components/ui/pagination';
+import { useAccidentRealtime } from '@/hooks/use-accident-realtime';
+import AppLayout from '@/layouts/app-layout';
+import { reports as reportRoutes } from '@/routes';
+import { BreadcrumbItem } from '@/types';
+import { ReportsProps, reports_T } from '@/types/report-types';
+import { Head } from '@inertiajs/react';
+import { Wifi, WifiOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import ReportsCard from './reports-comp/reports-card';
-import OngoingReport from './reports-comp/reports-ongoing';
 import ReportActionTab from './reports-comp/reports-tab';
-import ReportsTable from './reports-comp/reports-table';
 
-const Reports = ({ reports, reportTypes, statusOptions }: ReportsProps) => {
+const Reports = ({ reports, reportTypes }: ReportsProps) => {
     const [filteredReports, setFilteredReports] = useState<reports_T[]>(
         reports.data,
     );
-    console.log(filteredReports)
+
+    useEffect(() => {
+        setFilteredReports(reports.data);
+    }, [reports.data]);
 
     // Real-time connection
     const { isConnected } = useAccidentRealtime();
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Reports Page',
+            title: 'Incident Monitoring',
             href: reportRoutes().url,
         },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Reports Page" />
-            <div className="space-y-4 p-4">
-                {/* Real-time Connection Status */}
-                <div className="flex items-center justify-end">
-                    <Badge 
-                        variant={isConnected ? 'default' : 'secondary'} 
-                        className="gap-1"
-                    >
-                        {isConnected ? (
-                            <>
-                                <Wifi className="h-3 w-3" />
-                                Live Updates Active
-                            </>
-                        ) : (
-                            <>
-                                <WifiOff className="h-3 w-3" />
-                                Connecting...
-                            </>
-                        )}
-                    </Badge>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-md font-semibold">
-                            Ongoing Reports
+            <Head title="Incident Monitoring" />
+            <div className="mx-auto max-w-[1600px] space-y-8 p-6">
+                {/* Header Section */}
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            Incident Monitoring
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Active ongoing incidents requiring immediate
-                            attention.
+                            Real-time overview of detected accidents and citizen
+                            reports.
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {reports.data
-                            .filter((report) => !report.is_acknowledge)
-                            .map((report) => (
-                                <OngoingReport
-                                    key={report.id}
-                                    report={report}
-                                />
-                            ))}
+                    <div className="flex items-center gap-2">
+                        <Badge
+                            variant={isConnected ? 'outline' : 'destructive'}
+                            className={`gap-1.5 px-3 py-1 ${isConnected ? 'border-green-500 text-green-600 bg-green-50 dark:bg-green-950/20' : ''}`}
+                        >
+                            {isConnected ? (
+                                <>
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
+                                    </span>
+                                    <span className="font-medium">
+                                        System Online
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <WifiOff className="h-3.5 w-3.5" />
+                                    <span>Reconnecting...</span>
+                                </>
+                            )}
+                        </Badge>
                     </div>
                 </div>
 
-                <Tabs defaultValue="card" className="w-full space-y-2">
-                    <div className="flex flex-row gap-4">
+                {/* Main Content */}
+                <div className="space-y-6">
+                    <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                        <h2 className="text-lg font-semibold text-foreground">
+                            All Reports
+                        </h2>
                         <ReportActionTab
                             reports={reports}
                             reportTypes={reportTypes}
-                            statusOptions={statusOptions}
                             setFilteredReports={setFilteredReports}
                         />
-                        <TabsList className="h-12 w-24">
-                            <TabsTrigger
-                                value="card"
-                                className="cursor-pointer"
-                            >
-                                <Table className="h-4 w-4" />
-                            </TabsTrigger>
-                            <TabsTrigger
-                                value="table"
-                                className="cursor-pointer"
-                            >
-                                <List className="h-8 w-8" />
-                            </TabsTrigger>
-                        </TabsList>
                     </div>
 
-                    <TabsContent value="card" className="w-full space-y-6">
-                        <ReportsCard
-                            reports={filteredReports}
-                            reportTypes={reportTypes}
-                        />
-                        
-                        {/* Pagination */}
-                        {reports.links && (
-                            <Pagination className='flex justify-end'>
+                    <ReportsCard
+                        reports={filteredReports}
+                        reportTypes={reportTypes}
+                    />
+
+                    {/* Pagination */}
+                    {reports.links && (
+                        <div className="flex justify-center pt-4">
+                            <Pagination>
                                 <PaginationContent>
                                     <PaginationItem>
-                                        <PaginationPrevious href={reports.prev_page_url || '#'} />
+                                        <PaginationPrevious
+                                            href={reports.prev_page_url || '#'}
+                                            className={
+                                                !reports.prev_page_url
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
                                     </PaginationItem>
-                                    {
-                                        reports.links.map((link: { url: string | null; active: boolean; label: string }, index: number) => {
-                                            if (link.url !== null && index !== 0 && index !== reports.links.length - 1) {
+                                    {reports.links.map(
+                                        (
+                                            link: {
+                                                url: string | null;
+                                                active: boolean;
+                                                label: string;
+                                            },
+                                            index: number,
+                                        ) => {
+                                            if (
+                                                link.url !== null &&
+                                                index !== 0 &&
+                                                index !==
+                                                    reports.links.length - 1
+                                            ) {
                                                 return (
                                                     <PaginationItem key={index}>
-                                                        <PaginationLink isActive={link.active} href={link.url || '#'}>{link.label}</PaginationLink>
+                                                        <PaginationLink
+                                                            isActive={link.active}
+                                                            href={link.url || '#'}
+                                                        >
+                                                            {link.label}
+                                                        </PaginationLink>
                                                     </PaginationItem>
-                                                )
+                                                );
                                             }
-                                        })
-                                    }
+                                            return null;
+                                        },
+                                    )}
                                     <PaginationItem>
                                         <PaginationEllipsis />
                                     </PaginationItem>
                                     <PaginationItem>
-                                        <PaginationNext href={reports.next_page_url || '#'} />
+                                        <PaginationNext
+                                            href={reports.next_page_url || '#'}
+                                            className={
+                                                !reports.next_page_url
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>
-                        )}
-                    </TabsContent>
-                    <TabsContent value="table" className="w-full">
-                        <ReportsTable
-                            reports={filteredReports}
-                            reportTypes={reportTypes}
-                        />
-                    </TabsContent>
-                </Tabs>
+                        </div>
+                    )}
+                </div>
             </div>
         </AppLayout>
     );

@@ -11,9 +11,16 @@ class PublicPost extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'report_id',
+        'public_id',
+        'postable_id',
+        'postable_type',
+        'title',
+        'content',
+        'image_path',
+        'category',
         'published_by',
         'published_at',
+        'status',
     ];
 
     protected $casts = [
@@ -24,11 +31,37 @@ class PublicPost extends Model
     ];
 
     /**
-     * Get the report associated with this public post.
+     * Boot the model.
      */
-    public function report(): BelongsTo
+    protected static function boot()
     {
-        return $this->belongsTo(Report::class);
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->public_id)) {
+                $model->public_id = self::generateUniquePublicId();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique 6-character public ID.
+     */
+    protected static function generateUniquePublicId(): string
+    {
+        do {
+            $publicId = strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
+        } while (self::where('public_id', $publicId)->exists());
+
+        return $publicId;
+    }
+
+    /**
+     * Get the parent postable model (Accident, Report, etc.).
+     */
+    public function postable(): \Illuminate\Database\Eloquent\Relations\MorphTo
+    {
+        return $this->morphTo();
     }
 
     /**

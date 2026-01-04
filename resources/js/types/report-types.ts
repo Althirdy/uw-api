@@ -8,6 +8,7 @@ export type reports_T = {
     description: string;
     latitute: string;
     longtitude: string;
+    location_name?: string | null;
     is_acknowledge: boolean;
     acknowledge_by?: number;
     user?: users_T;
@@ -32,5 +33,4 @@ export type ReportsProps = {
         acknowledged?: string;
     };
     reportTypes: string[];
-    statusOptions: { value: string; label: string }[];
 };

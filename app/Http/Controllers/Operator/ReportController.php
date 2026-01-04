@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Accident;
+use App\Models\Locations;
+use App\Models\PublicPost;
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -35,16 +37,50 @@ class ReportController extends Controller
 
         // Filter by status
         if ($request->has('acknowledged') && $request->acknowledged !== '') {
-            $statusFilter = $request->acknowledged === 'true' ? 'resolved' : 'pending';
+            $statusFilter = $request->acknowledged === 'true' ? 'Resolved' : 'Pending';
             $query->where('status', $statusFilter);
         }
 
-        $accidents = $query->orderBy('created_at', 'desc')
+        // Order by status (Pending first, then In Progress, then Resolved last) and then by created_at
+        $accidents = $query
+            ->orderByRaw("CASE 
+                WHEN status = 'Pending' THEN 1 
+                WHEN status = 'In Progress' THEN 2 
+                WHEN status = 'Resolved' THEN 3 
+                ELSE 4 
+            END")
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
+        // Fetch all locations for nearest neighbor search
+        $locations = Locations::all(['location_name', 'latitude', 'longitude']);
+
         // Transform accidents data to match reports structure
-        $accidents->getCollection()->transform(function ($accident) {
+        $accidents->getCollection()->transform(function ($accident) use ($locations) {
+            // Find nearest location
+            $nearestLocationName = null;
+            $shortestDistance = PHP_FLOAT_MAX;
+
+            foreach ($locations as $location) {
+                $distance = $this->calculateDistance(
+                    $accident->latitude,
+                    $accident->longitude,
+                    $location->latitude,
+                    $location->longitude
+                );
+
+                if ($distance < $shortestDistance) {
+                    $shortestDistance = $distance;
+                    $nearestLocationName = $location->location_name;
+                }
+            }
+
+            // Only assign location name if within a reasonable distance (e.g., 500 meters)
+            // If distance is too far, we might just keep it as coordinates or null.
+            // For now, let's just use the nearest one if it's within 1km (1000m)
+            $displayLocation = ($shortestDistance <= 1000) ? $nearestLocationName : null;
+
             return [
                 'id' => $accident->id,
                 'report_type' => ucfirst($accident->accident_type),
@@ -52,7 +88,8 @@ class ReportController extends Controller
                 'description' => $accident->description,
                 'latitute' => $accident->latitude,
                 'longtitude' => $accident->longitude,
-                'is_acknowledge' => $accident->status !== 'pending',
+                'location_name' => $displayLocation, // Added field
+                'is_acknowledge' => strtolower($accident->status) !== 'pending',
                 'status' => ucfirst($accident->status),
                 'created_at' => $accident->created_at,
                 'updated_at' => $accident->updated_at,
@@ -70,6 +107,31 @@ class ReportController extends Controller
             'reportTypes' => ['Accident', 'Fire', 'Flood'], // Accident types
             'statusOptions' => ['Pending', 'Ongoing', 'Resolved', 'Archived'],
         ]);
+    }
+
+    /**
+     * Calculate distance between two coordinates using Haversine formula.
+     * Returns distance in meters.
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // Earth's radius in meters
+
+        $lat1 = deg2rad((float) $lat1);
+        $lon1 = deg2rad((float) $lon1);
+        $lat2 = deg2rad((float) $lat2);
+        $lon2 = deg2rad((float) $lon2);
+
+        $dLat = $lat2 - $lat1;
+        $dLon = $lon2 - $lon1;
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos($lat1) * cos($lat2) *
+            sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 
     public function create(): Response
@@ -163,7 +225,7 @@ class ReportController extends Controller
                 'description' => 'required|string|max:1000',
                 'latitute' => 'required|numeric|between:-90,90',
                 'longtitude' => 'required|numeric|between:-180,180',
-                'status' => 'nullable|string|in:pending,ongoing,resolved,archived',
+                'status' => 'nullable|string|in:Pending,In Progress,Resolved',
             ]);
 
             DB::beginTransaction();
@@ -225,16 +287,44 @@ class ReportController extends Controller
         try {
             $accident = Accident::findOrFail($id);
 
-            // Check if already acknowledged (not pending)
-            if ($accident->status !== 'pending') {
+            \Log::info('Acknowledging accident', [
+                'id' => $id,
+                'current_status' => $accident->status,
+            ]);
+
+            // Check if already acknowledged (not Pending)
+            if ($accident->status !== 'Pending') {
+                \Log::warning('Accident already acknowledged', ['status' => $accident->status]);
+
                 return back()->with('error', 'Report is already acknowledged.');
             }
 
             DB::beginTransaction();
             try {
-                // Update status to ongoing when acknowledged
+                // Update status to In Progress when acknowledged
                 $accident->update([
-                    'status' => 'ongoing',
+                    'status' => 'In Progress',
+                ]);
+
+                \Log::info('Accident status updated', ['new_status' => $accident->fresh()->status]);
+
+                // Create a PublicPost for this accident
+                $imagePath = null;
+                $firstMedia = $accident->media()->first();
+                if ($firstMedia) {
+                    $imagePath = $firstMedia->original_path;
+                }
+
+                PublicPost::create([
+                    'postable_id' => $accident->id,
+                    'postable_type' => Accident::class,
+                    'title' => 'PAUNAWA: '.$accident->title,
+                    'content' => $accident->description,
+                    'image_path' => $imagePath,
+                    'category' => 'emergency',
+                    'status' => 'published',
+                    'published_by' => auth()->id(),
+                    'published_at' => now(),
                 ]);
 
                 DB::commit();
@@ -254,20 +344,38 @@ class ReportController extends Controller
         }
     }
 
-    public function resolve(Report $report)
+    public function resolve($id)
     {
         try {
-            if ($report->status === 'Resolved') {
+            $accident = Accident::findOrFail($id);
+
+            if ($accident->status === 'Resolved') {
                 return back()->with('error', 'Report is already resolved.');
             }
 
-            if ($report->status !== 'Ongoing') {
+            if ($accident->status !== 'In Progress') {
                 return back()->with('error', 'Only ongoing reports can be resolved.');
             }
 
             DB::beginTransaction();
             try {
-                $report->resolve();
+                $accident->update([
+                    'status' => 'Resolved',
+                ]);
+
+                // Update the associated PublicPost if it exists
+                $publicPost = PublicPost::where('postable_id', $accident->id)
+                    ->where('postable_type', Accident::class)
+                    ->first();
+
+                if ($publicPost) {
+                    $publicPost->update([
+                        'title' => '[RESOLVED] '.$publicPost->title,
+                        // Optional: Unpublish it or keep it visible
+                        // 'status' => 'archived',
+                    ]);
+                }
+
                 DB::commit();
 
                 return redirect()->route('reports')

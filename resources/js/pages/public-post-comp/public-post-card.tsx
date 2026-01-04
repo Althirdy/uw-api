@@ -12,12 +12,22 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Archive, ExternalLink as Open, SquarePen } from 'lucide-react';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
+import { Archive, ExternalLink as Open, SquarePen, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { PublicPost_T } from '@/types/public-post-types';
 import ArchivePublicPost from './public-post-archive';
 import EditPublicPost from './public-post-edit';
 import ViewPublicPostDetails from './public-post-view';
+import ResolvePublicPost from './public-post-resolve';
 
 function getStatusInfo(publishedAt: string | null) {
     if (!publishedAt) {
@@ -37,10 +47,25 @@ function getStatusInfo(publishedAt: string | null) {
     return { label: 'Published', className: 'bg-green-100 text-green-800' };
 }
 
+const POSTS_PER_PAGE = 8;
+
 const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    
+    const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+    const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+    const paginatedPosts = posts.slice(startIndex, startIndex + POSTS_PER_PAGE);
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
     return (
-        <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-            {posts.length === 0 && (
+        <div className="flex flex-col gap-4">
+            <div className="grid auto-rows-min gap-4 md:grid-cols-4">
+                {paginatedPosts.length === 0 && (
                 <Card className="col-span-full rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border">
                     <CardContent className="flex items-center justify-center py-12">
                         <p className="text-muted-foreground">
@@ -50,58 +75,74 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                 </Card>
             )}
 
-            {posts.map((post) => {
+            {paginatedPosts.map((post) => {
                 const statusInfo = getStatusInfo(post.published_at);
 
                 return (
                     <Card
                         key={post.id}
-                        className="relative overflow-hidden rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border"
+                        className="relative flex h-full flex-col overflow-hidden rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border"
                     >
-                        <CardHeader>
-                            <CardTitle> Post ID: #{post.id}</CardTitle>
-                            <CardDescription>
-                                <span
-                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}
-                                >
-                                    {statusInfo.label}
-                                </span>
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium">
-                                    Report Content
-                                </p>
-                                <div className="rounded-lg border bg-muted/30 p-3">
-                                    <span
-                                        className={`mb-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                            post.report?.report_type === 'CCTV'
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : post.report?.report_type ===
-                                                    'Citizen Concern'
-                                                  ? 'bg-purple-100 text-purple-800'
-                                                  : post.report?.report_type ===
-                                                      'Emergency'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-gray-100 text-gray-800'
-                                        }`}
-                                    >
-                                        {post.report?.report_type}
-                                    </span>
-                                    <p className="mb-2 text-sm text-muted-foreground">
-                                        {post.report?.transcript ||
-                                            'No transcript available'}
-                                    </p>
-                                    {post.report?.description && (
-                                        <p className="text-sm text-muted-foreground">
-                                            {post.report.description}
-                                        </p>
-                                    )}
+                        <CardHeader className="pb-2">
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    <CardTitle className="line-clamp-1 text-base">
+                                        {post.title || `Post #${post.id}`}
+                                    </CardTitle>
+                                    <CardDescription className="mt-1 flex flex-wrap gap-1">
+                                        <span
+                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}
+                                        >
+                                            {statusInfo.label}
+                                        </span>
+                                        {post.category && (
+                                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                                {post.category}
+                                            </span>
+                                        )}
+                                        {post.postable?.status && (
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                                    post.postable.status === 'resolved'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : post.postable.status === 'ongoing'
+                                                          ? 'bg-yellow-100 text-yellow-800'
+                                                          : 'bg-gray-100 text-gray-800'
+                                                }`}
+                                            >
+                                                {post.postable.status.toUpperCase()}
+                                            </span>
+                                        )}
+                                    </CardDescription>
                                 </div>
                             </div>
+                        </CardHeader>
+                        {post.image_path && (
+                            <div className="px-6">
+                                <img
+                                    src={post.image_path}
+                                    alt={post.title}
+                                    className="h-36 w-full rounded-lg object-cover"
+                                />
+                            </div>
+                        )}
+                        <CardContent className="flex-1 pt-3">
+                            <div className="flex flex-col gap-2">
+                                <p className="line-clamp-3 text-sm text-muted-foreground">
+                                    {post.content || 'No content available'}
+                                </p>
+                                {post.published_at && (
+                                    <p className="mt-auto text-xs text-muted-foreground">
+                                        {new Date(post.published_at).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                        })}
+                                    </p>
+                                )}
+                            </div>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="mt-auto border-t pt-3">
                             <div className="flex w-full justify-end gap-2">
                                 <Tooltip>
                                     <ViewPublicPostDetails post={post}>
@@ -132,9 +173,28 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                                         </TooltipTrigger>
                                     </EditPublicPost>
                                     <TooltipContent>
-                                        <p>Edit User</p>
+                                        <p>Edit Post</p>
                                     </TooltipContent>
                                 </Tooltip>
+
+                                {post.postable?.status === 'ongoing' && (
+                                    <Tooltip>
+                                        <ResolvePublicPost post={post}>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="cursor-pointer border-green-600 text-green-600 hover:bg-green-50"
+                                                >
+                                                    <CheckCircle2 className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                        </ResolvePublicPost>
+                                        <TooltipContent>
+                                            <p>Resolve Accident</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                )}
 
                                 <Tooltip>
                                     <ArchivePublicPost post={post}>
@@ -149,7 +209,7 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                                         </TooltipTrigger>
                                     </ArchivePublicPost>
                                     <TooltipContent>
-                                        <p>Archive User</p>
+                                        <p>Archive Post</p>
                                     </TooltipContent>
                                 </Tooltip>
                             </div>
@@ -157,6 +217,43 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                     </Card>
                 );
             })}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t pt-4">
+                    <p className="text-sm text-muted-foreground">
+                        Showing {startIndex + 1} to {Math.min(startIndex + POSTS_PER_PAGE, posts.length)} of {posts.length} posts
+                    </p>
+                    <Pagination>
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious 
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                />
+                            </PaginationItem>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <PaginationItem key={page}>
+                                    <PaginationLink
+                                        onClick={() => handlePageChange(page)}
+                                        isActive={currentPage === page}
+                                        className="cursor-pointer"
+                                    >
+                                        {page}
+                                    </PaginationLink>
+                                </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                                <PaginationNext 
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                </div>
+            )}
         </div>
     );
 };

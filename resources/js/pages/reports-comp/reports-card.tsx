@@ -1,3 +1,4 @@
+import { ImagePreview } from '@/components/image-preview';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +14,17 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Archive, Camera, ExternalLink as Open, SquarePen } from 'lucide-react';
+import { formatRelativeTime } from '@/lib/utils';
+import { router } from '@inertiajs/react';
+import {
+    Archive,
+    Camera,
+    Check,
+    Clock,
+    ExternalLink as Open,
+    LocateFixed,
+    SquarePen,
+} from 'lucide-react';
 
 import { reports_T } from '@/types/report-types';
 import ArchiveReport from './reports-archive';
@@ -26,6 +37,46 @@ type ReportsCardProps = {
 };
 
 const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
+    const handleAcknowledge = (id: number) => {
+        console.log('Acknowledging report:', id);
+        router.patch(
+            `/report/${id}/acknowledge`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    console.log('Successfully acknowledged');
+                },
+                onError: (errors) => {
+                    console.error('Failed to acknowledge:', errors);
+                    // You might want to show a toast here
+                    alert('Failed to acknowledge report. Check console for details.');
+                },
+                onFinish: () => {
+                    console.log('Request finished');
+                }
+            },
+        );
+    };
+
+    const handleResolve = (id: number) => {
+        console.log('Resolving report:', id);
+        router.patch(
+            `/report/${id}/resolve`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    console.log('Successfully resolved');
+                },
+                onError: (errors) => {
+                    console.error('Failed to resolve:', errors);
+                    alert('Failed to resolve report. Check console for details.');
+                },
+            },
+        );
+    };
+
     return (
         <div className="grid auto-rows-min grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {reports.length === 0 && (
@@ -49,132 +100,211 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
                 return (
                     <Card
                         key={report.id}
-                        className="relative flex flex-col overflow-hidden rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border"
+                        className="relative flex flex-col overflow-hidden rounded-[var(--radius)] border border-sidebar-border/70 shadow-sm transition-shadow hover:shadow-md dark:border-sidebar-border"
                     >
-                        {/* Accident Image - Full width at top */}
+                        {/* Accident Image - Reduced height */}
                         {firstImage ? (
-                            <div className="relative h-48 w-full overflow-hidden bg-muted">
-                                <img
-                                    src={firstImage}
-                                    alt="Accident detection"
-                                    className="h-full w-full object-cover"
-                                />
-                                <div className="absolute top-2 right-2">
-                                    <Badge
-                                        variant="destructive"
-                                        className="text-xs"
-                                    >
-                                        <Camera className="mr-1 h-3 w-3" />
-                                        YOLO Detection
-                                    </Badge>
+                            <ImagePreview
+                                src={firstImage}
+                                alt="Accident detection"
+                            >
+                                <div className="group relative h-36 w-full overflow-hidden bg-muted">
+                                    <img
+                                        src={firstImage}
+                                        alt="Accident detection"
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                    <div className="absolute top-2 right-2">
+                                        <Badge
+                                            variant="destructive"
+                                            className="px-1.5 py-0 text-[10px] font-semibold shadow-sm"
+                                        >
+                                            <Camera className="mr-1 h-2.5 w-2.5" />
+                                            AI DETECTED
+                                        </Badge>
+                                    </div>
                                 </div>
-                            </div>
+                            </ImagePreview>
                         ) : (
-                            <div className="relative flex h-48 w-full items-center justify-center bg-muted">
-                                <Camera className="h-12 w-12 text-muted-foreground/20" />
+                            <div className="relative flex h-36 w-full items-center justify-center bg-muted">
+                                <Camera className="h-10 w-10 text-muted-foreground/20" />
                             </div>
                         )}
 
-                        <CardHeader>
-                            <CardTitle>
-                                {' '}
-                                <span>Report ID: #{report.id}</span>
-                            </CardTitle>
-                            <CardDescription>
-                                <div className="flex gap-2">
-                                    <span
-                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                            report.report_type === 'CCTV'
-                                                ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400'
-                                                : report.report_type ===
-                                                    'Citizen Concern'
-                                                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-                                                  : report.report_type ===
-                                                      'Emergency'
-                                                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                                                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                                        }`}
-                                    >
-                                        {report.report_type}
-                                    </span>
-                                    <span
-                                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                            report.status === 'Ongoing'
-                                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                                : report.status === 'Pending'
-                                                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                                                  : report.status === 'Resolved'
-                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                                        }`}
-                                    >
-                                        {report.status}
-                                    </span>
-                                </div>
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1">
-                            <div className="flex flex-col">
-                                <p className="text-md">Incident Description</p>
-                                <p className="text-md text-muted-foreground">
-                                    {report.description}
-                                </p>
-                            </div>
-                        </CardContent>
-                        <CardFooter>
-                            <div className="flex w-full justify-end gap-2">
-                                <Tooltip>
-                                    <ViewReportDetails report={report}>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="cursor-pointer"
-                                            >
-                                                <Open className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                    </ViewReportDetails>
-                                    <TooltipContent>
-                                        <p>View Details</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <EditReport
-                                        report={report}
-                                        reportTypes={reportTypes}
-                                    >
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="cursor-pointer"
-                                            >
-                                                <SquarePen className="h-4 w-4" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                    </EditReport>
-                                    <TooltipContent>
-                                        <p>Edit User</p>
-                                    </TooltipContent>
-                                </Tooltip>
+                                                <CardHeader className="p-3 pb-1">
 
-                                <Tooltip>
-                                    <ArchiveReport report={report}>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="cursor-pointer"
-                                            >
-                                                <Archive className="h-4 w-4 text-[var(--destructive)]" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                    </ArchiveReport>
-                                    <TooltipContent>
-                                        <p>Archive User</p>
-                                    </TooltipContent>
-                                </Tooltip>
+                                                    <div className="flex items-start justify-between gap-2">
+
+                                                        <div className="space-y-1">
+
+                                                            <CardTitle className="line-clamp-1 text-base font-extrabold leading-tight tracking-tight text-foreground">
+
+                                                                {report.transcript || `${report.report_type} Incident`}
+
+                                                            </CardTitle>
+
+                                                            <div className="flex items-center gap-2">
+
+                                                                <Badge variant="outline" className="h-4 px-1 text-[9px] font-medium text-muted-foreground">
+
+                                                                    #{report.id}
+
+                                                                </Badge>
+
+                                                                <Badge 
+
+                                                                    variant={report.status === 'Resolved' ? 'default' : 'secondary'} 
+
+                                                                    className="h-4 px-1.5 text-[9px] capitalize"
+
+                                                                >
+
+                                                                    {report.status}
+
+                                                                </Badge>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </CardHeader>
+
+                        
+
+                                                <CardContent className="flex-1 p-3 pt-1 pb-1">
+
+                                                    <div className="flex flex-col gap-2">
+
+                                                        <p className="line-clamp-2 text-xs font-medium leading-relaxed text-muted-foreground/90">
+
+                                                            {report.description}
+
+                                                        </p>
+
+                        
+
+                                                        <div className="flex flex-col gap-1 rounded-md bg-muted/50 p-2 text-xs">
+
+                                                            <div className="flex items-center gap-2 text-foreground/80">
+
+                                                                <LocateFixed className="h-3.5 w-3.5 shrink-0 text-primary" />
+
+                                                                <span className="truncate font-semibold">
+
+                                                                    {report.location_name || `${Number(report.latitute).toFixed(4)}, ${Number(report.longtitude).toFixed(4)}`}
+
+                                                                </span>
+
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2 text-muted-foreground">
+
+                                                                <Clock className="h-3.5 w-3.5 shrink-0" />
+
+                                                                <span>
+
+                                                                    {formatRelativeTime(report.created_at)}
+
+                                                                </span>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </CardContent>
+
+                        <CardFooter className="flex flex-col gap-2 p-3 pt-1 pb-3">
+                            {!report.is_acknowledge ? (
+                                <Button
+                                    size="sm"
+                                    className="h-8 w-full text-xs font-bold"
+                                    onClick={() => handleAcknowledge(report.id)}
+                                >
+                                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                                    Acknowledge
+                                </Button>
+                            ) : report.status === 'Ongoing' ? (
+                                <Button
+                                    variant="default" // or a specific variant like 'destructive' if appropriate
+                                    size="sm"
+                                    className="h-8 w-full text-xs font-bold bg-green-600 hover:bg-green-700"
+                                    onClick={() => handleResolve(report.id)}
+                                >
+                                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                                    Mark as Resolved
+                                </Button>
+                            ) : report.status === 'Resolved' ? (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled
+                                    className="h-8 w-full cursor-not-allowed text-xs opacity-70"
+                                >
+                                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                                    Resolved
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    disabled
+                                    className="h-8 w-full cursor-not-allowed text-xs opacity-70"
+                                >
+                                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                                    {report.status}
+                                </Button>
+                            )}
+
+                            <div className="flex w-full items-center justify-between gap-1.5">
+                                <ViewReportDetails report={report}>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 flex-1 text-xs"
+                                    >
+                                        <Open className="mr-1.5 h-3.5 w-3.5" />
+                                        Details
+                                    </Button>
+                                </ViewReportDetails>
+
+                                <div className="flex gap-1">
+                                    <Tooltip>
+                                        <EditReport
+                                            report={report}
+                                            reportTypes={reportTypes}
+                                        >
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8"
+                                                >
+                                                    <SquarePen className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                        </EditReport>
+                                        <TooltipContent>Edit</TooltipContent>
+                                    </Tooltip>
+
+                                    <Tooltip>
+                                        <ArchiveReport report={report}>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-destructive hover:text-destructive"
+                                                >
+                                                    <Archive className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                        </ArchiveReport>
+                                        <TooltipContent>Archive</TooltipContent>
+                                    </Tooltip>
+                                </div>
                             </div>
                         </CardFooter>
                     </Card>
@@ -183,5 +313,6 @@ const ReportsCard = ({ reports, reportTypes }: ReportsCardProps) => {
         </div>
     );
 };
+            
 
 export default ReportsCard;

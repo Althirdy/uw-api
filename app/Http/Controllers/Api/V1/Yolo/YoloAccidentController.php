@@ -2,132 +2,97 @@
 
 namespace App\Http\Controllers\Api\V1\Yolo;
 
-use App\Events\AccidentDetected;
 use App\Http\Controllers\Api\BaseApiController;
-use App\Models\Accident;
-use App\Models\IncidentMedia;
-use App\Services\FileUploadService;
+use App\Services\YoloAccidentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
+/**
+ * YoloAccidentController
+ *
+ * Handles HTTP requests for CCTV-based accident detection via YOLO integration.
+ * Business logic is delegated to YoloAccidentService for separation of concerns.
+ *
+ * Expected POST Parameters from Python YOLO script:
+ * - snapshot (file, required): Image file captured from CCTV
+ * - device_id (integer, optional): ID of the CCTV device from cctv_devices table
+ *   - If not provided, uses TEST_DEVICE_ID for webcam testing
+ * - detected_at (timestamp, optional): When the detection occurred
+ *
+ * Architecture:
+ * Controller (thin) -> Service (business logic) -> [GeminiService, FileUploadService, Models]
+ *
+ * Flow:
+ * 1. Validate HTTP request
+ * 2. Delegate to YoloAccidentService
+ * 3. Format and return HTTP response
+ */
 class YoloAccidentController extends BaseApiController
 {
-    protected $fileUploadService;
+    protected $yoloService;
 
-    public function __construct(FileUploadService $fileUploadService)
+    // Hardcoded test device ID for webcam testing (change this to your actual test device ID)
+    const TEST_DEVICE_ID = 1; // TODO: Update this after creating test CCTV device
+
+    public function __construct(YoloAccidentService $yoloService)
     {
-        $this->fileUploadService = $fileUploadService;
+        $this->yoloService = $yoloService;
     }
 
-    private function ValidateSnapShot($file)
-    {
-        // Add validation logic here if needed
-        return true;
-    }
-
-    private function ProcessImage($file, Request $request)
-    {
-        try {
-            DB::beginTransaction();
-
-            // 1. Get dynamic data from request (sent by YOLO script)
-            $accidentType = $request->input('accident_type', 'accident');
-            $severity = $request->input('severity', 'Medium'); // Default: Medium (matches ENUM)
-            $title = $request->input('title', 'YOLO Detected Incident');
-            $description = $request->input('description', 'Incident automatically detected by YOLO AI system');
-            $latitude = $request->input('latitude', '14.123456');
-            $longitude = $request->input('longitude', '121.123456');
-
-            // 2. Upload image to storage and get public URL
-            $uploadResult = $this->fileUploadService->uploadSingle($file, 'yolo');
-            $publicUrl = $uploadResult['public_url'] ?? null;
-            $storagePath = $uploadResult['storage_path'] ?? null;
-
-            // 3. Create accident record with dynamic data from YOLO
-            $accident = Accident::create([
-                'title' => $title,
-                'description' => $description,
-                'latitude' => $latitude,
-                'longitude' => $longitude,
-                'occurred_at' => now(),
-                'accident_type' => $accidentType,
-                'status' => 'pending',
-                'severity' => $severity,
-            ]);
-
-            // 4. Create incident media record and link to accident
-            $incidentMedia = IncidentMedia::create([
-                'source_type' => Accident::class,
-                'source_id' => $accident->id,
-                'source_category' => 'cctv_detection', // Use existing enum value
-                'media_type' => 'image',
-                'original_path' => $publicUrl,
-                'blurred_path' => null,
-                'public_id' => $storagePath, // Use storage_path like in ManualConcernController
-                'original_filename' => $uploadResult['original_filename'] ?? $file->getClientOriginalName(),
-                'file_size' => $uploadResult['file_size'] ?? $file->getSize(),
-                'mime_type' => $uploadResult['mime_type'] ?? $file->getMimeType(),
-                'detection_metadata' => [
-                    'detection_source' => 'yolo',
-                    'detection_type' => $accidentType,
-                    'severity' => $severity,
-                    'confidence' => null,
-                    'detected_objects' => null,
-                ],
-                'device_identifier' => 'yolo_camera_01', // You can make this dynamic later
-                'captured_at' => now(),
-            ]);
-
-            DB::commit();
-
-            // 5. Broadcast the event to all connected clients
-            broadcast(new AccidentDetected($accident));
-
-            Log::info('Accident detected and broadcasted', [
-                'accident_id' => $accident->id,
-                'type' => $accidentType,
-                'severity' => $severity,
-            ]);
-
-            return [
-                'success' => true,
-                'accident_id' => $accident->id,
-                'img' => $publicUrl,
-                'media_id' => $incidentMedia->id,
-                'title' => $accident->title,
-                'description' => $accident->description,
-                'latitude' => $accident->latitude,
-                'longitude' => $accident->longitude,
-                'occurred_at' => $accident->occurred_at,
-                'accident_type' => $accident->accident_type,
-            ];
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('YOLO Accident Processing Error: '.$e->getMessage());
-
-            throw $e;
-        }
-    }
-
+    /**
+     * Process snapshot from YOLO detection system.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function ProcessSnapShot(Request $request)
     {
         try {
-            if (! $request->hasFile('snapshot')) {
-                return $this->sendError('No snapshot file provided', null, 400);
+            // Validate request
+            $validator = Validator::make($request->all(), [
+                'snapshot' => 'required|file|image|max:10240', // Max 10MB
+                'device_id' => 'nullable|integer|exists:cctv_devices,id',
+                'detected_at' => 'nullable|date',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->sendError('Validation failed', $validator->errors(), 422);
             }
 
-            if (! $this->ValidateSnapShot($request->file('snapshot'))) {
-                return $this->sendError('Invalid snapshot', null, 400);
+            // Get parameters
+            $file = $request->file('snapshot');
+            $deviceId = $request->input('device_id', self::TEST_DEVICE_ID);
+            $detectedAt = $request->input('detected_at');
+
+            // Delegate to service for business logic
+            $result = $this->yoloService->processDetection($file, $deviceId, $detectedAt);
+
+            // Format response based on result
+            if ($result['false_alarm'] ?? false) {
+                return $this->sendResponse(
+                    $result,
+                    'Detection analyzed: False alarm (no emergency action needed)',
+                    200
+                );
             }
 
-            $result = $this->ProcessImage($request->file('snapshot'), $request);
-
-            return $this->sendResponse($result, 'Accident detected and saved successfully', 200);
+            return $this->sendResponse(
+                $result,
+                'Emergency verified and saved successfully',
+                201
+            );
 
         } catch (\Exception $e) {
-            return $this->sendError('Failed to process accident: '.$e->getMessage(), null, 500);
+            Log::error('YoloAccidentController: Exception caught', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->sendError(
+                'Failed to process detection: '.$e->getMessage(),
+                null,
+                500
+            );
         }
     }
 }

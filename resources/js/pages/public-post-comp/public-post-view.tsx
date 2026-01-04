@@ -105,30 +105,37 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex w-full flex-1 flex-col justify-start gap-4 overflow-y-auto px-6 py-4">
-                    {/* Report Preview */}
+                    {/* Post Preview Image */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md font-medium">Report Snapshot</p>
+                        <p className="text-md font-medium">Post Image</p>
                         <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                            <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                            {post.image_path ? (
+                                <img
+                                    src={post.image_path}
+                                    alt={post.title}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                            )}
                         </div>
                     </div>
 
-                    {/* Report Content */}
+                    {/* Post Content */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md font-medium">Report Content</p>
+                        <p className="text-md font-medium">Post Content</p>
                         <div className="rounded-lg border bg-muted/30 p-3">
-                            <p className="mb-2 text-sm font-medium">
-                                {post.report?.report_type}
-                            </p>
-                            <p className="mb-2 text-sm text-muted-foreground">
-                                {post.report?.transcript ||
-                                    'No transcript available'}
-                            </p>
-                            {post.report?.description && (
-                                <p className="text-sm text-muted-foreground">
-                                    {post.report.description}
+                            <div className="mb-2 flex items-center justify-between">
+                                <p className="text-sm font-bold uppercase tracking-wide">
+                                    {post.title}
                                 </p>
-                            )}
+                                <Badge variant="outline" className="uppercase">
+                                    {post.category}
+                                </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                {post.content}
+                            </p>
                         </div>
                     </div>
 
@@ -155,30 +162,18 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                         ])}
                     </div>
 
-                    {/* Original Report Details */}
-                    <div className="flex flex-col gap-2">
-                        <p className="text-md font-medium">
-                            Original Report Information
-                        </p>
-                        {renderDetailItems([
-                            {
-                                icon: User,
-                                text: `Reporter: ${post.report?.user?.name || 'Unknown'}`,
-                            },
-                            {
-                                icon: Mail,
-                                text: `Email: ${post.report?.user?.email || 'No email provided'}`,
-                            },
-                            {
-                                icon: LocateFixed,
-                                text: `Location: ${post.report?.latitute || 'N/A'}, ${post.report?.longtitude || 'N/A'}`,
-                            },
-                            {
-                                icon: TriangleAlert,
-                                text: `Report Type: ${post.report?.report_type || 'Unknown'}`,
-                            },
-                        ])}
-                    </div>
+                    {/* Original Source Details (if linked) */}
+                    {post.postable && (
+                        <div className="flex flex-col gap-2">
+                            <p className="text-md font-medium">
+                                Original Source Information
+                            </p>
+                            <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                                <p>Linked to: {post.postable_type?.split('\\').pop()}</p>
+                                <p>Source ID: #{post.postable_id}</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <DialogFooter className="flex-shrink-0 px-6 pb-4">
                     <div className="flex w-full gap-2">

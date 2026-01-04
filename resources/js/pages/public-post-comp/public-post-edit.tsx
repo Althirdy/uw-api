@@ -1,8 +1,24 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 import { PublicPost_T } from '@/types/public-post-types';
 import { router, useForm } from '@inertiajs/react';
@@ -16,8 +32,9 @@ type EditPublicPostProps = {
 
 type EditPublicPostForm = {
     published_at: string;
-    transcript: string;
-    description: string;
+    title: string;
+    content: string;
+    category: string;
 };
 
 function getStatusBadge(publishedAt: string | null) {
@@ -51,8 +68,9 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
     const { data, setData, put, processing, errors, reset } =
         useForm<EditPublicPostForm>({
             published_at: post.published_at || '',
-            transcript: post.report?.transcript || '',
-            description: post.report?.description || '',
+            title: post.title || '',
+            content: post.content || '',
+            category: post.category || 'general',
         });
 
     const [scheduleMode, setScheduleMode] = useState(
@@ -72,7 +90,7 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
 
         if (publishNow) {
             finalPublishedAt = new Date().toISOString();
-        } else if (!scheduleMode) {
+        } else if (!scheduleMode && !isPublished) {
             finalPublishedAt = '';
         }
 
@@ -80,8 +98,9 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
         router.put(
             `/public-post/${post.id}`,
             {
-                transcript: data.transcript,
-                description: data.description,
+                title: data.title,
+                content: data.content,
+                category: data.category,
                 published_at: finalPublishedAt,
             },
             {
@@ -117,8 +136,8 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                 <h3 className="text-xl font-semibold">
                                     Edit Public Post #{post.id}
                                 </h3>
-                                <p className="text-sm text-muted-foreground">
-                                    {post.report?.report_type}
+                                <p className="text-sm text-muted-foreground uppercase tracking-wider">
+                                    {data.category}
                                 </p>
                                 <div className="mt-1">
                                     {getStatusBadge(post.published_at)}
@@ -128,89 +147,101 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                     </DialogHeader>
 
                     <div className="flex w-full flex-1 flex-col justify-start gap-6 overflow-y-auto px-6 py-4">
-                        {/* Report Content - Editable */}
+                        {/* Post Content - Editable */}
                         <div className="flex w-full flex-col gap-4">
                             <div className="grid gap-3">
                                 <p className="text-sm font-medium text-[var(--gray)]">
-                                    Report Content
+                                    Post Content
                                 </p>
                             </div>
 
-                            {/* Report Type and Reporter Info (Read-only) */}
-                            <div className="rounded-lg border bg-muted/30 p-3">
-                                <div className="mb-2 flex items-center gap-2">
-                                    <TriangleAlert className="h-4 w-4" />
-                                    <span className="text-sm font-medium">
-                                        {post.report?.report_type}
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <User className="h-3 w-3" />
-                                    <span>
-                                        Reported by:{' '}
-                                        {post.report?.user?.name || 'Unknown'}
-                                    </span>
-                                </div>
+                            {/* Category Selector */}
+                            <div className="grid gap-3">
+                                <Label htmlFor="category">Category</Label>
+                                <Select
+                                    value={data.category}
+                                    onValueChange={(value) =>
+                                        setData('category', value)
+                                    }
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="general">General</SelectItem>
+                                        <SelectItem value="news">News</SelectItem>
+                                        <SelectItem value="emergency">Emergency</SelectItem>
+                                        <SelectItem value="advisory">Advisory</SelectItem>
+                                        <SelectItem value="event">Event</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
-                            {/* Editable Transcript */}
+                            {/* Editable Title */}
                             <div className="grid gap-3">
-                                <Label htmlFor="transcript">Transcript</Label>
+                                <Label htmlFor="title">Title</Label>
                                 <div className="relative">
-                                    <textarea
-                                        id="transcript"
-                                        value={data.transcript}
+                                    <Input
+                                        id="title"
+                                        value={data.title}
                                         onChange={(e) =>
-                                            setData(
-                                                'transcript',
-                                                e.target.value,
-                                            )
+                                            setData('title', e.target.value)
                                         }
-                                        placeholder="Enter report transcript or summary"
-                                        rows={4}
-                                        className={`w-full resize-none rounded-md border px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none ${
-                                            errors.transcript
-                                                ? 'border-red-500 focus:ring-red-500'
-                                                : 'border-input'
-                                        }`}
+                                        placeholder="Enter post title"
+                                        className={
+                                            errors.title ? 'border-red-500' : ''
+                                        }
                                     />
-                                    {errors.transcript && (
-                                        <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                            {errors.transcript}
+                                    {errors.title && (
+                                        <span className="text-xs text-red-500">
+                                            {errors.title}
                                         </span>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Editable Description */}
+                            {/* Editable Content */}
                             <div className="grid gap-3">
-                                <Label htmlFor="description">Description</Label>
+                                <Label htmlFor="content">Content</Label>
                                 <div className="relative">
                                     <textarea
-                                        id="description"
-                                        value={data.description}
+                                        id="content"
+                                        value={data.content}
                                         onChange={(e) =>
                                             setData(
-                                                'description',
+                                                'content',
                                                 e.target.value,
                                             )
                                         }
-                                        placeholder="Enter detailed description of the incident"
-                                        rows={6}
+                                        placeholder="Enter post content"
+                                        rows={8}
                                         className={`w-full resize-none rounded-md border px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none ${
-                                            errors.description
+                                            errors.content
                                                 ? 'border-red-500 focus:ring-red-500'
                                                 : 'border-input'
                                         }`}
                                     />
-                                    {errors.description && (
-                                        <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                            {errors.description}
+                                    {errors.content && (
+                                        <span className="text-xs text-red-500">
+                                            {errors.content}
                                         </span>
                                     )}
                                 </div>
                             </div>
                         </div>
+
+                        {/* Source Details (if linked) */}
+                        {post.postable && (
+                            <div className="flex flex-col gap-2">
+                                <p className="text-sm font-medium text-[var(--gray)]">
+                                    Original Source
+                                </p>
+                                <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+                                    <p>Type: {post.postable_type?.split('\\').pop()}</p>
+                                    <p>Source ID: #{post.postable_id}</p>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Publication Settings */}
                         {!isPublished && (
@@ -323,7 +354,7 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                     <User className="h-4 w-4" />
                                     <span>
                                         Published by:{' '}
-                                        {post.publishedBy?.name || 'Unknown'}
+                                        {post.publishedBy?.name || 'Barangay Office'}
                                     </span>
                                 </div>
                                 <div className="flex flex-row items-center gap-2">

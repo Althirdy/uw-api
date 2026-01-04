@@ -48,9 +48,9 @@ class Report extends Model
     /**
      * Get the public post associated with this report.
      */
-    public function publicPost(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function publicPost(): \Illuminate\Database\Eloquent\Relations\MorphOne
     {
-        return $this->hasOne(PublicPost::class);
+        return $this->morphOne(PublicPost::class, 'postable');
     }
 
     /**
