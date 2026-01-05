@@ -58,7 +58,7 @@ class UWDeviceRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             // If no location_id, custom location fields must be provided
-            if (!$this->location_id && (!$this->custom_address || !$this->custom_latitude || !$this->custom_longitude)) {
+            if (! $this->location_id && (! $this->custom_address || ! $this->custom_latitude || ! $this->custom_longitude)) {
                 $validator->errors()->add('custom_location', 'Custom location details are required when no location is selected.');
             }
         });

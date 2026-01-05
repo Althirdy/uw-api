@@ -15,9 +15,10 @@ class CctvDeviceSeeder extends Seeder
     {
         // Get location IDs to use in CCTV devices
         $locations = Locations::all();
-        
+
         if ($locations->isEmpty()) {
             $this->command->error('No locations found! Please run LocationSeeder first.');
+
             return;
         }
 
@@ -115,4 +116,3 @@ class CctvDeviceSeeder extends Seeder
         $this->command->info('CCTV devices seeded successfully!');
     }
 }
-

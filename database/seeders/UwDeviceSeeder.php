@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\UwDevice;
-use App\Models\Locations;
 use App\Models\cctvDevices;
+use App\Models\Locations;
+use App\Models\UwDevice;
 use Illuminate\Database\Seeder;
 
 class UwDeviceSeeder extends Seeder
@@ -20,6 +20,7 @@ class UwDeviceSeeder extends Seeder
 
         if ($locations->isEmpty()) {
             $this->command->warn('No locations found. Please seed locations first.');
+
             return;
         }
 

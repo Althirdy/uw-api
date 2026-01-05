@@ -3,8 +3,8 @@
 use App\Http\Controllers\Operator\CCTVController;
 use App\Http\Controllers\Operator\UWDeviceController;
 use App\Models\cctvDevices;
-use App\Models\UwDevice;
 use App\Models\Locations;
+use App\Models\UwDevice;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -37,7 +37,7 @@ Route::middleware('auth')->group(function () {
             } else {
                 $device->cctv_cameras = [];
             }
-            
+
             // Add latitude/longitude helpers (from location or custom)
             if ($device->location) {
                 $device->latitude = $device->location->latitude ?? null;
@@ -46,7 +46,7 @@ Route::middleware('auth')->group(function () {
                 $device->latitude = $device->custom_latitude;
                 $device->longitude = $device->custom_longitude;
             }
-            
+
             return $device;
         });
 
@@ -57,7 +57,7 @@ Route::middleware('auth')->group(function () {
             'devices' => $cctvDevices,
             'uwDevices' => $uwDevices,
             'locations' => $location,
-            'cctvDevices' => $allCctvDevices
+            'cctvDevices' => $allCctvDevices,
         ]);
     })->name('devices');
 

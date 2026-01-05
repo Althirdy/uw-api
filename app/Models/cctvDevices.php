@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class cctvDevices extends Model
-
 {
     use SoftDeletes;
 
@@ -42,7 +41,7 @@ class cctvDevices extends Model
     public function snapshots()
     {
         return $this->morphMany(\App\Models\IncidentMedia::class, 'source')
-                    ->where('source_category', 'device_snapshot');
+            ->where('source_category', 'device_snapshot');
     }
 
     /**
@@ -51,6 +50,6 @@ class cctvDevices extends Model
     public function detections()
     {
         return $this->morphMany(\App\Models\IncidentMedia::class, 'source')
-                    ->where('source_category', 'cctv_detection');
+            ->where('source_category', 'cctv_detection');
     }
 }

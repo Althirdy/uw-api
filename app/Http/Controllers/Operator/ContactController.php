@@ -136,7 +136,7 @@ class ContactController extends Controller
     public function show(Contact $contact)
     {
         return Inertia::render('ContactDetails', [
-            'contact' => $contact
+            'contact' => $contact,
         ]);
     }
 

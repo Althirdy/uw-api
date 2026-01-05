@@ -3,16 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\HasApiTokens; // Import the Attribute class
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasApiTokens, Notifiable, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * The attributes that are mass assignable.
@@ -21,7 +22,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'role_id',
-        'name',
+        'name', // Keep 'name' fillable, but accessor will override its display
         'first_name',
         'middle_name',
         'last_name',
@@ -29,7 +30,7 @@ class User extends Authenticatable
         'password',
         'phone_number',
         'assigned_brgy',
-        'status'
+        'status',
     ];
 
     /**
@@ -53,6 +54,71 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the user's full name.
+     */
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: function (?string $value, array $attributes) {
+                // If name is already set in the database, return it
+                if (!empty($value)) {
+                    return $value;
+                }
+                
+                // Otherwise, build name from relationships if loaded
+                if ($this->relationLoaded('officialDetails') && $this->officialDetails) {
+                    return trim(
+                        ($this->officialDetails->first_name ?? '').' '.
+                        (($this->officialDetails->middle_name ?? null) ? ($this->officialDetails->middle_name.' ') : '').
+                        ($this->officialDetails->last_name ?? '')
+                    );
+                }
+                
+                if ($this->relationLoaded('citizenDetails') && $this->citizenDetails) {
+                    return trim(
+                        ($this->citizenDetails->first_name ?? '').' '.
+                        (($this->citizenDetails->middle_name ?? null) ? ($this->citizenDetails->middle_name.' ') : '').
+                        ($this->citizenDetails->last_name ?? '')
+                    );
+                }
+                
+                // Fallback to empty string if no name available
+                return '';
+            },
+        );
+    }
+
+    /**
+     * Interact with the user's first name.
+     */
+    protected function firstName(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => ucwords(trim($value)),
+        );
+    }
+
+    /**
+     * Interact with the user's middle name.
+     */
+    protected function middleName(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => ucwords(trim($value)),
+        );
+    }
+
+    /**
+     * Interact with the user's last name.
+     */
+    protected function lastName(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value) => ucwords(trim($value)),
+        );
     }
 
     public function role()

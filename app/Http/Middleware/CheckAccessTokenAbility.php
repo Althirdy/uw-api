@@ -16,10 +16,10 @@ class CheckAccessTokenAbility
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated via Sanctum
-        if ($request->user() && !$request->user()->tokenCan('access-api')) {
+        if ($request->user() && ! $request->user()->tokenCan('access-api')) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid token type. This endpoint requires an access token.'
+                'message' => 'Invalid token type. This endpoint requires an access token.',
             ], 403);
         }
 

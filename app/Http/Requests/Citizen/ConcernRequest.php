@@ -22,15 +22,16 @@ class ConcernRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:100',
-            'description' => 'required|string',
+            'type' => 'required|in:manual,voice',
+            'title' => 'required_if:type,manual|nullable|string|max:100',
+            'description' => 'required_if:type,manual|nullable|string',
             'category' => 'required|string|in:safety,security,infrastructure,environment,noise,other',
             'severity' => 'nullable|string|in:low,medium,high',
             'transcript_text' => 'nullable|string',
             'longitude' => 'nullable|numeric',
             'latitude' => 'nullable|numeric',
-            // 'files' => 'nullable|array|min:1|max:3', // Maximum 3 files, minimum 1 if provided
-            // 'files.*' => 'file|mimes:jpeg,jpg,png,gif|max:3072', // Each file max 3MB, images only
+            'files' => 'nullable|array|min:1|max:3', // Maximum 3 files
+            'files.*' => 'file|mimes:jpeg,jpg,png,gif,mp3,wav,m4a,aac|max:10240', // Each file max 10MB
         ];
     }
 
@@ -40,10 +41,12 @@ class ConcernRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required' => 'Title is required.',
+            'type.required' => 'Concern type is required.',
+            'type.in' => 'Type must be either manual or voice.',
+            'title.required_if' => 'Title is required for manual concerns.',
             'title.string' => 'Title must be a string.',
             'title.max' => 'Title cannot exceed 100 characters.',
-            'description.required' => 'Description is required.',
+            'description.required_if' => 'Description is required for manual concerns.',
             'description.string' => 'Description must be a string.',
             'category.required' => 'Category is required.',
             'category.string' => 'Category must be a string.',
@@ -57,8 +60,8 @@ class ConcernRequest extends FormRequest
             'files.min' => 'At least one file must be uploaded when files are provided.',
             'files.max' => 'You can upload a maximum of 3 files.',
             'files.*.file' => 'Each uploaded item must be a valid file.',
-            'files.*.mimes' => 'Each file must be of type: jpeg, jpg, png, gif.',
-            'files.*.max' => 'Each file size cannot exceed 3MB.',
+            'files.*.mimes' => 'Each file must be of type: jpeg, jpg, png, gif, mp3, wav, m4a, aac.',
+            'files.*.max' => 'Each file size cannot exceed 10MB.',
         ];
     }
 }

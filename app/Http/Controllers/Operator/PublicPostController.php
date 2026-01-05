@@ -5,11 +5,10 @@ namespace App\Http\Controllers\Operator;
 use App\Http\Controllers\Controller;
 use App\Models\PublicPost;
 use App\Models\Report;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class PublicPostController extends Controller
@@ -27,10 +26,10 @@ class PublicPostController extends Controller
 
             // For web requests, return Inertia response
             $query = PublicPost::with([
-                'report' => function($query) {
+                'report' => function ($query) {
                     $query->with('user');
                 },
-                'publishedBy'
+                'publishedBy',
             ])->orderBy('created_at', 'desc');
 
             // Filter by publication status
@@ -61,18 +60,18 @@ class PublicPostController extends Controller
                 $search = $request->search;
                 $query->whereHas('report', function ($q) use ($search) {
                     $q->where('transcript', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhere('report_type', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('report_type', 'like', "%{$search}%");
                 });
             }
 
             $publicPosts = $query->paginate($request->get('per_page', 15));
 
             return Inertia::render('public-post', [
-                'data' => $publicPosts
+                'data' => $publicPosts,
             ]);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to retrieve public posts: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to retrieve public posts: '.$e->getMessage()]);
         }
     }
 
@@ -83,10 +82,10 @@ class PublicPostController extends Controller
     {
         try {
             $query = PublicPost::with([
-                'report' => function($query) {
+                'report' => function ($query) {
                     $query->with('user');
                 },
-                'publishedBy'
+                'publishedBy',
             ])->orderBy('created_at', 'desc');
 
             // Filter by publication status
@@ -117,8 +116,8 @@ class PublicPostController extends Controller
                 $search = $request->search;
                 $query->whereHas('report', function ($q) use ($search) {
                     $q->where('transcript', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhere('report_type', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('report_type', 'like', "%{$search}%");
                 });
             }
 
@@ -127,13 +126,13 @@ class PublicPostController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Public posts retrieved successfully',
-                'data' => $publicPosts
+                'data' => $publicPosts,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to retrieve public posts',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -154,7 +153,7 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -162,7 +161,7 @@ class PublicPostController extends Controller
             if ($request->report_id && PublicPost::where('report_id', $request->report_id)->exists()) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'A public post already exists for this report'
+                    'message' => 'A public post already exists for this report',
                 ], 409);
             }
 
@@ -217,13 +216,13 @@ class PublicPostController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Public post retrieved successfully',
-                'data' => $publicPost
+                'data' => $publicPost,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to retrieve public post',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -245,27 +244,28 @@ class PublicPostController extends Controller
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Validation failed',
-                        'errors' => $validator->errors()
+                        'errors' => $validator->errors(),
                     ], 422);
                 }
+
                 return back()->withErrors($validator->errors());
             }
 
             // Update the public post
             $publicPost->update($request->only(['published_at']));
-            
+
             // Update the associated report if transcript or description are provided
             if ($request->has('transcript') || $request->has('description')) {
                 $publicPost->report->update($request->only(['transcript', 'description']));
             }
-            
+
             $publicPost->load(['report.user', 'publishedBy']);
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Public post updated successfully',
-                    'data' => $publicPost
+                    'data' => $publicPost,
                 ]);
             }
 
@@ -275,10 +275,11 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Failed to update public post',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ], 500);
             }
-            return back()->withErrors(['error' => 'Failed to update public post: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to update public post: '.$e->getMessage()]);
         }
     }
 
@@ -293,7 +294,7 @@ class PublicPostController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Public post deleted successfully'
+                    'message' => 'Public post deleted successfully',
                 ]);
             }
 
@@ -303,10 +304,11 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Failed to delete public post',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ], 500);
             }
-            return back()->withErrors(['error' => 'Failed to delete public post: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to delete public post: '.$e->getMessage()]);
         }
     }
 
@@ -323,7 +325,7 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Public post published successfully',
-                    'data' => $publicPost
+                    'data' => $publicPost,
                 ]);
             }
 
@@ -333,10 +335,11 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Failed to publish public post',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ], 500);
             }
-            return back()->withErrors(['error' => 'Failed to publish public post: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to publish public post: '.$e->getMessage()]);
         }
     }
 
@@ -353,7 +356,7 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Public post unpublished successfully',
-                    'data' => $publicPost
+                    'data' => $publicPost,
                 ]);
             }
 
@@ -363,10 +366,11 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Failed to unpublish public post',
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ], 500);
             }
-            return back()->withErrors(['error' => 'Failed to unpublish public post: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to unpublish public post: '.$e->getMessage()]);
         }
     }
 
@@ -385,10 +389,10 @@ class PublicPostController extends Controller
             // Search functionality
             if ($request->has('search')) {
                 $search = $request->search;
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('transcript', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%")
-                      ->orWhere('report_type', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('report_type', 'like', "%{$search}%");
                 });
             }
 
@@ -402,13 +406,13 @@ class PublicPostController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Available reports retrieved successfully',
-                'data' => $reports
+                'data' => $reports,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to retrieve available reports',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -437,13 +441,13 @@ class PublicPostController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Statistics retrieved successfully',
-                'data' => $stats
+                'data' => $stats,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to retrieve statistics',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -464,7 +468,7 @@ class PublicPostController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Validation failed',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -489,13 +493,13 @@ class PublicPostController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => $message,
-                'affected_count' => $count
+                'affected_count' => $count,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Bulk action failed',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

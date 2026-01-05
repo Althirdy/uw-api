@@ -18,6 +18,7 @@ class ProcessConcernMedia implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $concernId;
+
     protected $tempFilePaths;
 
     public function __construct($concernId, array $tempFilePaths)
@@ -30,8 +31,9 @@ class ProcessConcernMedia implements ShouldQueue
     {
         try {
             $concern = Concern::find($this->concernId);
-            if (!$concern) {
+            if (! $concern) {
                 Log::error('Concern not found for media processing', ['concern_id' => $this->concernId]);
+
                 return;
             }
 
@@ -44,7 +46,7 @@ class ProcessConcernMedia implements ShouldQueue
                 if (Storage::exists($tempPath)) {
                     // Create a temporary file object for Cloudinary upload
                     $realPath = Storage::path($tempPath);
-                    
+
                     // Upload to Cloudinary using file path
                     $uploadResult = $cloudinaryService->uploadFileFromPath($realPath, 'concerns', $originalName);
 
@@ -63,7 +65,7 @@ class ProcessConcernMedia implements ShouldQueue
                         Log::info('Media uploaded successfully for concern', [
                             'concern_id' => $concern->id,
                             'filename' => $originalName,
-                            'url' => $uploadResult['secure_url']
+                            'url' => $uploadResult['secure_url'],
                         ]);
                     }
 
@@ -75,7 +77,7 @@ class ProcessConcernMedia implements ShouldQueue
             Log::error('Error processing concern media', [
                 'concern_id' => $this->concernId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

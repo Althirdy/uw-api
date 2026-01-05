@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MailService
 {
@@ -14,19 +14,21 @@ class MailService
     {
         try {
             Log::info('Sending raw email', ['to' => $to, 'subject' => $subject]);
-            
+
             Mail::raw($message, function ($mail) use ($to, $subject) {
                 $mail->to($to)
-                     ->subject($subject);
+                    ->subject($subject);
             });
-            
+
             Log::info('Raw email sent successfully', ['to' => $to]);
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send raw email', [
                 'to' => $to,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }
@@ -38,17 +40,19 @@ class MailService
     {
         try {
             Log::info('Sending OTP email', ['to' => $to, 'otp' => $otp]);
-            
+
             Mail::to($to)->send(new \App\Mail\OtpMail($otp, $userName));
-            
+
             Log::info('OTP email sent successfully', ['to' => $to]);
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send OTP email', [
                 'to' => $to,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -61,18 +65,20 @@ class MailService
         try {
             Log::info('Sending mailable email', [
                 'to' => $to,
-                'mailable' => get_class($mailable)
+                'mailable' => get_class($mailable),
             ]);
-            
+
             Mail::to($to)->send($mailable);
-            
+
             Log::info('Mailable email sent successfully', ['to' => $to]);
+
             return true;
         } catch (\Exception $e) {
             Log::error('Failed to send mailable email', [
                 'to' => $to,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

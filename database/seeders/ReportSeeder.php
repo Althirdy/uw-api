@@ -11,9 +11,10 @@ class ReportSeeder extends Seeder
     {
         // Get existing users to ensure we have valid user_ids
         $users = \App\Models\User::take(5)->get();
-        
+
         if ($users->isEmpty()) {
             $this->command->info('No users found. Please run UserSeeder first.');
+
             return;
         }
 
@@ -26,7 +27,7 @@ class ReportSeeder extends Seeder
                 'latitude'       => '14.7705',
                 'longtitude'     => '121.0480',
                 'is_acknowledge' => false,
-                'status'        => 'pending',
+                'status' => 'pending',
                 'acknowledge_by' => $users->first()->id,
             ],
             [
@@ -37,7 +38,7 @@ class ReportSeeder extends Seeder
                 'latitude'       => '14.7708',
                 'longtitude'     => '121.0483',
                 'is_acknowledge' => false,
-                'status'        => 'pending',
+                'status' => 'pending',
                 'acknowledge_by' => $users->skip(1)->first()?->id ?? $users->first()->id,
             ],
             [
@@ -48,7 +49,7 @@ class ReportSeeder extends Seeder
                 'latitude'       => '14.7709',
                 'longtitude'     => '121.0486',
                 'is_acknowledge' => false,
-                'status'        => 'pending',
+                'status' => 'pending',
                 'acknowledge_by' => $users->skip(3)->first()?->id ?? $users->first()->id,
             ],
             [
@@ -59,7 +60,7 @@ class ReportSeeder extends Seeder
                 'latitude'       => '14.7711',
                 'longtitude'     => '121.0484',
                 'is_acknowledge' => false,
-                'status'        => 'pending',
+                'status' => 'pending',
                 'acknowledge_by' => $users->first()->id,
             ],
             [
@@ -70,7 +71,7 @@ class ReportSeeder extends Seeder
                 'latitude'       => '14.7715',
                 'longtitude'     => '121.0490',
                 'is_acknowledge' => false,
-                'status'        => 'pending',
+                'status' => 'pending',
                 'acknowledge_by' => $users->skip(2)->first()?->id ?? $users->first()->id,
             ],
         ];

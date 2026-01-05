@@ -96,8 +96,11 @@ function CreateUsers({
     };
 
     const validatePhoneNumber = (value: string) => {
-        if (value && !/^[0-9]{10,15}$/.test(value)) {
-            return 'Phone number must be 10-15 digits only';
+        if (!value.trim()) {
+            return 'Phone number is required';
+        }
+        if (!/^09\d{9}$/.test(value)) {
+            return 'Phone number must be 11 digits starting with 09 (e.g., 09123456789)';
         }
         return '';
     };
