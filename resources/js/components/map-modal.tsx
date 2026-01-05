@@ -31,7 +31,7 @@ export function MapModal({ onLocationSelect, coordinates }: MapModalProps) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant="outline" className="w-full">
-                    <MapPin className="mr-2 h-4 w-4" />
+                    <MapPin className="h-4 w-4" />
                     {coordinates.latitude && coordinates.longitude
                         ? `${coordinates.latitude.slice(0, 8) + '...'}, ${coordinates.longitude.slice(0, 8) + '...'}`
                         : 'Select Location'}

@@ -25,12 +25,13 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/use-toast';
 import { cn } from '@/lib/utils';
 import { LocationCategory_T, location_T } from '@/types/location-types';
 import { useForm } from '@inertiajs/react';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, MoveLeft, Save } from 'lucide-react';
 import React, { useState } from 'react';
 
 const barangay = [
@@ -69,17 +70,12 @@ function EditLocation({
     // Find initial barangay and category from the location data
     const initialBarangay =
         barangay.find((b) => b.name === location.barangay) || null;
-    const initialCategory =
-        locationCategory.find(
-            (c) => c.name === location.location_category?.name,
-        ) || null;
 
     // Inertia form handling
     const { data, setData, put, processing, errors, reset } = useForm({
         location_name: location.location_name,
         landmark: location.landmark,
         barangay: location.barangay,
-        location_category: initialCategory?.id.toString() || '',
         latitude: location.latitude,
         longitude: location.longitude,
         description: location.description || '',
@@ -88,12 +84,6 @@ function EditLocation({
     // Combined states for both selectors
     const [barangayState, setBarangayState] = useState<SelectionState>({
         value: initialBarangay,
-        searchQuery: '',
-        open: false,
-    });
-
-    const [categoryState, setCategoryState] = useState<SelectionState>({
-        value: initialCategory,
         searchQuery: '',
         open: false,
     });
@@ -112,14 +102,6 @@ function EditLocation({
           )
         : barangay;
 
-    const filteredCategories = categoryState.searchQuery.trim()
-        ? (locationCategory || []).filter((c) =>
-              c.name
-                  .toLowerCase()
-                  .includes(categoryState.searchQuery.toLowerCase()),
-          )
-        : locationCategory || [];
-
     // Handlers for barangay selection
     const handleBarangaySelect = (selected: Barangay | null) => {
         setBarangayState({
@@ -128,16 +110,6 @@ function EditLocation({
             open: false,
         });
         setData('barangay', selected ? selected.name : '');
-    };
-
-    // Handlers for category selection
-    const handleCategorySelect = (selected: LocationCategory_T | null) => {
-        setCategoryState({
-            value: selected,
-            searchQuery: '',
-            open: false,
-        });
-        setData('location_category', selected ? selected.id.toString() : '');
     };
 
     const handleLocationSelect = (location: { lat: number; lng: number }) => {
@@ -183,7 +155,6 @@ function EditLocation({
             location_name: location.location_name,
             landmark: location.landmark,
             barangay: location.barangay,
-            location_category: initialCategory?.id.toString() || '',
             latitude: location.latitude,
             longitude: location.longitude,
             description: location.description || '',
@@ -195,11 +166,7 @@ function EditLocation({
             searchQuery: '',
             open: false,
         });
-        setCategoryState({
-            value: initialCategory,
-            searchQuery: '',
-            open: false,
-        });
+
         setCoordinates({
             latitude: location.latitude,
             longitude: location.longitude,
@@ -225,7 +192,7 @@ function EditLocation({
                             Update the location details and coordinates.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="flex-1 overflow-y-auto px-6 py-4 pb-20">
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
                         <div className="grid auto-rows-min gap-6">
                             <div className="grid gap-3">
                                 <div>
@@ -391,111 +358,6 @@ function EditLocation({
                                     )}
                                 </div>
 
-                                {/* Zone Category */}
-                                <div className="relative">
-                                    <Popover
-                                        open={categoryState.open}
-                                        onOpenChange={(open: boolean) =>
-                                            setCategoryState((prev) => ({
-                                                ...prev,
-                                                open,
-                                            }))
-                                        }
-                                    >
-                                        <PopoverTrigger asChild>
-                                            <div>
-                                                <Label className="mb-2">
-                                                    Zone Category
-                                                </Label>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={
-                                                        categoryState.open
-                                                    }
-                                                    className="w-full justify-between"
-                                                >
-                                                    {categoryState.value
-                                                        ? categoryState.value
-                                                              .name
-                                                        : 'Select Category'}
-                                                    <ChevronsUpDown className="opacity-50" />
-                                                </Button>
-                                            </div>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="p-0">
-                                            <Command>
-                                                <CommandInput
-                                                    value={
-                                                        categoryState.searchQuery
-                                                    }
-                                                    onValueChange={(search) => {
-                                                        setCategoryState(
-                                                            (prev) => ({
-                                                                ...prev,
-                                                                searchQuery:
-                                                                    search,
-                                                            }),
-                                                        );
-                                                    }}
-                                                    placeholder="Search location category..."
-                                                    className="h-9"
-                                                />
-                                                <CommandList>
-                                                    <CommandEmpty>
-                                                        No category found.
-                                                    </CommandEmpty>
-                                                    <CommandGroup>
-                                                        {filteredCategories.map(
-                                                            (category) => (
-                                                                <CommandItem
-                                                                    key={
-                                                                        category.id
-                                                                    }
-                                                                    value={
-                                                                        category.name
-                                                                    }
-                                                                    onSelect={() =>
-                                                                        handleCategorySelect(
-                                                                            categoryState
-                                                                                .value
-                                                                                ?.id ===
-                                                                                category.id
-                                                                                ? null
-                                                                                : category,
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    {
-                                                                        category.name
-                                                                    }
-                                                                    <Check
-                                                                        className={cn(
-                                                                            'ml-auto',
-                                                                            categoryState
-                                                                                .value
-                                                                                ?.id ===
-                                                                                category.id
-                                                                                ? 'opacity-100'
-                                                                                : 'opacity-0',
-                                                                        )}
-                                                                    />
-                                                                </CommandItem>
-                                                            ),
-                                                        )}
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    {errors.location_category && (
-                                        <p className="mt-1 text-sm text-red-500">
-                                            {errors.location_category}
-                                        </p>
-                                    )}
-                                </div>
-
                                 {/* GPS Coordinates */}
                                 <div className="space-y-2">
                                     <Label>GPS Coordinates</Label>
@@ -605,7 +467,8 @@ function EditLocation({
                                     disabled={processing}
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -613,7 +476,12 @@ function EditLocation({
                                 disabled={processing}
                                 className="flex-2"
                             >
-                                {processing ? 'Saving...' : 'Save Changes'}
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
+                                {processing ? 'Saving...' : ' Save Changes'}
                             </Button>
                         </div>
                     </DialogFooter>

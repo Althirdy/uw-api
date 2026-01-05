@@ -1,6 +1,16 @@
 import { MapModal } from '@/components/map-modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,10 +20,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/use-toast';
 import { router } from '@inertiajs/react';
 import { Select } from '@radix-ui/react-select';
-import { Camera, Plus } from 'lucide-react';
+import { Camera, CircuitBoard, MoveLeft, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import { cctv_T, location_T } from '../../types/cctv-location-types';
 
@@ -363,13 +374,11 @@ function AddUWDevice({
                                                             value={loc.id.toString()}
                                                         >
                                                             <div>
-                                                                {
-                                                                    loc.location_name
-                                                                }{' '}
-                                                                -{' '}
-                                                                {
-                                                                    loc.category_name
-                                                                }
+                                                                <div className="font-medium">
+                                                                    {
+                                                                        loc.location_name
+                                                                    }
+                                                                </div>
                                                                 <div className="text-xs text-muted-foreground">
                                                                     {
                                                                         loc.landmark
@@ -675,7 +684,8 @@ function AddUWDevice({
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -683,6 +693,11 @@ function AddUWDevice({
                                 className="flex-2"
                                 disabled={isSubmitting}
                             >
+                                {isSubmitting ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <CircuitBoard className="inline h-4 w-4" />
+                                )}
                                 {isSubmitting ? 'Creating...' : 'Add Device'}
                             </Button>
                         </div>

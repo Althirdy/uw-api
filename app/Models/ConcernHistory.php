@@ -29,4 +29,20 @@ class ConcernHistory extends Model
     {
         return $this->belongsTo(User::class, 'acted_by');
     }
+
+    public function getActorDisplayNameAttribute(): string
+    {
+        // 1. If there is no actor, it's the System
+        if (!$this->actor) {
+            return 'UrbanWatch System';
+        }
+
+        // 2. If they have official details, return "First Last"
+        if ($this->actor->officialDetails) {
+            return trim("{$this->actor->officialDetails->first_name} {$this->actor->officialDetails->last_name}");
+        }
+
+        // 3. Fallback to their login name
+        return $this->actor->name;
+    }
 }

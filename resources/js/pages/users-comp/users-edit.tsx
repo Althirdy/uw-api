@@ -17,10 +17,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
 import { useForm } from '@inertiajs/react';
+import { MoveLeft, Save } from 'lucide-react';
 import { FormEvent } from 'react';
 
 type EditUserProps = {
@@ -496,7 +498,8 @@ function EditUser({ user, roles, locations, children }: EditUserProps) {
                                     data-dialog-close
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -504,6 +507,11 @@ function EditUser({ user, roles, locations, children }: EditUserProps) {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>

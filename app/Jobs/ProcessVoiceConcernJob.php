@@ -56,19 +56,15 @@ class ProcessVoiceConcernJob implements ShouldQueue
             // Assuming public_id stores the relative storage path as per FileUploadService
             $storagePath = $audioMedia->public_id;
 
-            // Determine disk based on configuration or try default
-            // FileUploadService logic suggests it uses 'public' or 's3' or 'local' (mapped to public)
-            // We'll try the default disk first, then 'public' if not found
+            // Use the default configured disk (S3 in your case)
             $disk = config('filesystems.default');
-            if (! Storage::disk($disk)->exists($storagePath)) {
-                $disk = 'public'; // Fallback
-            }
 
             if (! Storage::disk($disk)->exists($storagePath)) {
                 Log::error('ProcessVoiceConcernJob: Audio file not found in storage', [
                     'concern_id' => $concern->id,
                     'path' => $storagePath,
                     'disk' => $disk,
+                    'configured_disk' => config('filesystems.default'),
                 ]);
 
                 return;
@@ -92,7 +88,8 @@ class ProcessVoiceConcernJob implements ShouldQueue
                     'concern_id' => $concern->id,
                 ]);
 
-                // Fire Event
+                // Fire Event (load distribution for broadcasting)
+                $concern->load('distribution');
                 event(new ConcernTranscribed($concern));
             } else {
                 Log::warning('ProcessVoiceConcernJob: Gemini analysis failed or returned null', [

@@ -8,6 +8,7 @@ import { List, Table } from 'lucide-react';
 import { useState } from 'react';
 
 import PublicPostCard from './public-post-comp/public-post-card';
+import CreatePublicPost from './public-post-comp/public-post-create';
 import PublicPostTab from './public-post-comp/public-post-tab';
 import PublicPostsTable from './public-post-comp/public-post-table';
 
@@ -36,8 +37,9 @@ export default function PublicPost({ data }: PublicPostPageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Public Posts" />
             <div className="space-y-4 p-4">
+                <CreatePublicPost />
                 <Tabs defaultValue="table" className="w-full space-y-2">
-                    <div className="flex flex-row gap-4">
+                    <div className="flex flex-row items-center gap-4">
                         <PublicPostTab
                             posts={posts}
                             setFilteredPosts={setFilteredPosts}

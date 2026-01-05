@@ -30,16 +30,14 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { location_T, LocationCategory_T } from '@/types/location-types';
+import { location_T } from '@/types/location-types';
 import { columns } from './locations-table-columns';
 
 const LocationsTable = ({
     locations,
-    locationCategory,
     isLoading = false,
 }: {
     locations: location_T[];
-    locationCategory: LocationCategory_T[];
     isLoading?: boolean;
 }) => {
     const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -51,7 +49,7 @@ const LocationsTable = ({
 
     const table = useReactTable({
         data: locations,
-        columns: columns(locationCategory),
+        columns: columns(),
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
@@ -114,7 +112,7 @@ const LocationsTable = ({
                         {showLoading ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns(locationCategory).length}
+                                    colSpan={columns().length}
                                     className="h-48 text-center"
                                 >
                                     <div className="text-md flex items-center justify-center gap-2 text-muted-foreground">
@@ -147,7 +145,7 @@ const LocationsTable = ({
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns(locationCategory).length}
+                                    colSpan={columns().length}
                                     className="h-24 text-center"
                                 >
                                     No locations found.

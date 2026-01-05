@@ -10,7 +10,6 @@ class Locations extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'location_category',
         'location_name',
         'landmark',
         'barangay',
@@ -18,17 +17,6 @@ class Locations extends Model
         'longitude',
         'description',
     ];
-
-    public function locationCategory()
-    {
-        return $this->belongsTo(LocationCategory::class, 'location_category');
-    }
-
-    // Accessor to get just the category name
-    public function getCategoryNameAttribute()
-    {
-        return $this->locationCategory?->name;
-    }
 
     public function cctvDevices()
     {

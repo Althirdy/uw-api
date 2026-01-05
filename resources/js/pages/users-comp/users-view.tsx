@@ -14,9 +14,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MoveLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { useIdentifyNumber } from '@/hooks/use-identify-number';
-import { users_T } from '@/types/user-types';
+import { AvailablePunishmentsData, users_T } from '@/types/user-types';
 
 // Network provider color configurations
 const networkColors: Record<
@@ -25,12 +26,12 @@ const networkColors: Record<
 > = {
     Globe: {
         bg: 'bg-[#23308F]',
-        text: 'text-white',
+        text: ' text-foreground',
         border: 'border-[#23308F]',
     },
     Smart: {
         bg: 'bg-[#099343]',
-        text: 'text-white',
+        text: ' text-foreground',
         border: 'border-[#099343]',
     },
     TNT: {
@@ -45,7 +46,7 @@ const networkColors: Record<
     },
     DITO: {
         bg: 'bg-[#CD1025]',
-        text: 'text-white',
+        text: ' text-foreground',
         border: 'border-[#CD1025]',
     },
     Unknown: {
@@ -61,6 +62,38 @@ type ViewUserProps = {
 };
 
 function ViewUser({ user, children }: ViewUserProps) {
+    const [suspensionData, setSuspensionData] =
+        useState<AvailablePunishmentsData | null>(null);
+    const [loadingSuspension, setLoadingSuspension] = useState(true);
+
+    useEffect(() => {
+        fetchSuspensionData();
+    }, [user.id]);
+
+    const fetchSuspensionData = async () => {
+        try {
+            setLoadingSuspension(true);
+            const response = await fetch(
+                `/user/${user.id}/available-punishments`,
+            );
+            const result = await response.json();
+            setSuspensionData(result);
+        } catch (error) {
+            console.error('Failed to fetch suspension data:', error);
+        } finally {
+            setLoadingSuspension(false);
+        }
+    };
+
+    const formatFullPunishmentType = (type: string): string => {
+        const formats: Record<string, string> = {
+            warning_1: 'Warning 1 - 3 days',
+            warning_2: 'Warning 2 - 7 days',
+            suspension: 'Permanent Suspension',
+        };
+        return formats[type] || type;
+    };
+
     // Function to generate initials from user's name
     const getInitials = (user: users_T) => {
         let firstName = '';
@@ -127,7 +160,45 @@ function ViewUser({ user, children }: ViewUserProps) {
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex w-full flex-1 flex-col justify-start gap-10 overflow-y-auto px-6 py-4">
+                <div className="flex w-full flex-1 flex-col justify-start gap-10 overflow-y-auto px-6">
+                    {/* Active Suspension Alert */}
+                    {!loadingSuspension &&
+                        suspensionData?.is_suspended &&
+                        suspensionData.active_suspension && (
+                            <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+                                <div className="mb-2 flex items-center gap-2">
+                                    <Badge className="inline-flex items-center rounded-[var(--radius)] bg-red-800 px-2.5 py-1 text-xs font-medium text-foreground dark:bg-red-900">
+                                        Suspended
+                                    </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                    Type:{' '}
+                                    {formatFullPunishmentType(
+                                        suspensionData.active_suspension.type,
+                                    )}
+                                    {suspensionData.active_suspension
+                                        .expires_at && (
+                                        <>
+                                            {' '}
+                                            • Expires:{' '}
+                                            {new Date(
+                                                suspensionData.active_suspension.expires_at,
+                                            ).toLocaleDateString()}
+                                        </>
+                                    )}
+                                </p>
+                                {suspensionData.active_suspension.reason && (
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Reason:{' '}
+                                        {
+                                            suspensionData.active_suspension
+                                                .reason
+                                        }
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                     {/* Basic Information */}
                     <div className="flex flex-row items-center gap-4">
                         <Avatar className="h-16 w-16">
@@ -145,7 +216,7 @@ function ViewUser({ user, children }: ViewUserProps) {
                                 </p>
                             </div>
                             <Badge
-                                className={`inline-flex h-fit items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${
+                                className={`inline-flex h-fit items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-foreground ${
                                     getUserStatus(user) === 'Active'
                                         ? 'bg-green-800 dark:bg-green-900'
                                         : 'bg-gray-800'

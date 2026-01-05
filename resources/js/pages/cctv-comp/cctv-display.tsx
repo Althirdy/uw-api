@@ -24,8 +24,8 @@ import {
     location_T,
     paginated_T,
 } from '../../types/cctv-location-types';
-import EditCCTVDevice from './EditCCTV';
-import ArchiveCCTV from './archiveCCTV';
+import ArchiveCCTV from './cctv-archive';
+import EditCCTVDevice from './cctv-edit';
 
 interface CCTVDisplayProps {
     onEdit?: (device: any) => void;
@@ -144,14 +144,6 @@ function CCTVDisplay({
                                     </p>
                                     <p className="font-medium">
                                         {device.brand}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">
-                                        Category
-                                    </p>
-                                    <p className="font-medium">
-                                        {device.location.category_name}
                                     </p>
                                 </div>
                             </div>

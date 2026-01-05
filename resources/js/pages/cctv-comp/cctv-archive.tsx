@@ -12,16 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/use-toast';
 import { useForm } from '@inertiajs/react';
-import {
-    Activity,
-    Archive,
-    Camera,
-    MapPin,
-    Monitor,
-    Settings,
-    Trash2,
-    Wifi,
-} from 'lucide-react';
+import { Activity, Archive, Camera, Settings, Wifi } from 'lucide-react';
 import { useState } from 'react';
 import { cctv_T } from '../../types/cctv-location-types';
 
@@ -54,17 +45,16 @@ function ArchiveCCTV({ cctv, onArchiveSuccess, children }: ArchiveCCTVProps) {
         }
     };
 
-    // Get status color
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'active':
-                return 'bg-green-100 text-green-800';
-            case 'inactive':
-                return 'bg-gray-100 text-gray-800';
-            case 'maintenance':
-                return 'bg-red-100 text-red-800';
+    const getStatusStyles = (status: string) => {
+        switch (status.toLocaleUpperCase()) {
+            case 'ACTIVE':
+                return 'bg-green-700 rounded-[var(--radius)]  dark:bg-green-800 dark:';
+            case 'MAINTENANCE':
+                return 'bg-orange-100 rounded-[var(--radius)] dark:bg-orange-700 ';
+            case 'INACTIVE':
+                return 'bg-gray-100 rounded-[var(--radius)]  dark:bg-zinc-600 ';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-gray-100 rounded-[var(--radius)]  dark:bg-zinc-600 ';
         }
     };
 
@@ -101,47 +91,33 @@ function ArchiveCCTV({ cctv, onArchiveSuccess, children }: ArchiveCCTVProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                {children || (
-                    <div className="cursor-pointer rounded-full p-2 hover:bg-destructive/20">
-                        <Archive className="text-destructive" size={20} />
-                    </div>
-                )}
+                {children || <Archive className="text-destructive" size={20} />}
             </DialogTrigger>
-            <DialogContent className="border-gray-700 bg-gray-900 text-white sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <div className="rounded-lg bg-red-900/20 p-2">
-                            <Trash2 className="h-5 w-5 text-red-400" />
-                        </div>
-                        <DialogTitle className="text-lg text-red-400">
-                            Archive CCTV Device
-                        </DialogTitle>
-                    </div>
-                    <DialogDescription className="text-gray-300">
+                    <DialogTitle className="flex items-center gap-2 font-bold text-destructive">
+                        <Archive className="h-5 w-5" />
+                        Archive CCTV Device
+                    </DialogTitle>
+                    <DialogDescription>
                         Are you sure you want to archive this CCTV device? This
                         action cannot be undone.
                     </DialogDescription>
                 </DialogHeader>
 
                 {/* Device Information Card */}
-                <div className="space-y-3 rounded-lg border border-gray-700 bg-gray-800 p-4">
-                    <div className="flex items-start gap-3">
-                        <div className="rounded-lg bg-blue-900/20 p-2">
-                            <Camera className="h-5 w-5 text-blue-400" />
+                <div className="space-y-3 rounded-[var(--radius)] border border-[var(--border)] p-4">
+                    <div className="flex items-center gap-3">
+                        <div className="h-fit w-fit rounded-[var(--radius)] bg-zinc-500 p-2">
+                            <Camera className="h-6 w-auto" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                            <h3 className="text-lg font-semibold text-white">
+                        <div className="flex min-w-0 flex-1 items-center">
+                            <h3 className="text-lg font-semibold text-foreground">
                                 {cctv.device_name}
                             </h3>
-                            <div className="mt-1 flex items-center gap-2">
-                                <MapPin className="h-3 w-3 text-gray-400" />
-                                <span className="text-sm text-gray-400">
-                                    {cctv.location?.barangay}
-                                </span>
-                            </div>
                         </div>
                         <Badge
-                            className={`gap-1 capitalize ${getStatusColor(cctv.status)}`}
+                            className={`gap-1 capitalize ${getStatusStyles(cctv.status)}`}
                         >
                             {getStatusIcon(cctv.status)}
                             {cctv.status}
@@ -149,73 +125,76 @@ function ArchiveCCTV({ cctv, onArchiveSuccess, children }: ArchiveCCTVProps) {
                     </div>
 
                     {/* Location Details */}
-                    <div className="space-y-1 border-t border-gray-700 pt-2 text-sm">
+                    <div className="space-y-1 border-t border-[var(--border)] pt-2 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-gray-400">Location:</span>
-                            <span className="text-gray-300">
+                            <span className="text-[var(--muted-foreground)]">
+                                Location:
+                            </span>
+                            <span className="text-whte">
                                 {cctv.location?.location_name}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-gray-400">Barangay:</span>
-                            <span className="text-gray-300">
+                            <span className="text-[var(--muted-foreground)]">
+                                Barangay:
+                            </span>
+                            <span className="text-foreground">
                                 {cctv.location?.barangay}
                             </span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-gray-400">Landmark:</span>
-                            <span className="text-gray-300">
+                            <span className="text-[var(--muted-foreground)]">
+                                Landmark:
+                            </span>
+                            <span className="text-foreground">
                                 {cctv.location?.landmark}
                             </span>
                         </div>
                     </div>
 
                     {/* Device Specifications */}
-                    <div className="grid grid-cols-2 gap-4 border-t border-gray-700 pt-2">
+                    <div className="grid grid-cols-2 gap-4 border-t border-[var(--border)] pt-2">
                         <div className="text-sm">
-                            <span className="block text-gray-400">
+                            <span className="block text-[var(--muted-foreground)]">
                                 Resolution:
                             </span>
-                            <span className="text-gray-300">
+                            <span className="text-foreground">
                                 {cctv.resolution || 'N/A'}
                             </span>
                         </div>
                         <div className="text-sm">
-                            <span className="block text-gray-400">FPS:</span>
-                            <span className="text-gray-300">
+                            <span className="block text-[var(--muted-foreground)]">
+                                FPS:
+                            </span>
+                            <span className="text-foreground">
                                 {cctv.fps || 'N/A'}
                             </span>
                         </div>
                         <div className="text-sm">
-                            <span className="block text-gray-400">Brand:</span>
-                            <span className="text-gray-300">
+                            <span className="block text-[var(--muted-foreground)]">
+                                Brand:
+                            </span>
+                            <span className="text-foreground">
                                 {cctv.brand || 'N/A'}
                             </span>
                         </div>
                         <div className="text-sm">
-                            <span className="block text-gray-400">Model:</span>
-                            <span className="text-gray-300">
+                            <span className="block text-[var(--muted-foreground)]">
+                                Model:
+                            </span>
+                            <span className="text-foreground">
                                 {cctv.model || 'N/A'}
                             </span>
                         </div>
-                    </div>
-
-                    {/* Camera Count (if available) */}
-                    <div className="flex items-center gap-2 border-t border-gray-700 pt-2">
-                        <Monitor className="h-4 w-4 text-blue-400" />
-                        <span className="text-sm text-gray-400">
-                            Active Streams:{' '}
-                            <span className="text-blue-400">1</span>
-                        </span>
                     </div>
                 </div>
 
                 {/* Confirmation Input */}
                 <div className="space-y-2">
-                    <div className="text-sm text-gray-300">
+                    <div className="text-sm text-[var(--muted-foreground)]">
                         To confirm archival, type{' '}
-                        <span className="font-semibold text-red-400">
-                            {cctv.device_name}
+                        <span className="font-bold text-[var(--destructive)] select-none">
+                            "{cctv.device_name}"
                         </span>{' '}
                         below:
                     </div>
@@ -223,10 +202,9 @@ function ArchiveCCTV({ cctv, onArchiveSuccess, children }: ArchiveCCTVProps) {
                         placeholder="Enter device name to confirm"
                         value={confirmationText}
                         onChange={(e) => setConfirmationText(e.target.value)}
-                        className="border-gray-600 bg-gray-800 text-white placeholder:text-gray-400 focus:border-red-400"
+                        className="text-foreground"
                     />
                 </div>
-
                 <DialogFooter className="gap-2">
                     <Button
                         variant="outline"
@@ -238,7 +216,7 @@ function ArchiveCCTV({ cctv, onArchiveSuccess, children }: ArchiveCCTVProps) {
                     <Button
                         onClick={handleArchive}
                         disabled={!isConfirmationValid || processing}
-                        className="bg-red-600 text-white hover:bg-red-700"
+                        className="bg-red-600 text-foreground hover:bg-red-700"
                     >
                         {processing ? 'Archiving...' : 'Archive Device'}
                     </Button>

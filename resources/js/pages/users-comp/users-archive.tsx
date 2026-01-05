@@ -9,8 +9,12 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { users_T } from '@/types/user-types';
 import { useForm } from '@inertiajs/react';
+import { Archive } from 'lucide-react';
+import { useState } from 'react';
 
 type ArchiveUserProps = {
     user: users_T;
@@ -18,11 +22,19 @@ type ArchiveUserProps = {
 };
 
 function ArchiveUser({ user, children }: ArchiveUserProps) {
+    const [confirmText, setConfirmText] = useState('');
     const { patch, processing } = useForm();
 
     const handleArchive = () => {
+        if (confirmText !== getUserFullName(user)) {
+            return;
+        }
+
         patch(`/user/${user.id}/archive`, {
             preserveScroll: true,
+            onSuccess: () => {
+                setConfirmText('');
+            },
         });
     };
 
@@ -40,18 +52,62 @@ function ArchiveUser({ user, children }: ArchiveUserProps) {
             <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Archive User</AlertDialogTitle>
-                    <AlertDialogDescription>
+                    <AlertDialogTitle className="flex flex-row items-center gap-2 text-muted-foreground">
+                        <Archive className="h-6 w-6" /> Archive User
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-whi mt-2">
                         Are you sure you want to archive{' '}
-                        <strong>{getUserFullName(user)}</strong>?
+                        <span className="font-bold text-destructive">
+                            {getUserFullName(user)}?
+                        </span>{' '}
+                        This action cannot be undone.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
+                <div className="flex flex-col gap-2">
+                    <Label
+                        htmlFor="archive-user "
+                        className="text-sm text-muted-foreground"
+                    >
+                        To confirm archiving, type{' '}
+                        <span className="font-semibold">
+                            "{getUserFullName(user)}"
+                        </span>{' '}
+                        below:
+                    </Label>
+                    <div className="relative">
+                        <Input
+                            id="archive-user"
+                            value={confirmText}
+                            onChange={(e) => setConfirmText(e.target.value)}
+                            placeholder="Enter full name to confirm"
+                            className={
+                                confirmText &&
+                                confirmText !== getUserFullName(user)
+                                    ? 'border-red-500'
+                                    : ''
+                            }
+                        />
+                        {confirmText &&
+                            confirmText !== getUserFullName(user) && (
+                                <span className="absolute -bottom-5 left-0 text-xs text-red-500">
+                                    Please type the exact full name to confirm
+                                </span>
+                            )}
+                    </div>
+                </div>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel
+                        className="cursor-pointer"
+                        onClick={() => setConfirmText('')}
+                    >
+                        Cancel
+                    </AlertDialogCancel>
                     <AlertDialogAction
                         onClick={handleArchive}
-                        disabled={processing}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        disabled={
+                            confirmText !== getUserFullName(user) || processing
+                        }
+                        className="cursor-pointer bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                         {processing ? 'Archiving...' : 'Archive User'}
                     </AlertDialogAction>

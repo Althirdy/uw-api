@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('locations', function (Blueprint $table) {
-            $table->foreignId('location_category')->after('barangay')->constrained('location_categories')->onDelete('cascade');
+        Schema::table('reports', function (Blueprint $table) {
+            $table->text('transcript')->nullable()->change();
         });
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('locations', function (Blueprint $table) {
-            $table->dropForeign(['location_category']);
-            $table->dropColumn('location_category');
+        Schema::table('reports', function (Blueprint $table) {
+            $table->text('transcript')->nullable()->change();
         });
     }
 };

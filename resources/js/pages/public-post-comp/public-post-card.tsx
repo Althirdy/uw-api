@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -19,9 +20,16 @@ import ArchivePublicPost from './public-post-archive';
 import EditPublicPost from './public-post-edit';
 import ViewPublicPostDetails from './public-post-view';
 
+const reportTypeColors: Record<string, string> = {
+    CCTV: 'bg-blue-800',
+    'Citizen Concern': 'bg-purple-800',
+    Emergency: 'bg-red-800',
+    Announcement: 'bg-yellow-800',
+};
+
 function getStatusInfo(publishedAt: string | null) {
     if (!publishedAt) {
-        return { label: 'Draft', className: 'bg-gray-100 text-gray-800' };
+        return { label: 'Draft', className: 'bg-zinc-600' };
     }
 
     const publishDate = new Date(publishedAt);
@@ -30,11 +38,11 @@ function getStatusInfo(publishedAt: string | null) {
     if (publishDate > now) {
         return {
             label: 'Scheduled',
-            className: 'bg-yellow-100 text-yellow-800',
+            className: 'bg-yellow-800',
         };
     }
 
-    return { label: 'Published', className: 'bg-green-100 text-green-800' };
+    return { label: 'Published', className: ' text-foreground bg-green-800' };
 }
 
 const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
@@ -60,12 +68,21 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                     >
                         <CardHeader>
                             <CardTitle> Post ID: #{post.id}</CardTitle>
-                            <CardDescription>
-                                <span
-                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}
+                            <CardDescription className="flex flex-row gap-2">
+                                <Badge
+                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${statusInfo.className}`}
                                 >
                                     {statusInfo.label}
-                                </span>
+                                </Badge>
+                                <Badge
+                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-xs font-medium ${
+                                        reportTypeColors[
+                                            post.report?.report_type || ''
+                                        ] || 'bg-zinc-600'
+                                    }`}
+                                >
+                                    {post.report?.report_type}
+                                </Badge>
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -73,25 +90,9 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                                 <p className="text-sm font-medium">
                                     Report Content
                                 </p>
-                                <div className="rounded-lg border bg-muted/30 p-3">
-                                    <span
-                                        className={`mb-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                            post.report?.report_type === 'CCTV'
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : post.report?.report_type ===
-                                                    'Citizen Concern'
-                                                  ? 'bg-purple-100 text-purple-800'
-                                                  : post.report?.report_type ===
-                                                      'Emergency'
-                                                    ? 'bg-red-100 text-red-800'
-                                                    : 'bg-gray-100 text-gray-800'
-                                        }`}
-                                    >
-                                        {post.report?.report_type}
-                                    </span>
-                                    <p className="mb-2 text-sm text-muted-foreground">
-                                        {post.report?.transcript ||
-                                            'No transcript available'}
+                                <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3">
+                                    <p className="text-sm text-muted-foreground">
+                                        {post.report?.transcript || null}
                                     </p>
                                     {post.report?.description && (
                                         <p className="text-sm text-muted-foreground">

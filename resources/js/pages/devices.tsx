@@ -9,8 +9,8 @@ import {
     paginated_T,
     uwDevice_T,
 } from '../types/cctv-location-types';
-import CCTVDisplay from './cctv-comp/cctvDisplay';
-import AddCCTVDevice from './cctv-comp/createCCTV';
+import CCTVDisplay from './cctv-comp/cctv-view';
+import AddCCTVDevice from './cctv-comp/cctv-create';
 import AddUWDevice from './uwdevice-comp/createDevice';
 import UWDeviceDisplay from './uwdevice-comp/deviceDisplay';
 

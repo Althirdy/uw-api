@@ -25,61 +25,13 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/use-toast';
 import { cn } from '@/lib/utils';
-import { useForm } from '@inertiajs/react';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { useForm, usePage } from '@inertiajs/react';
+import { Check, ChevronsUpDown, MoveLeft, Phone, Plus } from 'lucide-react';
 import React, { useState } from 'react';
-
-const responderTypes = [
-    { id: 1, name: 'Fire' },
-    { id: 2, name: 'Emergency' },
-    { id: 3, name: 'Crime' },
-    { id: 4, name: 'Traffic' },
-    { id: 5, name: 'Barangay' },
-    { id: 6, name: 'Others' },
-];
-
-const branchUnitNames = [
-    { id: 1, name: 'BEST' },
-    { id: 2, name: 'BCCM' },
-    { id: 3, name: 'BCPC' },
-    { id: 4, name: 'BDRRM' },
-    { id: 5, name: 'BHERT' },
-    { id: 6, name: 'BHW' },
-    { id: 7, name: 'BPSO' },
-    { id: 8, name: 'BTMO' },
-    { id: 9, name: 'VAWC' },
-];
-
-const locations = [
-    { id: 1, name: 'Pkg. 1A Bicolandia' },
-    { id: 2, name: 'Pkg. 1B Powerline' },
-    { id: 3, name: 'Pkg. 1C Sampalukan' },
-    { id: 4, name: 'Pkg. 2 Botlog' },
-    { id: 5, name: 'Pkg. 2 GK Staging' },
-    { id: 6, name: 'Pkg. 3 Kaunlaran' },
-    { id: 7, name: 'Pkg. 3 Maharlika' },
-    { id: 8, name: 'Pkg. 3 Maharlika 2' },
-    { id: 9, name: 'Pkg. 3 Damayan' },
-    { id: 10, name: 'Pkg. 4A Atlantika' },
-    { id: 11, name: 'Pkg. 4B Aklan Wire' },
-    { id: 12, name: 'Pkg. 5 San Roque' },
-    { id: 13, name: 'Pkg. 5 Brgy. Annex (BFP)' },
-    { id: 14, name: 'Pkg. 5 Crasher' },
-    { id: 15, name: 'Pkg. 5 Gatnai' },
-    { id: 16, name: 'Pkg. 6 Bayanihan' },
-    { id: 17, name: 'Pkg. 7A Lakan' },
-    { id: 18, name: 'Pkg. 7B PhilRad' },
-    { id: 19, name: 'Pkg. 7B  Khulits Court' },
-    { id: 20, name: 'Pkg. 7B Dating Daan' },
-    { id: 21, name: 'Pkg. 7C GS Senior High' },
-    { id: 22, name: 'Pkg. 8A North Cal' },
-    { id: 23, name: 'Pkg. 8B Makati' },
-    { id: 24, name: 'Pkg. 9 Plaza Maria Upper' },
-    { id: 25, name: 'Pkg. 9 Plaza Maria Lower' },
-];
 
 type ResponderType = {
     id: number;
@@ -101,7 +53,15 @@ type SelectionState = {
     open: boolean;
 };
 
+type PageProps = {
+    responderTypes: ResponderType[];
+    branchUnitNames: BranchUnitName[];
+    packageLocations: Location[];
+};
+
 function AddContacts() {
+    const { responderTypes, branchUnitNames, packageLocations } =
+        usePage<PageProps>().props;
     // Dialog control state
     const [dialogOpen, setDialogOpen] = useState(false);
     const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -402,7 +362,7 @@ function AddContacts() {
                                                             >
                                                                 <Check
                                                                     className={cn(
-                                                                        'mr-2 h-4 w-4',
+                                                                        'h-4 w-4',
                                                                         branchUnitNameState
                                                                             .value
                                                                             ?.id ===
@@ -488,7 +448,7 @@ function AddContacts() {
                                                                 >
                                                                     <Check
                                                                         className={cn(
-                                                                            'mr-2 h-4 w-4',
+                                                                            'h-4 w-4',
                                                                             responderTypeState
                                                                                 .value
                                                                                 ?.id ===
@@ -554,7 +514,7 @@ function AddContacts() {
                                                         No package found.
                                                     </CommandEmpty>
                                                     <CommandGroup>
-                                                        {locations.map(
+                                                        {packageLocations.map(
                                                             (location) => (
                                                                 <CommandItem
                                                                     key={
@@ -571,7 +531,7 @@ function AddContacts() {
                                                                 >
                                                                     <Check
                                                                         className={cn(
-                                                                            'mr-2 h-4 w-4',
+                                                                            'h-4 w-4',
                                                                             locationState
                                                                                 .value
                                                                                 ?.id ===
@@ -753,7 +713,8 @@ function AddContacts() {
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -761,6 +722,11 @@ function AddContacts() {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Phone className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Creating...' : 'Add Contact'}
                             </Button>
                         </div>

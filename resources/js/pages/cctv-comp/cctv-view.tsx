@@ -31,8 +31,8 @@ import {
     location_T,
     paginated_T,
 } from '../../types/cctv-location-types';
-import EditCCTVDevice from './EditCCTV';
-import ArchiveCCTV from './archiveCCTV';
+import ArchiveCCTV from './cctv-archive';
+import EditCCTVDevice from './cctv-edit';
 
 interface CCTVDisplayProps {
     onEdit?: (device: any) => void;
@@ -64,13 +64,13 @@ function CCTVDisplay({
     const getStatusStyles = (status: string) => {
         switch (status.toLocaleUpperCase()) {
             case 'ACTIVE':
-                return 'bg-green-700 rounded-full  dark:bg-green-800 dark:';
+                return 'bg-green-700 rounded-[var(--radius)]  dark:bg-green-800 dark:';
             case 'MAINTENANCE':
-                return 'bg-orange-100 rounded-full dark:bg-orange-700 ';
+                return 'bg-orange-100 rounded-[var(--radius)] dark:bg-orange-700 ';
             case 'INACTIVE':
-                return 'bg-gray-100 rounded-full  dark:bg-zinc-600 ';
+                return 'bg-gray-100 rounded-[var(--radius)]  dark:bg-zinc-600 ';
             default:
-                return 'bg-gray-100 rounded-full  dark:bg-zinc-600 ';
+                return 'bg-gray-100 rounded-[var(--radius)]  dark:bg-zinc-600 ';
         }
     };
 
@@ -99,7 +99,7 @@ function CCTVDisplay({
                     >
                         <CardHeader className="flex flex-row items-start justify-between pb-3">
                             <div className="flex flex-row items-center gap-4">
-                                <div className="h-fit w-fit rounded-lg bg-zinc-500 p-2">
+                                <div className="h-fit w-fit rounded-[var(--radius)] bg-zinc-500 p-2">
                                     <Camera className="h-5 w-auto" />
                                 </div>
                                 <div className="flex flex-col">
@@ -148,14 +148,6 @@ function CCTVDisplay({
                                     </p>
                                     <p className="font-medium">
                                         {device.brand}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">
-                                        Category
-                                    </p>
-                                    <p className="font-medium">
-                                        {device.location.category_name}
                                     </p>
                                 </div>
                             </div>

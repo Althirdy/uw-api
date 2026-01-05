@@ -58,7 +58,7 @@ const UserCard = ({
                             <p className="font-medium">Role & Location</p>
                             <div className="flex items-center gap-2">
                                 <Badge
-                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${
+                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-foreground ${
                                         user.role?.name === 'Operator'
                                             ? 'bg-green-800'
                                             : user.role?.name === 'Citizen'

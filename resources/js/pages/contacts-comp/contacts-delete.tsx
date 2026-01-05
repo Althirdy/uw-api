@@ -18,6 +18,15 @@ import { useForm } from '@inertiajs/react';
 import { Archive, MapPin, Phone, User } from 'lucide-react';
 import React, { useState } from 'react';
 
+const responderTypeColors: Record<string, string> = {
+    Fire: 'bg-red-600  text-foreground',
+    Emergency: 'bg-yellow-500 text-black',
+    Crime: 'bg-zinc-700  text-foreground',
+    Traffic: 'bg-orange-500 text-black',
+    Barangay: 'bg-blue-500  text-foreground',
+    Others: 'bg-gray-600  text-foreground',
+};
+
 interface DeleteContactsProps {
     contact: Contact;
     children?: React.ReactNode;
@@ -73,23 +82,27 @@ export default function DeleteContacts({
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-3 border-l-4 border-destructive/20 pl-4">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <div className="mb-1 flex items-center gap-2">
-                                    <User className="h-4 w-4 text-muted-foreground" />
-                                    <h1 className="text-lg font-bold">
-                                        {contact.branch_unit_name}
-                                    </h1>
-                                </div>
-                                {contact.contact_person && (
-                                    <p className="mb-2 text-sm text-muted-foreground">
-                                        {contact.contact_person}
-                                    </p>
-                                )}
-                                <Badge variant="secondary" className="text-xs">
-                                    {contact.responder_type}
-                                </Badge>
-                            </div>
+                        <div className="flex flex-row items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+
+                            <h1 className="text-lg font-bold">
+                                {contact.branch_unit_name}
+                            </h1>
+                            <Badge
+                                className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium ${
+                                    responderTypeColors[
+                                        contact.responder_type
+                                    ] || 'bg-blue-100 text-blue-800'
+                                }`}
+                            >
+                                {contact.responder_type}
+                            </Badge>
+                        </div>
+                        <div className="flex flex-row items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            {contact.contact_person && (
+                                <p>{contact.contact_person}</p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 text-sm">
@@ -145,19 +158,19 @@ export default function DeleteContacts({
                             <span className="text-muted-foreground">
                                 Status:
                             </span>
-                            <span
-                                className={`ml-2 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            <Badge
+                                className={`ml-2 inline-flex items-center rounded-[var(--radius)] px-2 py-1 text-xs font-medium ${
                                     contact.active
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-gray-100 text-gray-800'
+                                        ? 'bg-green-800'
+                                        : 'bg-gray-800'
                                 }`}
                             >
-                                ● {contact.active ? 'Active' : 'Inactive'}
-                            </span>
+                                {contact.active ? 'Active' : 'Inactive'}
+                            </Badge>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="flex flex-col gap-2">
                         <Label htmlFor="archive-contact">
                             To confirm archiving, type{' '}
                             <span className="font-medium text-destructive">

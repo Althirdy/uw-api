@@ -14,7 +14,6 @@ class LocationSeeder extends Seeder
     {
         $locations = [
             [
-                'location_category' => 1,
                 'location_name' => 'Atlantica Langit Road #37',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -25,7 +24,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Pkg 8 J&T Langit Road #60',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -36,7 +34,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Lacson #36',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -47,7 +44,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Gym Langit Road #35',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -58,7 +54,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Atlantica Aklan Wire # 38',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -69,7 +64,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Treasurer Nest #40',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -80,7 +74,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 2,
                 'location_name' => 'Pkg 1 Kadiwa Market #75',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -91,7 +84,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 2,
                 'location_name' => 'Pkg 5 Buko King #18',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -102,7 +94,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Damayan Crossing #41',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -113,7 +104,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 3,
                 'location_name' => 'Senior High School Back Area',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -124,7 +114,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 5,
                 'location_name' => 'Health Center Philrads pkg 7B #2',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -135,7 +124,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Arko ph 9 exit #20',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -146,7 +134,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Pkg 6 & pkg 5 road #32',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -157,7 +144,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Crasher court pkg 5 #32',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -168,7 +154,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 2,
                 'location_name' => 'Maharlika 1 Jayoma #52',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -179,7 +164,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 5,
                 'location_name' => 'Philrads Health Center pkg 7b #1',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -190,7 +174,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 5,
                 'location_name' => 'BFP & Annex pkg 5 #34',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -201,7 +184,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 1,
                 'location_name' => 'Sampalukan Dulo pkg 1 #76',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -212,7 +194,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 3,
                 'location_name' => 'Genesis School pkg 5 #31',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',
@@ -223,7 +204,6 @@ class LocationSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'location_category' => 2,
                 'location_name' => 'Maharlika Dulo Video #51',
                 'landmark' => '',
                 'barangay' => 'Brgy. 176-E',

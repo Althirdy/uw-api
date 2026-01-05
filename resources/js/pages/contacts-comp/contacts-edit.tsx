@@ -387,7 +387,7 @@ export default function EditContacts({ contact, children }: EditContactsProps) {
                                                             >
                                                                 <Check
                                                                     className={cn(
-                                                                        'mr-2 h-4 w-4',
+                                                                        'h-4 w-4',
                                                                         branchUnitNameState
                                                                             .value
                                                                             ?.id ===
@@ -473,7 +473,7 @@ export default function EditContacts({ contact, children }: EditContactsProps) {
                                                                 >
                                                                     <Check
                                                                         className={cn(
-                                                                            'mr-2 h-4 w-4',
+                                                                            'h-4 w-4',
                                                                             responderTypeState
                                                                                 .value
                                                                                 ?.id ===
@@ -556,7 +556,7 @@ export default function EditContacts({ contact, children }: EditContactsProps) {
                                                                 >
                                                                     <Check
                                                                         className={cn(
-                                                                            'mr-2 h-4 w-4',
+                                                                            'h-4 w-4',
                                                                             locationState
                                                                                 .value
                                                                                 ?.id ===

@@ -1,14 +1,6 @@
 import { MapModal } from '@/components/map-modal';
 import { Button } from '@/components/ui/button';
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
-import {
     Dialog,
     DialogClose,
     DialogContent,
@@ -20,55 +12,23 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/use-toast';
-import { cn } from '@/lib/utils';
-import { LocationCategory_T } from '@/types/location-types';
 import { useForm } from '@inertiajs/react';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { MapPin, MoveLeft, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 
-const barangay = [
-    { id: 1, name: 'Brgy 176 - A' },
-    { id: 2, name: 'Brgy 176 - B' },
-    { id: 3, name: 'Brgy 176 - C' },
-    { id: 4, name: 'Brgy 176 - D' },
-    { id: 5, name: 'Brgy 176 - E' },
-    { id: 6, name: 'Brgy 176 - F' },
-];
-
-const packages = [
-    { id: 1, name: 'Pkg. 1A Bicolandia' },
-    { id: 2, name: 'Pkg. 1B Powerline' },
-    { id: 3, name: 'Pkg. 1C Sampalukan' },
-    { id: 4, name: 'Pkg. 2 Botlog' },
-    { id: 5, name: 'Pkg. 2 GK Staging' },
-    { id: 6, name: 'Pkg. 3 Kaunlaran' },
-    { id: 7, name: 'Pkg. 3 Maharlika' },
-    { id: 8, name: 'Pkg. 3 Maharlika 2' },
-    { id: 9, name: 'Pkg. 3 Damayan' },
-    { id: 10, name: 'Pkg. 4A Atlantika' },
-    { id: 11, name: 'Pkg. 4B Aklan Wire' },
-    { id: 12, name: 'Pkg. 5 San Roque' },
-    { id: 13, name: 'Pkg. 5 Brgy. Annex (BFP)' },
-    { id: 14, name: 'Pkg. 5 Crasher' },
-    { id: 15, name: 'Pkg. 5 Gatnai' },
-    { id: 16, name: 'Pkg. 6 Bayanihan' },
-    { id: 17, name: 'Pkg. 7A Lakan' },
-    { id: 18, name: 'Pkg. 7B PhilRad' },
-    { id: 19, name: 'Pkg. 7B  Khulits Court' },
-    { id: 20, name: 'Pkg. 7B Dating Daan' },
-    { id: 21, name: 'Pkg. 7C GS Senior High' },
-    { id: 22, name: 'Pkg. 8A North Cal' },
-    { id: 23, name: 'Pkg. 8B Makati' },
-    { id: 24, name: 'Pkg. 9 Plaza Maria Upper' },
-    { id: 25, name: 'Pkg. 9 Plaza Maria Lower' },
-];
+const barangay = [{ id: 5, name: 'Brgy 176 - E' }];
 
 type Barangay = {
     id: number;
@@ -81,15 +41,11 @@ type Package = {
 };
 
 type SelectionState = {
-    value: Barangay | LocationCategory_T | Package | null;
+    value: Barangay | Package | null;
     open: boolean;
 };
 
-function CreateLocation({
-    locationCategory = [],
-}: {
-    locationCategory?: LocationCategory_T[];
-}) {
+function CreateLocation({ packages = [] }: { packages?: Package[] }) {
     // Dialog control state
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -99,7 +55,7 @@ function CreateLocation({
     const { data, setData, post, processing, errors, reset } = useForm({
         location_name: '',
         landmark: '',
-        barangay: '',
+        barangay: 'Brgy 176 - E',
         location_category: '',
         latitude: '',
         longitude: '',
@@ -113,7 +69,7 @@ function CreateLocation({
     });
 
     const [barangayState, setBarangayState] = useState<SelectionState>({
-        value: null,
+        value: barangay[0],
         open: false,
     });
 
@@ -143,15 +99,6 @@ function CreateLocation({
             open: false,
         });
         setData('barangay', selected ? selected.name : '');
-    };
-
-    // Handlers for category selection
-    const handleCategorySelect = (selected: LocationCategory_T | null) => {
-        setCategoryState({
-            value: selected,
-            open: false,
-        });
-        setData('location_category', selected ? selected.id.toString() : '');
     };
 
     const handleLocationSelect = (location: { lat: number; lng: number }) => {
@@ -236,76 +183,45 @@ function CreateLocation({
                     <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
                         <div className="space-y-4">
                             {/* Location Name (Package) Selector */}
-                            <Popover
-                                open={packageState.open}
-                                onOpenChange={(open: boolean) =>
-                                    setPackageState((prev) => ({
-                                        ...prev,
-                                        open,
-                                    }))
-                                }
-                            >
-                                <PopoverTrigger asChild>
-                                    <div>
-                                        <Label className="mb-2">
-                                            Location Name
-                                        </Label>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={packageState.open}
-                                            className="w-full justify-between"
-                                        >
-                                            {packageState.value
-                                                ? (
-                                                      packageState.value as Package
-                                                  ).name
-                                                : 'Select Package'}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="p-0">
-                                    <Command>
-                                        <CommandInput placeholder="Search package..." />
-                                        <CommandList>
-                                            <CommandEmpty>
-                                                No package found.
-                                            </CommandEmpty>
-                                            <CommandGroup>
+                            <div>
+                                <Label htmlFor="location-name">
+                                    Location Name
+                                </Label>
+                                <Select
+                                    value={
+                                        packageState.value
+                                            ? (
+                                                  packageState.value as Package
+                                              ).id.toString()
+                                            : ''
+                                    }
+                                    onValueChange={(value) => {
+                                        const selected = packages.find(
+                                            (pkg) =>
+                                                pkg.id.toString() === value,
+                                        );
+                                        handlePackageSelect(selected || null);
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select Package" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <ScrollArea className="h-[300px]">
+                                            <SelectGroup>
                                                 {packages.map((pkg) => (
-                                                    <CommandItem
+                                                    <SelectItem
                                                         key={pkg.id}
-                                                        value={pkg.name}
-                                                        onSelect={() =>
-                                                            handlePackageSelect(
-                                                                (
-                                                                    packageState.value as Package
-                                                                )?.id === pkg.id
-                                                                    ? null
-                                                                    : pkg,
-                                                            )
-                                                        }
+                                                        value={pkg.id.toString()}
                                                     >
                                                         {pkg.name}
-                                                        <Check
-                                                            className={cn(
-                                                                'ml-auto',
-                                                                (
-                                                                    packageState.value as Package
-                                                                )?.id === pkg.id
-                                                                    ? 'opacity-100'
-                                                                    : 'opacity-0',
-                                                            )}
-                                                        />
-                                                    </CommandItem>
+                                                    </SelectItem>
                                                 ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
+                                            </SelectGroup>
+                                        </ScrollArea>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             {errors.location_name && (
                                 <p className="mt-1 text-sm text-red-500">
                                     {errors.location_name}
@@ -314,7 +230,10 @@ function CreateLocation({
 
                             <div>
                                 <Label htmlFor="location-landmark">
-                                    Near Landmark
+                                    Near Landmark{' '}
+                                    <span className="text-muted-foreground">
+                                        (Optional)
+                                    </span>
                                 </Label>
                                 <Input
                                     id="location-landmark"
@@ -332,158 +251,44 @@ function CreateLocation({
                             </div>
 
                             {/* Barangay Selector */}
-                            <Popover
-                                open={barangayState.open}
-                                onOpenChange={(open: boolean) =>
-                                    setBarangayState((prev) => ({
-                                        ...prev,
-                                        open,
-                                    }))
-                                }
-                            >
-                                <PopoverTrigger asChild>
-                                    <div>
-                                        <Label className="mb-2">Barangay</Label>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={barangayState.open}
-                                            className="w-full justify-between"
-                                        >
-                                            {barangayState.value
-                                                ? (
-                                                      barangayState.value as Barangay
-                                                  ).name
-                                                : 'Select Barangay'}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="p-0">
-                                    <Command>
-                                        <CommandList>
-                                            <CommandEmpty>
-                                                No barangay found.
-                                            </CommandEmpty>
-                                            <CommandGroup>
-                                                {barangay.map((brgy) => (
-                                                    <CommandItem
-                                                        key={brgy.id}
-                                                        value={brgy.name}
-                                                        onSelect={() =>
-                                                            handleBarangaySelect(
-                                                                (
-                                                                    barangayState.value as Barangay
-                                                                )?.id ===
-                                                                    brgy.id
-                                                                    ? null
-                                                                    : brgy,
-                                                            )
-                                                        }
-                                                    >
-                                                        {brgy.name}
-                                                        <Check
-                                                            className={cn(
-                                                                'ml-auto',
-                                                                (
-                                                                    barangayState.value as Barangay
-                                                                )?.id ===
-                                                                    brgy.id
-                                                                    ? 'opacity-100'
-                                                                    : 'opacity-0',
-                                                            )}
-                                                        />
-                                                    </CommandItem>
-                                                ))}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
+                            <div>
+                                <Label htmlFor="barangay">Barangay</Label>
+                                <Select
+                                    value={
+                                        barangayState.value
+                                            ? (
+                                                  barangayState.value as Barangay
+                                              ).id.toString()
+                                            : ''
+                                    }
+                                    onValueChange={(value) => {
+                                        const selected = barangay.find(
+                                            (brgy) =>
+                                                brgy.id.toString() === value,
+                                        );
+                                        handleBarangaySelect(selected || null);
+                                    }}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select Barangay" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {barangay.map((brgy) => (
+                                                <SelectItem
+                                                    key={brgy.id}
+                                                    value={brgy.id.toString()}
+                                                >
+                                                    {brgy.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             {errors.barangay && (
                                 <p className="mt-1 text-sm text-red-500">
                                     {errors.barangay}
-                                </p>
-                            )}
-
-                            {/* Zone Category */}
-                            <Popover
-                                open={categoryState.open}
-                                onOpenChange={(open: boolean) =>
-                                    setCategoryState((prev) => ({
-                                        ...prev,
-                                        open,
-                                    }))
-                                }
-                            >
-                                <PopoverTrigger asChild>
-                                    <div>
-                                        <Label className="mb-2">
-                                            Zone Category
-                                        </Label>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={categoryState.open}
-                                            className="w-full justify-between"
-                                        >
-                                            {categoryState.value
-                                                ? categoryState.value.name
-                                                : 'Select Category'}
-                                            <ChevronsUpDown className="opacity-50" />
-                                        </Button>
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="p-0">
-                                    <Command>
-                                        <CommandList>
-                                            <CommandEmpty>
-                                                No category found.
-                                            </CommandEmpty>
-                                            <CommandGroup>
-                                                {(locationCategory || []).map(
-                                                    (category) => (
-                                                        <CommandItem
-                                                            key={category.id}
-                                                            value={
-                                                                category.name
-                                                            }
-                                                            onSelect={() =>
-                                                                handleCategorySelect(
-                                                                    categoryState
-                                                                        .value
-                                                                        ?.id ===
-                                                                        category.id
-                                                                        ? null
-                                                                        : category,
-                                                                )
-                                                            }
-                                                        >
-                                                            {category.name}
-                                                            <Check
-                                                                className={cn(
-                                                                    'ml-auto',
-                                                                    categoryState
-                                                                        .value
-                                                                        ?.id ===
-                                                                        category.id
-                                                                        ? 'opacity-100'
-                                                                        : 'opacity-0',
-                                                                )}
-                                                            />
-                                                        </CommandItem>
-                                                    ),
-                                                )}
-                                            </CommandGroup>
-                                        </CommandList>
-                                    </Command>
-                                </PopoverContent>
-                            </Popover>
-                            {errors.location_category && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {errors.location_category}
                                 </p>
                             )}
 
@@ -554,7 +359,12 @@ function CreateLocation({
 
                             {/* Description */}
                             <div>
-                                <Label htmlFor="description">Description</Label>
+                                <Label htmlFor="description">
+                                    Description{' '}
+                                    <span className="text-muted-foreground">
+                                        (Optional)
+                                    </span>
+                                </Label>
                                 <Textarea
                                     id="description"
                                     className="resize-none"
@@ -581,7 +391,8 @@ function CreateLocation({
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -589,6 +400,11 @@ function CreateLocation({
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <MapPin className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Creating...' : 'Add Location'}
                             </Button>
                         </div>
