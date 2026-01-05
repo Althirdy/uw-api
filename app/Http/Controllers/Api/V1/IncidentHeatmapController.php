@@ -67,15 +67,39 @@ class IncidentHeatmapController extends BaseApiController
             }
 
             $accidents = $accidentsQuery->get()->map(function ($accident) {
-                return [
-                    'id' => $accident->id,
-                    'lat' => (float) $accident->lat,
-                    'lng' => (float) $accident->lng,
-                    'severity' => strtolower($accident->severity),
-                    'type' => strtolower($accident->type),
-                    'title' => $accident->title,
-                    'occurred_at' => $accident->occurred_at->toISOString(),
+                // Map severity: Low -> low, Medium -> medium, High -> high
+                $severityMap = [
+                    'Low' => 'low',
+                    'Medium' => 'medium',
+                    'High' => 'high',
                 ];
+                $severity = $severityMap[$accident->severity] ?? strtolower($accident->severity ?? 'low');
+
+                // Handle occurred_at - ensure it's a Carbon instance or convert it
+                $occurredAt = $accident->occurred_at;
+                if ($occurredAt && !($occurredAt instanceof \Carbon\Carbon)) {
+                    try {
+                        $occurredAt = \Carbon\Carbon::parse($occurredAt);
+                    } catch (\Exception $e) {
+                        $occurredAt = now();
+                    }
+                } elseif (!$occurredAt) {
+                    $occurredAt = now();
+                }
+
+                return [
+                    'id' => (int) $accident->id,
+                    'lat' => $accident->lat !== null ? (string) $accident->lat : null,
+                    'lng' => $accident->lng !== null ? (string) $accident->lng : null,
+                    'severity' => $severity,
+                    'type' => strtolower($accident->type ?? 'accident'),
+                    'title' => $accident->title ?? 'Untitled Incident',
+                    'occurred_at' => $occurredAt->toISOString(),
+                ];
+            })->filter(function ($accident) {
+                // Filter out incidents without valid coordinates
+                return $accident['lat'] !== null && $accident['lng'] !== null &&
+                       !empty($accident['lat']) && !empty($accident['lng']);
             });
 
             // 2. Get verified/resolved concerns (citizen reports)
@@ -117,30 +141,38 @@ class IncidentHeatmapController extends BaseApiController
             }
 
             $concerns = $concernsQuery->get()->map(function ($concern) {
+                // Handle created_at - ensure it's a Carbon instance
+                $createdAt = $concern->created_at;
+                if (!$createdAt || !($createdAt instanceof \Carbon\Carbon)) {
+                    $createdAt = now();
+                }
+
                 return [
-                    'id' => $concern->id,
-                    'lat' => (float) $concern->latitude,
-                    'lng' => (float) $concern->longitude,
-                    'severity' => $concern->severity,
-                    'type' => $concern->category, // Use category as type for concerns
-                    'title' => $concern->title,
-                    'occurred_at' => $concern->created_at->toISOString(),
+                    'id' => (int) $concern->id,
+                    'lat' => $concern->latitude !== null ? (string) $concern->latitude : null,
+                    'lng' => $concern->longitude !== null ? (string) $concern->longitude : null,
+                    'severity' => strtolower($concern->severity ?? 'low'),
+                    'type' => strtolower($concern->category ?? 'other'), // Use category as type for concerns
+                    'title' => $concern->title ?? 'Untitled Concern',
+                    'occurred_at' => $createdAt->toISOString(),
                 ];
+            })->filter(function ($concern) {
+                // Filter out incidents without valid coordinates
+                return $concern['lat'] !== null && $concern['lng'] !== null &&
+                       !empty($concern['lat']) && !empty($concern['lng']);
             });
 
-            // Combine both sources
-            $incidents = $accidents->merge($concerns);
-
-            // Filter out any incidents without valid coordinates (safety check)
-            $incidents = $incidents->filter(function ($incident) {
-                return isset($incident['lat']) && isset($incident['lng']) &&
-                       ! is_nan($incident['lat']) && ! is_nan($incident['lng']);
-            })->values();
+            // Combine both sources and reset keys
+            // Convert to arrays first to avoid Eloquent Collection merge issues (getKey() error)
+            $incidents = collect(array_merge(
+                $accidents->toArray(),
+                $concerns->toArray()
+            ))->values();
 
             return $this->sendResponse([
                 'incidents' => $incidents,
                 'total' => $incidents->count(),
-            ], 'Incidents retrieved successfully');
+            ], 'Heatmap data retrieved successfully');
 
         } catch (\Exception $e) {
             Log::error('Error retrieving heatmap incidents', [
