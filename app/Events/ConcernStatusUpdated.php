@@ -86,8 +86,9 @@ class ConcernStatusUpdated implements ShouldBroadcast
                 'severity' => $this->concern->severity,
                 'status' => $this->newStatus,
                 'previousStatus' => $this->previousStatus,
-                'latitude' => $this->concern->latitude,
-                'longitude' => $this->concern->longitude,
+                // ✅ CRITICAL: Always include coordinates (even if null - frontend will filter)
+                'latitude' => $this->concern->latitude !== null ? (string) $this->concern->latitude : null,
+                'longitude' => $this->concern->longitude !== null ? (string) $this->concern->longitude : null,
                 'address' => $this->concern->address,
                 'customLocation' => $this->concern->custom_location,
                 'transcriptText' => $this->concern->transcript_text,

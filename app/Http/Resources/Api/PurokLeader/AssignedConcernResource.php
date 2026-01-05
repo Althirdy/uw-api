@@ -31,8 +31,9 @@ class AssignedConcernResource extends JsonResource
             'severity' => $concern->severity,
             'status' => $concern->status, // Global status from concerns table
             'distribution_status' => $this->status, // Status from concern_distribution table
-            'latitude' => $concern->latitude,
-            'longitude' => $concern->longitude,
+            // ✅ CRITICAL: Always include coordinates (even if null - frontend will filter)
+            'latitude' => $concern->latitude !== null ? (string) $concern->latitude : null,
+            'longitude' => $concern->longitude !== null ? (string) $concern->longitude : null,
             'created_at' => $concern->created_at,
             'updated_at' => $concern->updated_at,
 

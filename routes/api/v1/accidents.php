@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActiveAccidentController;
+use App\Http\Controllers\Api\V1\IncidentHeatmapController;
 use App\Http\Controllers\Api\V1\Operator\AccidentController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,5 +17,10 @@ Route::middleware(['auth:sanctum', 'ability.access'])->group(function () {
     Route::prefix('active-accidents')->group(function () {
         Route::get('/', [ActiveAccidentController::class, 'index']);
         Route::get('/{id}', [ActiveAccidentController::class, 'show']);
+    });
+
+    // Heatmap endpoint - Returns verified/resolved incidents for heatmap visualization
+    Route::prefix('incidents')->group(function () {
+        Route::get('/heatmap', [IncidentHeatmapController::class, 'index']);
     });
 });
