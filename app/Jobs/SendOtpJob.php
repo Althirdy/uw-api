@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Services\SemaphoreService;
+use App\Services\TextBeeService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -27,11 +27,13 @@ class SendOtpJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(SemaphoreService $semaphore): void
+    public function handle(): void
     {
-        $message = "Your secure login code is: {otp}. Do not share this.";
+        $textBee = new TextBeeService(
+            config('services.textbee.api_key'),
+            config('services.textbee.device_id')
+        );
 
-        $semaphore->sendOtp($this->phoneNumber, $message, $this->otpCode);
-        //
+        $textBee->sendOtp($this->phoneNumber, $this->otpCode);
     }
 }

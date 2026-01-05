@@ -23,8 +23,6 @@ Route::prefix('v1')->group(function () {
     require __DIR__.'/api/v1/yolo.php';
 
     Route::post('/ocr/national-id', [App\Http\Controllers\Api\V1\Auth\IdVerificationController::class, 'scanIdFront']);
-    
-    Route::post('/otp/request', [App\Http\Controllers\Api\V1\Auth\OtpController::class, 'requestOtp']);
 
 });
 
