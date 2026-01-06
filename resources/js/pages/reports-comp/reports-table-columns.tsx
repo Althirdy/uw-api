@@ -101,7 +101,7 @@ export const columns = (reportTypes: string[]): ColumnDef<reports_T>[] => [
             const report = row.original;
             return (
                 <div>
-                    {Number(report.latitute).toFixed(2)},{' '}
+                    {Number(report.latitude).toFixed(2)},{' '}
                     {Number(report.longtitude).toFixed(2)}
                 </div>
             );

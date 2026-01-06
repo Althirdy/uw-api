@@ -20,12 +20,12 @@ import EditContacts from './contacts-edit';
 import ViewContacts from './contacts-view';
 
 const responderTypeColors: Record<string, string> = {
-    Fire: 'bg-red-600 text-white',
+    Fire: 'bg-red-600  text-foreground',
     Emergency: 'bg-yellow-500 text-black',
-    Crime: 'bg-zinc-700 text-white',
+    Crime: 'bg-zinc-700  text-foreground',
     Traffic: 'bg-orange-500 text-black',
-    Barangay: 'bg-blue-500 text-white',
-    Others: 'bg-gray-600 text-white',
+    Barangay: 'bg-blue-500  text-foreground',
+    Others: 'bg-gray-600  text-foreground',
 };
 
 const ContactCard = ({ contacts }: { contacts: Contact[] }) => {
@@ -67,7 +67,7 @@ const ContactCard = ({ contacts }: { contacts: Contact[] }) => {
                                     Name: {contact.contact_person}
                                 </span>
                                 <span
-                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium text-white ${
+                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium text-foreground ${
                                         contact.active
                                             ? 'bg-green-800'
                                             : 'bg-gray-800'

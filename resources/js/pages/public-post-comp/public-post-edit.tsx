@@ -1,4 +1,3 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -19,10 +18,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 
 import { PublicPost_T } from '@/types/public-post-types';
 import { router, useForm } from '@inertiajs/react';
-import { Calendar, Globe, TriangleAlert, User } from 'lucide-react';
+import { Calendar, Globe, MoveLeft, Save, User } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type EditPublicPostProps = {
@@ -37,12 +37,25 @@ type EditPublicPostForm = {
     category: string;
 };
 
+const reportTypeColors: Record<string, string> = {
+    CCTV: 'bg-blue-800',
+    'Citizen Concern': 'bg-purple-800',
+    Emergency: 'bg-red-800',
+    Announcement: 'bg-yellow-800',
+};
+
+function formatDateTimeForInput(isoString: string): string {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    return date.toISOString().slice(0, 16);
+}
+
 function getStatusBadge(publishedAt: string | null) {
     if (!publishedAt) {
         return (
-            <Badge variant="outline" className="text-gray-500">
+            <span className="inline-flex items-center rounded-[var(--radius)] bg-zinc-800 px-2.5 py-0.5 text-sm font-medium">
                 Draft
-            </Badge>
+            </span>
         );
     }
 
@@ -51,16 +64,16 @@ function getStatusBadge(publishedAt: string | null) {
 
     if (publishDate > now) {
         return (
-            <Badge variant="secondary" className="text-blue-600">
+            <span className="inline-flex items-center rounded-[var(--radius)] bg-yellow-800 px-2.5 py-0.5 text-sm font-medium">
                 Scheduled
-            </Badge>
+            </span>
         );
     }
 
     return (
-        <Badge variant="default" className="bg-green-600 text-white">
+        <span className="inline-flex items-center rounded-[var(--radius)] bg-green-800 px-2.5 py-0.5 text-sm font-medium text-foreground">
             Published
-        </Badge>
+        </span>
     );
 }
 
@@ -114,10 +127,6 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
             },
         );
     };
-    const formatDateTimeForInput = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toISOString().slice(0, 16);
-    };
 
     return (
         <Dialog>
@@ -141,6 +150,14 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                 </p>
                                 <div className="mt-1">
                                     {getStatusBadge(post.published_at)}
+                                    <span
+                                        className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-0.5 text-sm font-medium ${reportTypeColors[
+                                            post.report?.report_type || ''
+                                            ] || 'bg-gray-100 text-gray-800'
+                                            }`}
+                                    >
+                                        {post.report?.report_type}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -200,187 +217,194 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                 </div>
                             </div>
 
-                            {/* Editable Content */}
-                            <div className="grid gap-3">
-                                <Label htmlFor="content">Content</Label>
-                                <div className="relative">
-                                    <textarea
-                                        id="content"
-                                        value={data.content}
-                                        onChange={(e) =>
-                                            setData(
-                                                'content',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="Enter post content"
-                                        rows={8}
-                                        className={`w-full resize-none rounded-md border px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none ${
-                                            errors.content
-                                                ? 'border-red-500 focus:ring-red-500'
-                                                : 'border-input'
-                                        }`}
-                                    />
-                                    {errors.content && (
-                                        <span className="text-xs text-red-500">
-                                            {errors.content}
-                                        </span>
+                                {/* Editable Content */}
+                                <div className="grid gap-3">
+                                    <Label htmlFor="content">Content</Label>
+                                    <div className="relative">
+                                        <textarea
+                                            id="content"
+                                            value={data.content}
+                                            onChange={(e) =>
+                                                setData(
+                                                    'content',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Enter post content"
+                                            rows={8}
+                                            className={`w-full resize-none rounded-md border px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-ring focus:outline-none ${errors.content
+                                                    ? 'border-red-500 focus:ring-red-500'
+                                                    : 'border-input'
+                                                }`}
+                                        />
+                                        {errors.content && (
+                                            <span className="text-xs text-red-500">
+                                                {errors.content}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                            {/* Source Details (if linked) */}
+                            {post.postable && (
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-sm font-medium text-[var(--gray)]">
+                                        Original Source
+                                    </p>
+                                    <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
+                                        <p>Type: {post.postable_type?.split('\\').pop()}</p>
+                                        <p>Source ID: #{post.postable_id}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Publication Settings */}
+                            {!isPublished && (
+                                <div className="flex w-full flex-col gap-4">
+                                    <div className="grid gap-3">
+                                        <p className="text-sm font-medium text-[var(--gray)]">
+                                            Publication Settings
+                                        </p>
+                                    </div>
+
+                                    {/* Publish Now Option */}
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="publish-now"
+                                            checked={publishNow}
+                                            onCheckedChange={(checked: boolean) => {
+                                                setPublishNow(checked);
+                                                if (checked) {
+                                                    setScheduleMode(false);
+                                                }
+                                            }}
+                                        />
+                                        <Label
+                                            htmlFor="publish-now"
+                                            className="flex cursor-pointer items-center gap-2"
+                                        >
+                                            <Globe className="h-4 w-4" />
+                                            Publish immediately
+                                        </Label>
+                                    </div>
+
+                                    {/* Schedule Option */}
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="schedule-mode"
+                                            checked={scheduleMode}
+                                            onCheckedChange={(checked: boolean) => {
+                                                setScheduleMode(checked);
+                                                if (checked) {
+                                                    setPublishNow(false);
+                                                }
+                                            }}
+                                        />
+                                        <Label
+                                            htmlFor="schedule-mode"
+                                            className="flex cursor-pointer items-center gap-2"
+                                        >
+                                            <Calendar className="h-4 w-4" />
+                                            Schedule for later
+                                        </Label>
+                                    </div>
+
+                                    {/* Schedule Date/Time Input */}
+                                    {scheduleMode && (
+                                        <div className="grid gap-3">
+                                            <Label htmlFor="published_at">
+                                                Schedule Date & Time
+                                            </Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="published_at"
+                                                    type="datetime-local"
+                                                    value={
+                                                        data.published_at
+                                                            ? formatDateTimeForInput(
+                                                                data.published_at,
+                                                            )
+                                                            : ''
+                                                    }
+                                                    onChange={(e) => {
+                                                        const date = e.target.value
+                                                            ? new Date(
+                                                                e.target.value,
+                                                            ).toISOString()
+                                                            : '';
+                                                        setData(
+                                                            'published_at',
+                                                            date,
+                                                        );
+                                                    }}
+                                                    min={new Date()
+                                                        .toISOString()
+                                                        .slice(0, 16)}
+                                                    className={
+                                                        errors.published_at
+                                                            ? 'border-red-500 focus:ring-red-500'
+                                                            : ''
+                                                    }
+                                                />
+                                                {errors.published_at && (
+                                                    <span className="absolute -bottom-5 left-0 text-xs text-red-500">
+                                                        {errors.published_at}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-                        </div>
+                            )}
 
-                        {/* Source Details (if linked) */}
-                        {post.postable && (
+                            {/* Post Metadata (Read-only) */}
                             <div className="flex flex-col gap-2">
-                                <p className="text-sm font-medium text-[var(--gray)]">
-                                    Original Source
-                                </p>
-                                <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground">
-                                    <p>Type: {post.postable_type?.split('\\').pop()}</p>
-                                    <p>Source ID: #{post.postable_id}</p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Publication Settings */}
-                        {!isPublished && (
-                            <div className="flex w-full flex-col gap-4">
-                                <div className="grid gap-3">
+                                <div className="grid">
                                     <p className="text-sm font-medium text-[var(--gray)]">
-                                        Publication Settings
+                                        Post Information
                                     </p>
                                 </div>
-
-                                {/* Publish Now Option */}
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="publish-now"
-                                        checked={publishNow}
-                                        onCheckedChange={(checked: boolean) => {
-                                            setPublishNow(checked);
-                                            if (checked) {
-                                                setScheduleMode(false);
-                                            }
-                                        }}
-                                    />
-                                    <Label
-                                        htmlFor="publish-now"
-                                        className="flex cursor-pointer items-center gap-2"
-                                    >
-                                        <Globe className="h-4 w-4" />
-                                        Publish immediately
-                                    </Label>
-                                </div>
-
-                                {/* Schedule Option */}
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="schedule-mode"
-                                        checked={scheduleMode}
-                                        onCheckedChange={(checked: boolean) => {
-                                            setScheduleMode(checked);
-                                            if (checked) {
-                                                setPublishNow(false);
-                                            }
-                                        }}
-                                    />
-                                    <Label
-                                        htmlFor="schedule-mode"
-                                        className="flex cursor-pointer items-center gap-2"
-                                    >
-                                        <Calendar className="h-4 w-4" />
-                                        Schedule for later
-                                    </Label>
-                                </div>
-
-                                {/* Schedule Date/Time Input */}
-                                {scheduleMode && (
-                                    <div className="grid gap-3">
-                                        <Label htmlFor="published_at">
-                                            Schedule Date & Time
-                                        </Label>
-                                        <div className="relative">
-                                            <Input
-                                                id="published_at"
-                                                type="datetime-local"
-                                                value={
-                                                    data.published_at
-                                                        ? formatDateTimeForInput(
-                                                              data.published_at,
-                                                          )
-                                                        : ''
-                                                }
-                                                onChange={(e) => {
-                                                    const date = e.target.value
-                                                        ? new Date(
-                                                              e.target.value,
-                                                          ).toISOString()
-                                                        : '';
-                                                    setData(
-                                                        'published_at',
-                                                        date,
-                                                    );
-                                                }}
-                                                min={new Date()
-                                                    .toISOString()
-                                                    .slice(0, 16)}
-                                                className={
-                                                    errors.published_at
-                                                        ? 'border-red-500 focus:ring-red-500'
-                                                        : ''
-                                                }
-                                            />
-                                            {errors.published_at && (
-                                                <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                    {errors.published_at}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Post Metadata (Read-only) */}
-                        <div className="flex flex-col gap-2">
-                            <div className="grid">
-                                <p className="text-sm font-medium text-[var(--gray)]">
-                                    Post Information
-                                </p>
-                            </div>
-                            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                                <div className="flex flex-row items-center gap-2">
-                                    <User className="h-4 w-4" />
-                                    <span>
-                                        Published by:{' '}
-                                        {post.publishedBy?.name || 'Barangay Office'}
-                                    </span>
-                                </div>
-                                <div className="flex flex-row items-center gap-2">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>
-                                        Created:{' '}
-                                        {new Date(
-                                            post.created_at,
-                                        ).toLocaleDateString()}
-                                    </span>
-                                </div>
-                                {post.published_at && (
+                                <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                                     <div className="flex flex-row items-center gap-2">
-                                        <Globe className="h-4 w-4" />
+                                        <User className="h-4 w-4" />
                                         <span>
-                                            Current publish date:{' '}
-                                            {new Date(
-                                                post.published_at,
-                                            ).toLocaleDateString()}{' '}
-                                            at{' '}
-                                            {new Date(
-                                                post.published_at,
-                                            ).toLocaleTimeString()}
+                                            Published by:{' '}
+                                            {post.publishedBy?.name || 'Barangay Office'}
                                         </span>
                                     </div>
-                                )}
+                                    <div className="flex flex-row items-center gap-2">
+                                        <User className="h-4 w-4" />
+                                        {/* <span>
+                                        Reported by:{' '}
+                                        {post.report?.user?.name || 'Unknown'}
+                                    </span> */}
+                                    </div>
+
+                                    <div className="flex flex-row items-center gap-2">
+                                        <Calendar className="h-4 w-4" />
+                                        <span>
+                                            Created:{' '}
+                                            {new Date(
+                                                post.created_at,
+                                            ).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    {post.published_at && (
+                                        <div className="flex flex-row items-center gap-2">
+                                            <Globe className="h-4 w-4" />
+                                            <span>
+                                                Current publish date:{' '}
+                                                {new Date(
+                                                    post.published_at,
+                                                ).toLocaleDateString()}{' '}
+                                                at{' '}
+                                                {new Date(
+                                                    post.published_at,
+                                                ).toLocaleTimeString()}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -392,16 +416,22 @@ function EditPublicPost({ post, children }: EditPublicPostProps) {
                                     type="button"
                                     variant="outline"
                                     data-dialog-close
-                                    className="flex-1"
+                                    className="flex-1 cursor-pointer"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
                                 type="submit"
                                 disabled={processing}
-                                className="flex-2"
+                                className="flex-2 cursor-pointer"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>

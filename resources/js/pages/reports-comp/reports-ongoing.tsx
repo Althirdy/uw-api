@@ -123,7 +123,7 @@ const OngoingReport = ({ report }: { report: reports_T }) => {
                         <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <LocateFixed className="h-3.5 w-3.5 text-primary" />
                             <span className="truncate">
-                                {report.location_name || `${report.latitute}, ${report.longtitude}`}
+                                {report.location_name || `${report.latitude}, ${report.longitude}`}
                             </span>
                         </div>
                     </div>

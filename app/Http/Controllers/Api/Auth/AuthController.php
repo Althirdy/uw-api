@@ -8,6 +8,7 @@ use App\Http\Requests\Api\Auth\PurokLeaderLoginRequest;
 use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Models\CitizenDetails;
 use App\Models\User;
+use App\Models\UserSuspension;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -262,6 +263,7 @@ class AuthController extends BaseApiController
                 'middle_name' => 'nullable|string|max:255',
                 'last_name' => 'nullable|string|max:255',
                 'suffix' => 'nullable|string|max:10',
+                'phone_number' => 'nullable|string|max:20',
             ]);
 
             $results = [];
@@ -275,6 +277,28 @@ class AuthController extends BaseApiController
                         ? 'This email is already registered.'
                         : 'Email is available.',
                 ];
+            }
+
+            // Check if identity is banned (requires name and phone)
+            if (!empty($validated['first_name']) && 
+                !empty($validated['last_name']) && 
+                !empty($validated['phone_number'])) {
+                
+                $isBanned = UserSuspension::isIdentityBanned(
+                    $validated['phone_number'],
+                    $validated['first_name'],
+                    $validated['middle_name'] ?? null,
+                    $validated['last_name'],
+                    $validated['suffix'] ?? null
+                );
+
+                if ($isBanned) {
+                    $results['identity'] = [
+                        'available' => false,
+                        'banned' => true,
+                        'message' => 'This identity has been permanently banned from the system.'
+                    ];
+                }
             }
 
             // Check name availability if first_name and last_name are provided
@@ -319,6 +343,23 @@ class AuthController extends BaseApiController
         $validated = $request->validated();
 
         try {
+            // Check if the identity is banned
+            $isBanned = UserSuspension::isIdentityBanned(
+                $validated['phone_number'],
+                $validated['first_name'],
+                $validated['middle_name'] ?? null,
+                $validated['last_name'],
+                $validated['suffix'] ?? null
+            );
+
+            if ($isBanned) {
+                return $this->sendError(
+                    'This identity has been permanently banned from the system. If you believe this is an error, please contact support.',
+                    null,
+                    403
+                );
+            }
+
             DB::beginTransaction();
 
             // Concatenate full name

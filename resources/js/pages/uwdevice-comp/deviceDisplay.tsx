@@ -100,19 +100,6 @@ function UWDeviceDisplay({
 
                         <CardContent className="space-y-4">
                             {/* Technical Details */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-muted-foreground">
-                                        Category
-                                    </p>
-                                    <p className="font-medium">
-                                        {device.location?.category_name ||
-                                            (device.custom_address
-                                                ? 'Custom'
-                                                : 'N/A')}
-                                    </p>
-                                </div>
-                            </div>
                             <div>
                                 <p className="mb-1 text-muted-foreground">
                                     Location

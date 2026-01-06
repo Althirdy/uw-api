@@ -24,11 +24,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/components/use-toast';
 import { useForm } from '@inertiajs/react';
 import { Select } from '@radix-ui/react-select';
 import { format } from 'date-fns'; // Add this import
-import { ChevronDownIcon, Plus } from 'lucide-react';
+import { Camera, ChevronDownIcon, MoveLeft, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import { location_T } from '../../types/cctv-location-types';
 
@@ -96,7 +97,7 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                     onSubmit={onSubmit}
                     className="flex h-full flex-col overflow-hidden"
                 >
-                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6">
                         <DialogTitle>Add New CCTV Device</DialogTitle>
                         <DialogDescription>
                             Add a new CCTV camera device with its configuration
@@ -165,74 +166,71 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                 )}
                             </div>
 
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="cctv-location">
-                                    CCTV Location
-                                </Label>
-                                <Select
-                                    onValueChange={(value) =>
-                                        setData('location_id', value)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent id="cctv-location">
-                                        <SelectGroup>
-                                            {location.map((loc) => (
-                                                <SelectItem
-                                                    key={loc.id}
-                                                    value={loc.id.toString()}
-                                                >
-                                                    <div>
-                                                        {loc.location_name} -{' '}
-                                                        {loc.category_name}
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {loc.landmark},{' '}
-                                                            {loc.barangay}
-                                                        </div>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {errors.location_id && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.location_id}
-                                    </p>
-                                )}
-                            </div>
+                            <div className="flex flex-row justify-between gap-2">
+                                <div className="flex w-full flex-col gap-2">
+                                    <Label htmlFor="cctv-location">
+                                        CCTV Location
+                                    </Label>
+                                    <Select
+                                        onValueChange={(value) =>
+                                            setData('location_id', value)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent id="cctv-location">
+                                            <SelectGroup>
+                                                {location.map((loc) => (
+                                                    <SelectItem
+                                                        key={loc.id}
+                                                        value={loc.id.toString()}
+                                                    >
+                                                        {loc.location_name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.location_id && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.location_id}
+                                        </p>
+                                    )}
+                                </div>
 
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="cctv-status">CCTV Status</Label>
-                                <Select
-                                    onValueChange={(value) =>
-                                        setData('status', value)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent id="cctv-status">
-                                        <SelectGroup>
-                                            <SelectItem value="active">
-                                                Active
-                                            </SelectItem>
-                                            <SelectItem value="inactive">
-                                                Inactive
-                                            </SelectItem>
-                                            <SelectItem value="maintenance">
-                                                Maintenance
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {errors.status && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.status}
-                                    </p>
-                                )}
+                                <div className="flex w-full flex-col gap-2">
+                                    <Label htmlFor="cctv-status">
+                                        CCTV Status
+                                    </Label>
+                                    <Select
+                                        onValueChange={(value) =>
+                                            setData('status', value)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent id="cctv-status">
+                                            <SelectGroup>
+                                                <SelectItem value="active">
+                                                    Active
+                                                </SelectItem>
+                                                <SelectItem value="inactive">
+                                                    Inactive
+                                                </SelectItem>
+                                                <SelectItem value="maintenance">
+                                                    Maintenance
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.status && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.status}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-4">
@@ -280,16 +278,28 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                             <div className="flex gap-2">
                                 <div className="flex flex-1 flex-col gap-2">
                                     <Label htmlFor="fps">FPS</Label>
-                                    <Input
-                                        id="fps"
-                                        type="number"
-                                        min="30"
-                                        max="120"
-                                        value={data.fps}
-                                        onChange={(e) =>
-                                            setData('fps', e.target.value)
+                                    <Select
+                                        onValueChange={(value) =>
+                                            setData('fps', value)
                                         }
-                                    />
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent id="fps">
+                                            <SelectGroup>
+                                                <SelectItem value="24">
+                                                    24 FPS
+                                                </SelectItem>
+                                                <SelectItem value="30">
+                                                    30 FPS
+                                                </SelectItem>
+                                                <SelectItem value="60">
+                                                    60 FPS
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
                                     {errors.fps && (
                                         <p className="mt-1 text-sm text-red-500">
                                             {errors.fps}
@@ -385,7 +395,8 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                     type="button"
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -393,6 +404,11 @@ function AddCCTVDevice({ location }: { location: location_T[] }) {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Camera className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Saving...' : 'Add CCTV'}
                             </Button>
                         </div>

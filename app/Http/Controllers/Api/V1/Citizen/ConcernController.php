@@ -59,6 +59,27 @@ class ConcernController extends BaseApiController
     {
         $validated = $request->validated();
 
+        // Check if user is suspended
+        if (\App\Models\UserSuspension::isUserSuspended(auth()->id())) {
+            $activeSuspension = \App\Models\UserSuspension::getActiveSuspension(auth()->id());
+            
+            $message = 'Your account is currently suspended and cannot create concerns.';
+            if ($activeSuspension) {
+                if ($activeSuspension->punishment_type === 'suspension') {
+                    $message = 'Your account has been permanently suspended and cannot create concerns.';
+                } else {
+                    $expiresAt = $activeSuspension->expires_at->format('F j, Y \\a\\t g:i A');
+                    $message = "Your account is suspended until {$expiresAt} and cannot create concerns.";
+                }
+                
+                if ($activeSuspension->reason) {
+                    $message .= " Reason: {$activeSuspension->reason}";
+                }
+            }
+            
+            return $this->sendError($message, [], 403);
+        }
+
         try {
             // Determine file input (files or images fallback)
             $files = $request->file('files') ?? $request->file('images');

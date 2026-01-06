@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -29,9 +30,16 @@ import EditPublicPost from './public-post-edit';
 import ViewPublicPostDetails from './public-post-view';
 import ResolvePublicPost from './public-post-resolve';
 
+const reportTypeColors: Record<string, string> = {
+    CCTV: 'bg-blue-800',
+    'Citizen Concern': 'bg-purple-800',
+    Emergency: 'bg-red-800',
+    Announcement: 'bg-yellow-800',
+};
+
 function getStatusInfo(publishedAt: string | null) {
     if (!publishedAt) {
-        return { label: 'Draft', className: 'bg-gray-100 text-gray-800' };
+        return { label: 'Draft', className: 'bg-zinc-600' };
     }
 
     const publishDate = new Date(publishedAt);
@@ -40,11 +48,11 @@ function getStatusInfo(publishedAt: string | null) {
     if (publishDate > now) {
         return {
             label: 'Scheduled',
-            className: 'bg-yellow-100 text-yellow-800',
+            className: 'bg-yellow-800',
         };
     }
 
-    return { label: 'Published', className: 'bg-green-100 text-green-800' };
+    return { label: 'Published', className: ' text-foreground bg-green-800' };
 }
 
 const POSTS_PER_PAGE = 8;

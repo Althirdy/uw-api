@@ -89,7 +89,7 @@ class LocationService
      */
     public function getLocationWithDetails(Locations $location): Locations
     {
-        return $location->load('locationCategory');
+        return $location;
     }
 
     /**
@@ -97,13 +97,9 @@ class LocationService
      */
     public function getLocations(array $filters = []): Collection
     {
-        $query = Locations::with('locationCategory');
+        $query = Locations::query();
 
         // Add filters if needed
-        if (isset($filters['category_id'])) {
-            $query->where('location_category_id', $filters['category_id']);
-        }
-
         if (isset($filters['barangay'])) {
             $query->where('barangay', $filters['barangay']);
         }

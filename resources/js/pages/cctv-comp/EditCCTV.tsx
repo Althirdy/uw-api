@@ -108,7 +108,7 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
                     className="flex h-full flex-col overflow-hidden"
                 >
                     {/* Fixed Header */}
-                    <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                    <DialogHeader className="flex-shrink-0 px-6 pt-6">
                         <DialogTitle>Edit CCTV Device</DialogTitle>
                         <DialogDescription>
                             Update the CCTV camera device configuration details.
@@ -176,79 +176,75 @@ function EditCCTVDevice({ location, cctv, children }: EditCCTVDevice) {
                                 )}
                             </div>
 
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="cctv-location">
-                                    CCTV Location
-                                </Label>
-                                <Select
-                                    value={data.location_id}
-                                    onValueChange={(value) =>
-                                        setData('location_id', value)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select a location" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {location.map((loc) => (
-                                                <SelectItem
-                                                    key={loc.id}
-                                                    value={loc.id.toString()}
-                                                >
-                                                    <div>
+                            <div className="flex flex-row justify-between gap-2">
+                                <div className="flex w-full flex-col gap-2">
+                                    <Label htmlFor="cctv-location">
+                                        CCTV Location
+                                    </Label>
+                                    <Select
+                                        value={data.location_id}
+                                        onValueChange={(value) =>
+                                            setData('location_id', value)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select a location" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {location.map((loc) => (
+                                                    <SelectItem
+                                                        key={loc.id}
+                                                        value={loc.id.toString()}
+                                                    >
                                                         <div className="font-medium">
-                                                            {loc.location_name}{' '}
-                                                            -{' '}
-                                                            {loc.category_name}
+                                                            {loc.location_name}
                                                         </div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {loc.landmark},{' '}
-                                                            {loc.barangay}
-                                                        </div>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {errors.location_id && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.location_id}
-                                    </p>
-                                )}
-                            </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.location_id && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.location_id}
+                                        </p>
+                                    )}
+                                </div>
 
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="cctv-status">CCTV Status</Label>
-                                <Select
-                                    value={data.status}
-                                    onValueChange={(value) =>
-                                        setData('status', value)
-                                    }
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem value="active">
-                                                Active
-                                            </SelectItem>
-                                            <SelectItem value="inactive">
-                                                Inactive
-                                            </SelectItem>
-                                            <SelectItem value="maintenance">
-                                                Maintenance
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                {errors.status && (
-                                    <p className="mt-1 text-sm text-red-500">
-                                        {errors.status}
-                                    </p>
-                                )}
+                                <div className="flex w-full flex-col gap-2">
+                                    <Label htmlFor="cctv-status">
+                                        CCTV Status
+                                    </Label>
+                                    <Select
+                                        value={data.status}
+                                        onValueChange={(value) =>
+                                            setData('status', value)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem value="active">
+                                                    Active
+                                                </SelectItem>
+                                                <SelectItem value="inactive">
+                                                    Inactive
+                                                </SelectItem>
+                                                <SelectItem value="maintenance">
+                                                    Maintenance
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    {errors.status && (
+                                        <p className="mt-1 text-sm text-red-500">
+                                            {errors.status}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-4">

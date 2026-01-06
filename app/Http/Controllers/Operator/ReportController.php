@@ -86,7 +86,7 @@ class ReportController extends Controller
                 'report_type' => ucfirst($accident->accident_type),
                 'transcript' => $accident->title,
                 'description' => $accident->description,
-                'latitute' => $accident->latitude,
+                'latitude' => $accident->latitude,
                 'longtitude' => $accident->longitude,
                 'location_name' => $displayLocation, // Added field
                 'is_acknowledge' => strtolower($accident->status) !== 'pending',
@@ -152,7 +152,7 @@ class ReportController extends Controller
                 'report_type' => 'required|string|in:'.implode(',', Report::getReportTypes()),
                 'transcript' => 'required|string|max:500',
                 'description' => 'required|string|max:1000',
-                'latitute' => 'required|numeric|between:-90,90',
+                'latitude' => 'required|numeric|between:-90,90',
                 'longtitude' => 'required|numeric|between:-180,180',
                 'user_id' => 'nullable|exists:users,id',
                 'status' => 'nullable|string|in:Pending,Ongoing,Resolved,Archived',
@@ -234,7 +234,7 @@ class ReportController extends Controller
                 $accident->update([
                     'title' => $validated['transcript'] ?? $accident->title,
                     'description' => $validated['description'],
-                    'latitude' => $validated['latitute'],
+                    'latitude' => $validated['latitude'],
                     'longitude' => $validated['longtitude'],
                     'accident_type' => strtolower($validated['report_type']),
                     'status' => $validated['status'] ?? $accident->status,

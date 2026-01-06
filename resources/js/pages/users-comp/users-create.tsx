@@ -18,10 +18,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { useForm } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { MoveLeft, Plus, UserPlus } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type CreateUserForm = {
@@ -95,8 +96,11 @@ function CreateUsers({
     };
 
     const validatePhoneNumber = (value: string) => {
-        if (value && !/^[0-9]{10,15}$/.test(value)) {
-            return 'Phone number must be 10-15 digits only';
+        if (!value.trim()) {
+            return 'Phone number is required';
+        }
+        if (!/^09\d{9}$/.test(value)) {
+            return 'Phone number must be 11 digits starting with 09 (e.g., 09123456789)';
         }
         return '';
     };
@@ -294,7 +298,7 @@ function CreateUsers({
                         </DialogDescription>
                     </DialogHeader>
                     <div className="flex-1 space-y-6 overflow-y-auto px-6 py-2">
-                        <div className="grid flex-1 auto-rows-min gap-2">
+                        <div className="grid flex-1 auto-rows-min gap-4">
                             <div className="grid pb-2">
                                 <p className="text-sm font-medium text-muted-foreground">
                                     Personal Information
@@ -695,7 +699,8 @@ function CreateUsers({
                                     data-dialog-close
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -703,6 +708,11 @@ function CreateUsers({
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <UserPlus className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Creating...' : 'Create User'}
                             </Button>
                         </div>

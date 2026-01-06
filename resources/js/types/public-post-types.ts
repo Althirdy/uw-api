@@ -13,7 +13,7 @@ export type Report_T = {
     report_type: string;
     transcript: string;
     description: string;
-    latitute: string;
+    latitude: string;
     longtitude: string;
     is_acknowledge: boolean;
     acknowledge_by: number | null;
@@ -36,6 +36,7 @@ export type PublicPost_T = {
     status: 'draft' | 'published' | 'scheduled';
     created_at: string;
     updated_at: string;
+    report?: Report_T;
     deleted_at?: string;
     postable?: {
         id: number;
