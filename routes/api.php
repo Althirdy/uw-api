@@ -26,7 +26,10 @@ Route::prefix('v1')->group(function () {
     // ->middleware('auth:sanctum');
 
     Route::post('/ocr/national-id', [App\Http\Controllers\Api\V1\Auth\IdVerificationController::class, 'scanIdFront']);
+
 });
+
+
 
 /**
  * Legacy Routes (for backward compatibility)

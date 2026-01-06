@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendOtpJob;
 use App\Models\Otp;
 use App\Models\User;
 use App\Services\MailService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
@@ -20,110 +22,54 @@ class OtpController extends Controller
     {
         $this->mailService = $mailService;
     }
-
+    
     /**
-     * Send OTP to email
+     * Request OTP via SMS
      */
-    public function send(Request $request): JsonResponse
+    public function requestOtp(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'type' => 'required|in:registration,forgot_password,email_verification',
-            'name' => 'nullable|string|max:255',
+        $request->validate([
+            'phone' => 'required|numeric|digits:11', // e.g., 09171234567
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+        $phone = $request->phone;
+
+        // Rate limiting: 60 seconds between requests
+        if(Cache::has('otp_lock_'.$phone)) {
+           return response()->json([
+               'success' => false,
+               'message' => 'Please wait 60 seconds before requesting again.'
+           ], 429);
         }
-
-        $email = $request->email;
-        $type = $request->type;
-        $name = $request->name ?? 'User';
-
-        // Rate limiting: 3 attempts per email per 10 minutes
-        $key = 'otp:send:'.$email;
-        if (RateLimiter::tooManyAttempts($key, 3)) {
-            $seconds = RateLimiter::availableIn($key);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Too many OTP requests. Please try again in '.ceil($seconds / 60).' minutes.',
-            ], 429);
-        }
-
-        // Additional validation based on type
-        if ($type === 'registration') {
-            // Check if user already exists
-            if (User::where('email', $email)->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Email already registered',
-                ], 400);
-            }
-        } elseif ($type === 'forgot_password') {
-            // Check if user exists
-            if (! User::where('email', $email)->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Email not found',
-                ], 404);
-            }
-        }
-
-        // Delete old OTPs for this email and type
-        Otp::where('email', $email)
-            ->where('type', $type)
-            ->delete();
 
         // Generate 6-digit OTP
-        $otpCode = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+        $code = rand(100000, 999999);
+        
+        // Store OTP in cache for 1 minute
+        Cache::put('otp_' . $phone, $code, 60);
+        Cache::put('otp_lock_' . $phone, true, 60);
 
-        // Create OTP record
-        $otp = Otp::create([
-            'email' => $email,
-            'otp' => $otpCode,
-            'type' => $type,
-            'expires_at' => Carbon::now()->addMinutes(10),
-        ]);
-
-        // Send email
-        $emailSent = $this->mailService->sendOtpEmail($email, $otpCode, $name);
-
-        if (! $emailSent) {
-            // Delete OTP if email fails
-            $otp->delete();
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to send OTP email. Please try again.',
-            ], 500);
-        }
-
-        RateLimiter::hit($key, 600); // 10 minutes
-
+        // Dispatch job to send SMS
+        SendOtpJob::dispatch($phone, $code);
+        
         return response()->json([
             'success' => true,
-            'message' => 'OTP sent successfully',
+            'message' => 'OTP sent successfully to your phone!',
             'data' => [
-                'email' => $email,
-                'expires_in' => 10, // minutes
-            ],
+                'phone' => $phone,
+                'expires_in' => 1, // minutes
+            ]
         ]);
     }
 
     /**
-     * Verify OTP
+     * Verify OTP sent via SMS
      */
-    public function verify(Request $request): JsonResponse
+    public function verifyOtp(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'phone' => 'required|numeric|digits:11',
             'otp' => 'required|string|size:6',
-            'type' => 'required|in:registration,forgot_password,email_verification',
         ]);
 
         if ($validator->fails()) {
@@ -134,8 +80,11 @@ class OtpController extends Controller
             ], 422);
         }
 
-        // Rate limiting: 5 attempts per email per 10 minutes
-        $key = 'otp:verify:'.$request->email;
+        $phone = $request->phone;
+        $otpCode = $request->otp;
+
+        // Rate limiting: 5 attempts per phone per 5 minutes
+        $key = 'otp:verify:'.$phone;
         if (RateLimiter::tooManyAttempts($key, 5)) {
             return response()->json([
                 'success' => false,
@@ -143,111 +92,80 @@ class OtpController extends Controller
             ], 429);
         }
 
-        // Find valid OTP
-        $otp = Otp::forEmail($request->email)
-            ->ofType($request->type)
-            ->valid()
-            ->latest()
-            ->first();
+        // Check if OTP exists in cache
+        $cachedOtp = Cache::get('otp_' . $phone);
 
-        if (! $otp) {
-            RateLimiter::hit($key, 600);
-
+        if (!$cachedOtp) {
+            RateLimiter::hit($key, 300);
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid or expired OTP',
+                'message' => 'OTP has expired or does not exist. Please request a new one.',
             ], 400);
         }
 
         // Verify OTP code
-        if ($otp->otp !== $request->otp) {
-            RateLimiter::hit($key, 600);
-
+        if ($cachedOtp != $otpCode) {
+            RateLimiter::hit($key, 300);
             return response()->json([
                 'success' => false,
-                'message' => 'Incorrect OTP',
+                'message' => 'Incorrect OTP code.',
             ], 400);
         }
 
-        // Mark as verified
-        $otp->markAsVerified();
-
-        // Clear rate limiting on successful verification
+        // OTP is valid - clear it and rate limiter
+        Cache::forget('otp_' . $phone);
+        Cache::forget('otp_lock_' . $phone);
         RateLimiter::clear($key);
-
-        $responseData = [
-            'email' => $request->email,
-            'type' => $request->type,
-        ];
-
-        // If forgot password, generate and return a reset token
-        if ($request->type === 'forgot_password') {
-            $token = \Illuminate\Support\Str::random(60);
-
-            \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $request->email],
-                [
-                    'token' => \Illuminate\Support\Facades\Hash::make($token),
-                    'created_at' => now(),
-                ]
-            );
-
-            $responseData['token'] = $token;
-        }
 
         return response()->json([
             'success' => true,
             'message' => 'OTP verified successfully',
-            'data' => $responseData,
+            'data' => [
+                'phone' => $phone,
+                'verified' => true,
+            ],
         ]);
     }
 
     /**
-     * Resend OTP
+     * Resend OTP via SMS
      */
-    public function resend(Request $request): JsonResponse
+    public function resendOtp(Request $request): JsonResponse
     {
-        // Resend uses the same logic as send
-        return $this->send($request);
-    }
-
-    /**
-     * Check if OTP is still valid
-     */
-    public function check(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'type' => 'required|in:registration,forgot_password,email_verification',
+        $request->validate([
+            'phone' => 'required|numeric|digits:11',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+        $phone = $request->phone;
+
+        // Rate limiting: 60 seconds between resend requests
+        if(Cache::has('otp_lock_'.$phone)) {
+           $remainingTime = Cache::get('otp_lock_'.$phone);
+           return response()->json([
+               'success' => false,
+               'message' => 'Please wait before requesting another OTP.'
+           ], 429);
         }
 
-        $otp = Otp::forEmail($request->email)
-            ->ofType($request->type)
-            ->valid()
-            ->latest()
-            ->first();
+        // Generate new 6-digit OTP
+        $code = rand(100000, 999999);
+        
+        // Store OTP in cache for 1 minute
+        Cache::put('otp_' . $phone, $code, 60);
+        Cache::put('otp_lock_' . $phone, true, 60);
 
-        if (! $otp) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No valid OTP found',
-                'has_valid_otp' => false,
-            ]);
-        }
-
+        // Dispatch job to send SMS
+        SendOtpJob::dispatch($phone, $code);
+        
         return response()->json([
             'success' => true,
-            'has_valid_otp' => true,
-            'expires_at' => $otp->expires_at->toISOString(),
-            'expires_in_seconds' => Carbon::now()->diffInSeconds($otp->expires_at, false),
+            'message' => 'OTP resent successfully to your phone!',
+            'data' => [
+                'phone' => $phone,
+                'expires_in' => 1, // minutes
+            ]
         ]);
     }
+
+
 }

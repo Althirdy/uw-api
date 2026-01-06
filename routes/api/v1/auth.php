@@ -5,12 +5,11 @@ use App\Http\Controllers\Api\V1\Auth\OtpController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
-// ========OTP Routes========//
+// ========OTP Routes (SMS-based)========//
 Route::prefix('otp')->group(function () {
-    Route::post('/send', [OtpController::class, 'send']);
-    Route::post('/verify', [OtpController::class, 'verify']);
-    Route::post('/resend', [OtpController::class, 'resend']);
-    Route::post('/check', [OtpController::class, 'check']);
+    Route::post('/request', [OtpController::class, 'requestOtp']);
+    Route::post('/verify', [OtpController::class, 'verifyOtp']);
+    Route::post('/resend', [OtpController::class, 'resendOtp']);
 });
 
 // ========Auth Routes========//
