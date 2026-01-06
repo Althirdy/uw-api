@@ -37,7 +37,7 @@ export default function PublicPost({ data }: PublicPostPageProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Public Posts" />
             <div className="space-y-4 p-4">
-                <CreatePublicPost />
+                {/* <CreatePublicPost /> */}
                 <Tabs defaultValue="table" className="w-full space-y-2">
                     <div className="flex flex-row items-center gap-4">
                         <PublicPostTab
