@@ -1,13 +1,32 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Archive, Cpu, ExternalLink, MapPin, SquarePen } from 'lucide-react';
-import React from 'react';
+import {
+    Activity,
+    Archive,
+    Cpu,
+    ExternalLink,
+    Filter,
+    MapPin,
+    Search,
+    Settings,
+    Wifi,
+    X,
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
 import {
     cctv_T,
     location_T,
@@ -35,133 +54,278 @@ function UWDeviceDisplay({
     locations = [],
     cctvDevices = [],
 }: UWDeviceDisplayProps): React.JSX.Element {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [locationFilter, setLocationFilter] = useState<string>('all');
+    const [locationTypeFilter, setLocationTypeFilter] = useState<string>('all');
+
+    // Filter devices based on search and filters
+    const filteredDevices = useMemo(() => {
+        if (!devices?.data) return [];
+
+        return devices.data.filter((device) => {
+            // Search filter
+            const searchLower = searchQuery.toLowerCase();
+            const matchesSearch =
+                searchQuery === '' ||
+                device.device_name.toLowerCase().includes(searchLower) ||
+                device.location?.location_name?.toLowerCase().includes(searchLower) ||
+                device.location?.barangay?.toLowerCase().includes(searchLower) ||
+                device.custom_address?.toLowerCase().includes(searchLower);
+
+            // Status filter
+            const matchesStatus =
+                statusFilter === 'all' ||
+                device.status.toLowerCase() === statusFilter.toLowerCase();
+
+            // Location filter
+            const matchesLocation =
+                locationFilter === 'all' ||
+                device.location?.id?.toString() === locationFilter;
+
+            // Location type filter (registered vs custom)
+            const isCustomLocation = !device.location && device.custom_address;
+            const matchesLocationType =
+                locationTypeFilter === 'all' ||
+                (locationTypeFilter === 'registered' && device.location) ||
+                (locationTypeFilter === 'custom' && isCustomLocation);
+
+            return matchesSearch && matchesStatus && matchesLocation && matchesLocationType;
+        });
+    }, [devices?.data, searchQuery, statusFilter, locationFilter, locationTypeFilter]);
+
+    // Clear all filters
+    const clearFilters = () => {
+        setSearchQuery('');
+        setStatusFilter('all');
+        setLocationFilter('all');
+        setLocationTypeFilter('all');
+    };
+
+    const hasActiveFilters =
+        searchQuery !== '' ||
+        statusFilter !== 'all' ||
+        locationFilter !== 'all' ||
+        locationTypeFilter !== 'all';
+
     if (!devices || !devices.data) {
         return (
-            <div className="p-4 text-center text-muted-foreground">
-                No devices found
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Cpu className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <h3 className="text-sm font-medium text-foreground">No devices found</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                    No UW devices have been added yet
+                </p>
             </div>
         );
     }
 
-    // Get status badge variant and colors - matching CCTV pattern
+    // Get status badge styles
     const getStatusStyles = (status: string) => {
-        switch (status.toLocaleUpperCase()) {
+        switch (status.toUpperCase()) {
             case 'ACTIVE':
-                return 'bg-green-700 rounded-full dark:bg-green-800';
+                return 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/30';
             case 'MAINTENANCE':
-                return 'bg-orange-100 rounded-full dark:bg-orange-700';
+                return 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/30';
             case 'INACTIVE':
-                return 'bg-gray-100 rounded-full dark:bg-zinc-600';
+                return 'bg-zinc-500/15 text-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-400 border-zinc-500/30';
             default:
-                return 'bg-gray-100 rounded-full dark:bg-zinc-600';
+                return 'bg-zinc-500/15 text-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-400 border-zinc-500/30';
+        }
+    };
+
+    // Get status icon
+    const getStatusIcon = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'active':
+                return <Activity className="h-3 w-3" />;
+            case 'inactive':
+                return <Wifi className="h-3 w-3" />;
+            case 'maintenance':
+                return <Settings className="h-3 w-3" />;
+            default:
+                return null;
         }
     };
 
     return (
         <div className="space-y-4">
-            {/* UW Device Cards Grid */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {devices.data.map((device) => (
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 dark:border-zinc-800">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    {/* Search Input */}
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Search devices, locations..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 h-9"
+                        />
+                    </div>
+
+                    {/* Filter Controls */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Filter className="h-4 w-4" />
+                            <span className="text-xs font-medium hidden sm:inline">Filters:</span>
+                        </div>
+
+                        {/* Status Filter */}
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="h-8 w-[110px] text-xs">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="inactive">Inactive</SelectItem>
+                                <SelectItem value="maintenance">Maintenance</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Location Filter */}
+                        <Select value={locationFilter} onValueChange={setLocationFilter}>
+                            <SelectTrigger className="h-8 w-[130px] text-xs">
+                                <SelectValue placeholder="Location" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Locations</SelectItem>
+                                {locations.map((loc) => (
+                                    <SelectItem key={loc.id} value={loc.id.toString()}>
+                                        {loc.location_name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {/* Location Type Filter */}
+                        <Select value={locationTypeFilter} onValueChange={setLocationTypeFilter}>
+                            <SelectTrigger className="h-8 w-[120px] text-xs">
+                                <SelectValue placeholder="Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Types</SelectItem>
+                                <SelectItem value="registered">Registered</SelectItem>
+                                <SelectItem value="custom">Custom</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {/* Clear Filters */}
+                        {hasActiveFilters && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearFilters}
+                                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="h-3 w-3 mr-1" />
+                                Clear
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Results count */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                        Showing {filteredDevices.length} of {devices?.data?.length || 0} devices
+                    </span>
+                    {hasActiveFilters && (
+                        <span className="text-primary">Filters applied</span>
+                    )}
+                </div>
+            </div>
+
+            {/* UW Device Cards Grid - Compact Design */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredDevices.map((device) => (
                     <Card
                         key={device.id}
-                        className="group relative overflow-hidden rounded-[var(--radius)] transition-all duration-200 hover:shadow-md"
+                        className="group relative overflow-hidden border bg-card transition-all duration-200 hover:shadow-md hover:border-primary/20 dark:border-zinc-800 dark:hover:border-zinc-700"
                     >
-                        <CardHeader className="flex flex-row items-start justify-between pb-3">
-                            <div className="flex flex-row items-center gap-4">
-                                <div className="h-fit w-fit rounded-lg bg-zinc-500 p-2">
-                                    <Cpu className="h-5 w-auto" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <h3 className="truncate text-base font-semibold">
-                                        {device.device_name}
-                                    </h3>
-                                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                        <MapPin className="h-5 w-auto" />
-                                        <span className="truncate">
-                                            {device.location?.barangay ||
-                                                (device.custom_address
-                                                    ? 'Custom Location'
-                                                    : 'No location')}
-                                        </span>
+                        <CardContent className="p-3">
+                            {/* Header Row */}
+                            <div className="flex items-start justify-between gap-2 mb-3">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
+                                        <Cpu className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="truncate text-sm font-semibold leading-tight">
+                                            {device.device_name}
+                                        </h3>
+                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                            <MapPin className="h-3 w-3 shrink-0" />
+                                            <span className="truncate">
+                                                {device.location?.barangay ||
+                                                    (device.custom_address
+                                                        ? 'Custom Location'
+                                                        : 'No location')}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
+                                <Badge
+                                    variant="outline"
+                                    className={`shrink-0 gap-1 text-[10px] font-medium px-1.5 py-0.5 capitalize ${getStatusStyles(device.status)}`}
+                                >
+                                    {getStatusIcon(device.status)}
+                                    {device.status}
+                                </Badge>
                             </div>
-                            <div className="items-center">
-                                {/* Status Badge */}
-                                <div>
-                                    <Badge
-                                        className={`gap-1 text-sm capitalize ${getStatusStyles(device.status)}`}
-                                    >
-                                        {device.status}
-                                    </Badge>
-                                </div>
-                            </div>
-                        </CardHeader>
 
-                        <CardContent className="space-y-4">
-                            {/* Technical Details */}
-                            <div>
-                                <p className="mb-1 text-muted-foreground">
-                                    Location
-                                </p>
+                            {/* Location Details - Compact */}
+                            <div className="mb-3 text-xs">
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Location</p>
                                 {device.location ? (
-                                    <>
-                                        <p className="font-medium">
-                                            {device.location.location_name}
-                                        </p>
-                                        <p className="text-muted-foreground">
-                                            {device.location.landmark}
-                                        </p>
-                                    </>
+                                    <p className="font-medium truncate">
+                                        {device.location.location_name}
+                                    </p>
                                 ) : device.custom_address ? (
-                                    <>
-                                        <div className="mb-1 flex items-center gap-2">
-                                            <p className="font-medium">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <p className="font-medium truncate flex-1">
                                                 {device.custom_address}
                                             </p>
                                             <Badge
                                                 variant="outline"
-                                                className="border-blue-200 bg-blue-50 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                                                className="shrink-0 border-blue-200 bg-blue-50 text-[9px] text-blue-700 px-1 py-0 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
                                             >
                                                 Custom
                                             </Badge>
                                         </div>
                                         {device.custom_latitude &&
                                             device.custom_longitude && (
-                                                <p className="text-muted-foreground">
-                                                    {Number(
-                                                        device.custom_latitude,
-                                                    ).toFixed(4)}
-                                                    ,{' '}
-                                                    {Number(
-                                                        device.custom_longitude,
-                                                    ).toFixed(4)}
+                                                <p className="text-muted-foreground text-[10px]">
+                                                    {Number(device.custom_latitude).toFixed(4)},{' '}
+                                                    {Number(device.custom_longitude).toFixed(4)}
                                                 </p>
                                             )}
-                                    </>
+                                    </div>
                                 ) : (
-                                    <p className="text-muted-foreground">
+                                    <p className="text-muted-foreground italic">
                                         No location assigned
                                     </p>
                                 )}
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex items-center justify-end gap-2">
+                            {/* Action Buttons - Compact */}
+                            <div className="flex items-center justify-end gap-1.5 pt-2 border-t dark:border-zinc-800">
                                 <Tooltip>
                                     <ViewUWDevice device={device}>
                                         <TooltipTrigger asChild>
                                             <Button
-                                                variant="outline"
+                                                variant="ghost"
                                                 size="sm"
-                                                className="cursor-pointer"
+                                                className="h-7 w-7 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                             >
-                                                <ExternalLink className="h-4 w-4" />
+                                                <ExternalLink className="h-3.5 w-3.5" />
                                             </Button>
                                         </TooltipTrigger>
                                     </ViewUWDevice>
-                                    <TooltipContent>
-                                        <p>View Device</p>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">View Device</p>
                                     </TooltipContent>
                                 </Tooltip>
                                 <Tooltip>
@@ -172,32 +336,32 @@ function UWDeviceDisplay({
                                     >
                                         <TooltipTrigger asChild>
                                             <Button
-                                                variant="outline"
+                                                variant="ghost"
                                                 size="sm"
-                                                className="cursor-pointer"
+                                                className="h-7 w-7 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                             >
-                                                <SquarePen className="h-4 w-4" />
+                                                <Settings className="h-3.5 w-3.5" />
                                             </Button>
                                         </TooltipTrigger>
                                     </EditUWDevice>
-                                    <TooltipContent>
-                                        <p>Edit Device</p>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">Edit Device</p>
                                     </TooltipContent>
                                 </Tooltip>
                                 <Tooltip>
                                     <ArchiveUWDevice device={device}>
                                         <TooltipTrigger asChild>
                                             <Button
-                                                variant="outline"
+                                                variant="ghost"
                                                 size="sm"
-                                                className="cursor-pointer"
+                                                className="h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-950/30"
                                             >
-                                                <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                                <Archive className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
                                             </Button>
                                         </TooltipTrigger>
                                     </ArchiveUWDevice>
-                                    <TooltipContent>
-                                        <p>Archive Device</p>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">Archive Device</p>
                                     </TooltipContent>
                                 </Tooltip>
                             </div>
@@ -205,6 +369,29 @@ function UWDeviceDisplay({
                     </Card>
                 ))}
             </div>
+
+            {/* Empty State */}
+            {filteredDevices.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Cpu className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                    <h3 className="text-sm font-medium text-foreground">No devices found</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {hasActiveFilters
+                            ? 'Try adjusting your search or filters'
+                            : 'No UW devices have been added yet'}
+                    </p>
+                    {hasActiveFilters && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearFilters}
+                            className="mt-3 text-xs"
+                        >
+                            Clear all filters
+                        </Button>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

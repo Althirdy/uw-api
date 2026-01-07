@@ -1,21 +1,14 @@
 import { Button } from '@/components/ui/button';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { useEffect, useState } from 'react';
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Filter, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { roles_T } from '@/types/role-types';
 import { PaginatedUsers, users_T } from '@/types/user-types';
@@ -29,30 +22,26 @@ const UserActionTab = ({
     roles: roles_T[];
     setFilteredUsers: (users: users_T[]) => void;
 }) => {
-    const [open, setOpen] = useState(false);
-    const [statusOpen, setStatusOpen] = useState(false);
-    const [barangayOpen, setBarangayOpen] = useState(false);
-    const [value, setValue] = useState<string | null>(null);
-    const [statusValue, setStatusValue] = useState<string | null>(null);
-    const [barangayValue, setBarangayValue] = useState<string | null>(null);
+    const [roleFilter, setRoleFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [barangayFilter, setBarangayFilter] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [searchable_roles, setSearchableRoles] = useState<string[]>([]);
-    const [searchable_barangays, setSearchableBarangays] = useState<string[]>(
-        [],
-    );
 
-    // Extract unique roles and barangays from users data
-    useEffect(() => {
-        const roles = users.data
+    // Extract unique roles from users data
+    const searchableRoles = useMemo(() => {
+        return users.data
             .map((user: users_T) => user.role?.name)
             .filter((roleName): roleName is string => Boolean(roleName))
             .filter(
                 (value: string, index: number, self: string[]) =>
                     self.indexOf(value) === index,
-            );
-        setSearchableRoles(roles);
+            )
+            .sort();
+    }, [users.data]);
 
-        const barangays = users.data
+    // Extract unique barangays from users data
+    const searchableBarangays = useMemo(() => {
+        return users.data
             .map(
                 (user: users_T) =>
                     user.citizen_details?.barangay ||
@@ -62,34 +51,34 @@ const UserActionTab = ({
             .filter(
                 (value: string, index: number, self: string[]) =>
                     self.indexOf(value) === index,
-            );
-        setSearchableBarangays(barangays);
+            )
+            .sort();
     }, [users.data]);
 
-    // Filter displayed users based on selected role, status, barangay and search query
+    // Filter displayed users based on selected filters
     useEffect(() => {
         let filteredResults = users.data;
 
-        // Filter by role if selected
-        if (value) {
+        // Filter by role
+        if (roleFilter !== 'all') {
             filteredResults = filteredResults.filter(
-                (user: users_T) => user.role?.name === value,
+                (user: users_T) => user.role?.name === roleFilter,
             );
         }
 
-        // Filter by status if selected
-        if (statusValue) {
+        // Filter by status
+        if (statusFilter !== 'all') {
             filteredResults = filteredResults.filter(
-                (user: users_T) => user.status === statusValue,
+                (user: users_T) => user.status === statusFilter,
             );
         }
 
-        // Filter by barangay if selected
-        if (barangayValue) {
+        // Filter by barangay
+        if (barangayFilter !== 'all') {
             filteredResults = filteredResults.filter(
                 (user: users_T) =>
-                    user.citizen_details?.barangay === barangayValue ||
-                    user.official_details?.assigned_brgy === barangayValue,
+                    user.citizen_details?.barangay === barangayFilter ||
+                    user.official_details?.assigned_brgy === barangayFilter,
             );
         }
 
@@ -98,7 +87,6 @@ const UserActionTab = ({
             filteredResults = filteredResults.filter((user: users_T) => {
                 let fullName = user.name.toLowerCase();
 
-                // Try to build full name from detail tables
                 if (user.official_details) {
                     fullName =
                         `${user.official_details.first_name} ${user.official_details.middle_name || ''} ${user.official_details.last_name}`.toLowerCase();
@@ -115,163 +103,143 @@ const UserActionTab = ({
         }
 
         setFilteredUsers(filteredResults);
-    }, [
-        value,
-        statusValue,
-        barangayValue,
-        searchQuery,
-        users.data,
-        setFilteredUsers,
-    ]);
+    }, [roleFilter, statusFilter, barangayFilter, searchQuery, users.data, setFilteredUsers]);
+
+    // Clear all filters
+    const clearFilters = () => {
+        setSearchQuery('');
+        setRoleFilter('all');
+        setStatusFilter('all');
+        setBarangayFilter('all');
+    };
+
+    const hasActiveFilters =
+        searchQuery !== '' ||
+        roleFilter !== 'all' ||
+        statusFilter !== 'all' ||
+        barangayFilter !== 'all';
+
+    // Count filtered results
+    const filteredCount = useMemo(() => {
+        let count = users.data.length;
+        
+        let filtered = users.data;
+        if (roleFilter !== 'all') {
+            filtered = filtered.filter((user) => user.role?.name === roleFilter);
+        }
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter((user) => user.status === statusFilter);
+        }
+        if (barangayFilter !== 'all') {
+            filtered = filtered.filter(
+                (user) =>
+                    user.citizen_details?.barangay === barangayFilter ||
+                    user.official_details?.assigned_brgy === barangayFilter,
+            );
+        }
+        if (searchQuery.trim()) {
+            filtered = filtered.filter((user) => {
+                let fullName = user.name.toLowerCase();
+                if (user.official_details) {
+                    fullName = `${user.official_details.first_name} ${user.official_details.middle_name || ''} ${user.official_details.last_name}`.toLowerCase();
+                } else if (user.citizen_details) {
+                    fullName = `${user.citizen_details.first_name} ${user.citizen_details.middle_name || ''} ${user.citizen_details.last_name}`.toLowerCase();
+                }
+                const email = user.email.toLowerCase();
+                return fullName.includes(searchQuery.toLowerCase()) || email.includes(searchQuery.toLowerCase());
+            });
+        }
+        return filtered.length;
+    }, [users.data, roleFilter, statusFilter, barangayFilter, searchQuery]);
 
     return (
-        <div className="flex flex-wrap gap-4">
-            <Input
-                placeholder="Search users by name or email"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-12 min-w-[300px] flex-1"
-            />
-            <Popover open={barangayOpen} onOpenChange={setBarangayOpen}>
-                <PopoverTrigger asChild className="h-12">
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={barangayOpen}
-                        className="w-[180px] cursor-pointer justify-between"
-                    >
-                        {barangayValue || 'Select barangay...'}
-                        <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[180px] p-0">
-                    <Command>
-                        <CommandInput
-                            placeholder="Search barangay..."
-                            className="h-9"
-                        />
-                        <CommandList>
-                            <CommandEmpty>No Barangay found.</CommandEmpty>
-                            <CommandGroup>
-                                {/* Add "All Barangays" option */}
-                                <CommandItem
-                                    key="all-barangay"
-                                    value=""
-                                    onSelect={() => {
-                                        setBarangayValue(null);
-                                        setBarangayOpen(false);
-                                    }}
-                                >
-                                    All Barangays
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            barangayValue === null
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                                {/* Use searchable_barangays for dropdown options */}
-                                {searchable_barangays.map((barangayName) => (
-                                    <CommandItem
-                                        key={barangayName}
-                                        value={barangayName}
-                                        onSelect={(currentValue) => {
-                                            setBarangayValue(
-                                                currentValue === barangayValue
-                                                    ? null
-                                                    : currentValue,
-                                            );
-                                            setBarangayOpen(false);
-                                        }}
-                                    >
-                                        {barangayName}
-                                        <Check
-                                            className={cn(
-                                                'ml-auto',
-                                                barangayValue === barangayName
-                                                    ? 'opacity-100'
-                                                    : 'opacity-0',
-                                            )}
-                                        />
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-            <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild className="h-12">
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={open}
-                        className="w-[180px] cursor-pointer justify-between"
-                    >
-                        {value || 'Select role...'}
-                        <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[180px] p-0">
-                    <Command>
-                        <CommandInput
-                            placeholder="Search role..."
-                            className="h-9"
-                        />
-                        <CommandList>
-                            <CommandEmpty>No Role found.</CommandEmpty>
-                            <CommandGroup>
-                                {/* Add "All Roles" option */}
-                                <CommandItem
-                                    key="all"
-                                    value=""
-                                    onSelect={() => {
-                                        setValue(null);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    All Roles
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            value === null
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                                {/* Use searchable_roles for dropdown options */}
-                                {searchable_roles.map((roleName) => (
-                                    <CommandItem
-                                        key={roleName}
-                                        value={roleName}
-                                        onSelect={(currentValue) => {
-                                            setValue(
-                                                currentValue === value
-                                                    ? null
-                                                    : currentValue,
-                                            );
-                                            setOpen(false);
-                                        }}
-                                    >
-                                        {roleName}
-                                        <Check
-                                            className={cn(
-                                                'ml-auto',
-                                                value === roleName
-                                                    ? 'opacity-100'
-                                                    : 'opacity-0',
-                                            )}
-                                        />
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
+        <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 dark:border-zinc-800">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                {/* Search Input */}
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by name or email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 h-9"
+                    />
+                </div>
+
+                {/* Filter Controls */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Filter className="h-4 w-4" />
+                        <span className="text-xs font-medium hidden sm:inline">Filters:</span>
+                    </div>
+
+                    {/* Role Filter */}
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                        <SelectTrigger className="h-8 w-[120px] text-xs">
+                            <SelectValue placeholder="Role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Roles</SelectItem>
+                            {searchableRoles.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                    {role}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* Status Filter */}
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-8 w-[110px] text-xs">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                            <SelectItem value="suspended">Suspended</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    {/* Barangay Filter */}
+                    <Select value={barangayFilter} onValueChange={setBarangayFilter}>
+                        <SelectTrigger className="h-8 w-[130px] text-xs">
+                            <SelectValue placeholder="Barangay" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Barangays</SelectItem>
+                            {searchableBarangays.map((barangay) => (
+                                <SelectItem key={barangay} value={barangay}>
+                                    {barangay}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* Clear Filters */}
+                    {hasActiveFilters && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearFilters}
+                            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-3 w-3 mr-1" />
+                            Clear
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {/* Results count */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                    Showing {filteredCount} of {users.data.length} users
+                </span>
+                {hasActiveFilters && (
+                    <span className="text-primary">Filters applied</span>
+                )}
+            </div>
         </div>
     );
 };

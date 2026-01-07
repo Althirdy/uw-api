@@ -25,6 +25,7 @@ export type cctv_T = {
     resolution: string;
     status: string;
     fps: number;
+    yolo_enabled: boolean;
 };
 
 export type uwDevice_T = {

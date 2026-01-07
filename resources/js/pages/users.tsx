@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { users } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { List, Table } from 'lucide-react';
+import { LayoutGrid, Table } from 'lucide-react';
 import { useState } from 'react';
 
 import { location_T } from '@/types/location-types';
@@ -31,51 +31,57 @@ export default function Users({
     locations: location_T[];
 }) {
     const [filtered_users, setFilteredUsers] = useState<users_T[]>(users.data);
+    const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users" />
             <div className="space-y-4 p-4">
-                <CreateUsers roles={roles} locations={locations} />
-
-                <Tabs defaultValue="table" className="w-full space-y-2">
-                    <div className="flex flex-row gap-4">
-                        <UserActionTab
-                            users={users}
-                            roles={roles}
-                            setFilteredUsers={setFilteredUsers}
-                        />
-                        <TabsList className="h-12 w-24">
+                <div className="flex items-center justify-between gap-4">
+                    <CreateUsers roles={roles} locations={locations} />
+                    
+                    {/* View Toggle */}
+                    <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'table' | 'card')}>
+                        <TabsList className="h-9 p-1">
                             <TabsTrigger
                                 value="table"
-                                className="cursor-pointer"
+                                className="h-7 px-3 text-xs data-[state=active]:bg-background"
                             >
-                                <List className="h-8 w-8" />
+                                <Table className="h-3.5 w-3.5 mr-1.5" />
+                                Table
                             </TabsTrigger>
                             <TabsTrigger
                                 value="card"
-                                className="cursor-pointer"
+                                className="h-7 px-3 text-xs data-[state=active]:bg-background"
                             >
-                                <Table className="h-4 w-4" />
+                                <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
+                                Cards
                             </TabsTrigger>
                         </TabsList>
-                    </div>
+                    </Tabs>
+                </div>
 
-                    <TabsContent value="table" className="w-full">
-                        <UserTable
-                            users={filtered_users}
-                            roles={roles}
-                            locations={locations}
-                        />
-                    </TabsContent>
-                    <TabsContent value="card" className="w-full">
-                        <UserCard
-                            users={filtered_users}
-                            roles={roles}
-                            locations={locations}
-                        />
-                    </TabsContent>
-                </Tabs>
+                {/* Filters */}
+                <UserActionTab
+                    users={users}
+                    roles={roles}
+                    setFilteredUsers={setFilteredUsers}
+                />
+
+                {/* Content */}
+                {viewMode === 'table' ? (
+                    <UserTable
+                        users={filtered_users}
+                        roles={roles}
+                        locations={locations}
+                    />
+                ) : (
+                    <UserCard
+                        users={filtered_users}
+                        roles={roles}
+                        locations={locations}
+                    />
+                )}
             </div>
         </AppLayout>
     );

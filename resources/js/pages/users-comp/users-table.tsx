@@ -90,9 +90,9 @@ const UserTable = ({
 
     return (
         <div className="w-full">
-            <div className="overflow-hidden rounded-[var(--radius)] border">
+            <div className="overflow-hidden rounded-lg border bg-card dark:border-zinc-800">
                 <Table>
-                    <TableHeader className="bg-muted">
+                    <TableHeader className="bg-zinc-50 dark:bg-zinc-800/50">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {

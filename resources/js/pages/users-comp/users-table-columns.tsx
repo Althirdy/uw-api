@@ -152,27 +152,29 @@ export const columns = (
                             <p>View Details</p>
                         </TooltipContent>
                     </Tooltip>
-                    <Tooltip>
-                        <EditUser
-                            user={user}
-                            roles={roles}
-                            locations={locations}
-                        >
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="cursor-pointer"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <SquarePen className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                        </EditUser>
-                        <TooltipContent>
-                            <p>Edit User</p>
-                        </TooltipContent>
-                    </Tooltip>
+                    {user.role?.name?.toLowerCase() !== 'citizen' && (
+                        <Tooltip>
+                            <EditUser
+                                user={user}
+                                roles={roles}
+                                locations={locations}
+                            >
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="cursor-pointer"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <SquarePen className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                            </EditUser>
+                            <TooltipContent>
+                                <p>Edit User</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
                     <Tooltip>
                         <SuspensionUser user={user}>
                             <TooltipTrigger asChild>

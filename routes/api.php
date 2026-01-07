@@ -22,9 +22,9 @@ Route::prefix('v1')->group(function () {
     // YOLO detection routes
     require __DIR__.'/api/v1/yolo.php';
     // Public Post routes
-    Route::get('/mobile/public-posts', [App\Http\Controllers\Operator\PublicPostController::class, 'getMobilePublicPosts']);
-    // ->middleware('auth:sanctum');
-
+    Route::get('/mobile/public-posts', [App\Http\Controllers\Operator\PublicPostController::class, 'getMobilePublicPosts'])
+    ->middleware('auth:sanctum');
+    
     Route::post('/ocr/national-id', [App\Http\Controllers\Api\V1\Auth\IdVerificationController::class, 'scanIdFront']);
 
 });

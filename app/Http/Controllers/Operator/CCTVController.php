@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Operator;
 
+use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Operator\CCTVRequest;
+use App\Http\Resources\Api\v1\CCTVResource;
 use App\Models\cctvDevices;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class CCTVController extends Controller
+class CCTVController extends BaseApiController
 {
     public function store(CCTVRequest $request)
     {
@@ -40,7 +42,7 @@ class CCTVController extends Controller
             DB::rollBack();
 
             // Log the error with details
-            Log::error('CCTV Creation Error: '.$e->getMessage(), [
+            Log::error('CCTV Creation Error: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
@@ -48,10 +50,66 @@ class CCTVController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'An error occurred while creating the CCTV device: '.$e->getMessage())
+                ->with('error', 'An error occurred while creating the CCTV device: ' . $e->getMessage())
                 ->withInput();
         }
     }
+
+    public function getActiveCCTVs()
+    {
+        $cctvDevices = cctvDevices::where('status', 'active')->get();
+        return $this->sendResponse(CCTVResource::collection($cctvDevices), 'Active CCTV devices retrieved successfully.');
+    }
+
+    /**
+     * Get all CCTV devices that have YOLO detection enabled.
+     * This endpoint is used by the Python YOLO script to fetch
+     * which cameras should be processed for accident detection.
+     */
+    public function getYoloEnabledCCTVs()
+    {
+        $cctvDevices = cctvDevices::where('yolo_enabled', true)
+            ->where('status', 'active')
+            ->with('location:id,location_name,landmark,barangay')
+            ->get();
+
+        return $this->sendResponse(CCTVResource::collection($cctvDevices), 'YOLO-enabled CCTV devices retrieved successfully.');
+    }
+
+    /**
+     * Toggle the YOLO detection enabled status for a CCTV device.
+     */
+    public function toggleYolo(cctvDevices $cctv)
+    {
+        DB::beginTransaction();
+
+        try {
+            $cctv->yolo_enabled = !$cctv->yolo_enabled;
+            $cctv->save();
+
+            DB::commit();
+
+            Log::info('CCTV YOLO status toggled:', [
+                'id' => $cctv->id,
+                'device_name' => $cctv->device_name,
+                'yolo_enabled' => $cctv->yolo_enabled,
+            ]);
+
+            $status = $cctv->yolo_enabled ? 'enabled' : 'disabled';
+            return redirect()->back()->with('success', "YOLO detection {$status} for {$cctv->device_name}");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('CCTV YOLO Toggle Error: ' . $e->getMessage(), [
+                'cctv_id' => $cctv->id,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'An error occurred while toggling YOLO detection.');
+        }
+    }
+
 
     public function update(CCTVRequest $request, cctvDevices $cctv)
     {
@@ -83,7 +141,7 @@ class CCTVController extends Controller
             DB::rollBack();
 
             // Log the error with details
-            Log::error('CCTV Update Error: '.$e->getMessage(), [
+            Log::error('CCTV Update Error: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
@@ -91,7 +149,7 @@ class CCTVController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'An error occurred while updating the CCTV device: '.$e->getMessage())
+                ->with('error', 'An error occurred while updating the CCTV device: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -113,7 +171,7 @@ class CCTVController extends Controller
             return redirect()->back()->with('success', 'CCTV device deleted successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('CCTV Deletion Error: '.$e->getMessage(), [
+            Log::error('CCTV Deletion Error: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),

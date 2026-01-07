@@ -1,22 +1,15 @@
 import { Button } from '@/components/ui/button';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Contact, PaginatedContacts } from '@/types/contacts-types';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Filter, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 const ContactActionTab = ({
     contacts,
@@ -25,16 +18,14 @@ const ContactActionTab = ({
     contacts: PaginatedContacts;
     setFilteredContacts: (contacts: Contact[]) => void;
 }) => {
-    const [open, setOpen] = useState(false);
-    const [statusOpen, setStatusOpen] = useState(false);
-    const [value, setValue] = useState<string | null>(null);
-    const [statusValue, setStatusValue] = useState<string | null>(null);
+    const [branchFilter, setBranchFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [responderFilter, setResponderFilter] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [searchable_units, setSearchableUnits] = useState<string[]>([]);
 
-    // Extract unique branch/unit names from contacts data
-    useEffect(() => {
-        const units = contacts.data
+    // Extract unique branch/unit names
+    const searchableUnits = useMemo(() => {
+        return contacts.data
             .map((contact: Contact) => contact.branch_unit_name)
             .filter((unit): unit is string => Boolean(unit))
             .filter(
@@ -42,29 +33,47 @@ const ContactActionTab = ({
                     self.indexOf(value) === index,
             )
             .sort();
-        setSearchableUnits(units);
     }, [contacts.data]);
 
-    // Filter displayed contacts based on selected unit, status and search query
+    // Extract unique responder types
+    const responderTypes = useMemo(() => {
+        return contacts.data
+            .map((contact: Contact) => contact.responder_type)
+            .filter((type): type is string => Boolean(type))
+            .filter(
+                (value: string, index: number, self: string[]) =>
+                    self.indexOf(value) === index,
+            )
+            .sort();
+    }, [contacts.data]);
+
+    // Filter displayed contacts
     useEffect(() => {
         let filteredResults = contacts.data;
 
-        // Filter by branch/unit name if selected
-        if (value) {
+        // Filter by branch/unit name
+        if (branchFilter !== 'all') {
             filteredResults = filteredResults.filter(
-                (contact: Contact) => contact.branch_unit_name === value,
+                (contact: Contact) => contact.branch_unit_name === branchFilter,
             );
         }
 
-        // Filter by status if selected
-        if (statusValue) {
-            const isActive = statusValue === 'Active';
+        // Filter by status
+        if (statusFilter !== 'all') {
+            const isActive = statusFilter === 'active';
             filteredResults = filteredResults.filter(
                 (contact: Contact) => contact.active === isActive,
             );
         }
 
-        // Filter by search query (branch name, location, or contact person)
+        // Filter by responder type
+        if (responderFilter !== 'all') {
+            filteredResults = filteredResults.filter(
+                (contact: Contact) => contact.responder_type === responderFilter,
+            );
+        }
+
+        // Filter by search query
         if (searchQuery.trim()) {
             filteredResults = filteredResults.filter((contact: Contact) => {
                 const branch = contact.branch_unit_name.toLowerCase();
@@ -81,171 +90,136 @@ const ContactActionTab = ({
         }
 
         setFilteredContacts(filteredResults);
-    }, [value, statusValue, searchQuery, contacts.data, setFilteredContacts]);
+    }, [branchFilter, statusFilter, responderFilter, searchQuery, contacts.data, setFilteredContacts]);
+
+    // Clear all filters
+    const clearFilters = () => {
+        setSearchQuery('');
+        setBranchFilter('all');
+        setStatusFilter('all');
+        setResponderFilter('all');
+    };
+
+    const hasActiveFilters =
+        searchQuery !== '' ||
+        branchFilter !== 'all' ||
+        statusFilter !== 'all' ||
+        responderFilter !== 'all';
+
+    // Count filtered results
+    const filteredCount = useMemo(() => {
+        let filtered = contacts.data;
+        
+        if (branchFilter !== 'all') {
+            filtered = filtered.filter((c) => c.branch_unit_name === branchFilter);
+        }
+        if (statusFilter !== 'all') {
+            const isActive = statusFilter === 'active';
+            filtered = filtered.filter((c) => c.active === isActive);
+        }
+        if (responderFilter !== 'all') {
+            filtered = filtered.filter((c) => c.responder_type === responderFilter);
+        }
+        if (searchQuery.trim()) {
+            filtered = filtered.filter((c) => {
+                const query = searchQuery.toLowerCase();
+                return (
+                    c.branch_unit_name.toLowerCase().includes(query) ||
+                    c.location.toLowerCase().includes(query) ||
+                    (c.contact_person?.toLowerCase() || '').includes(query)
+                );
+            });
+        }
+        return filtered.length;
+    }, [contacts.data, branchFilter, statusFilter, responderFilter, searchQuery]);
 
     return (
-        <div className="flex max-w-4xl flex-wrap gap-4">
-            <Input
-                placeholder="Search contacts by branch, location, or person"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-12 min-w-[300px] flex-1"
-            />
-            <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild className="h-12">
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={open}
-                        className="w-[200px] cursor-pointer justify-between"
-                    >
-                        {value || 'Select branch/unit...'}
-                        <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0">
-                    <Command>
-                        <CommandInput
-                            placeholder="Search branch/unit..."
-                            className="h-9"
-                        />
-                        <CommandList>
-                            <CommandEmpty>No branch/unit found.</CommandEmpty>
-                            <CommandGroup>
-                                {/* Add "All Branch/Units" option */}
-                                <CommandItem
-                                    key="all"
-                                    value=""
-                                    onSelect={() => {
-                                        setValue(null);
-                                        setOpen(false);
-                                    }}
-                                >
-                                    All Branch/Units
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            value === null
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                                {/* Use searchable_units for dropdown options */}
-                                {searchable_units.map((unitName) => (
-                                    <CommandItem
-                                        key={unitName}
-                                        value={unitName}
-                                        onSelect={(currentValue) => {
-                                            setValue(
-                                                currentValue === value
-                                                    ? null
-                                                    : currentValue,
-                                            );
-                                            setOpen(false);
-                                        }}
-                                    >
-                                        {unitName}
-                                        <Check
-                                            className={cn(
-                                                'ml-auto',
-                                                value === unitName
-                                                    ? 'opacity-100'
-                                                    : 'opacity-0',
-                                            )}
-                                        />
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-            <Popover open={statusOpen} onOpenChange={setStatusOpen}>
-                <PopoverTrigger asChild className="h-12">
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={statusOpen}
-                        className="w-[150px] cursor-pointer justify-between"
-                    >
-                        {statusValue || 'Select status...'}
-                        <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[150px] p-0">
-                    <Command>
-                        <CommandList>
-                            <CommandEmpty>No status found.</CommandEmpty>
-                            <CommandGroup>
-                                {/* Add "All Status" option */}
-                                <CommandItem
-                                    key="all-status"
-                                    value=""
-                                    onSelect={() => {
-                                        setStatusValue(null);
-                                        setStatusOpen(false);
-                                    }}
-                                >
-                                    All Status
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            statusValue === null
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                                <CommandItem
-                                    key="active"
-                                    value="Active"
-                                    onSelect={(currentValue) => {
-                                        setStatusValue(
-                                            currentValue === statusValue
-                                                ? null
-                                                : currentValue,
-                                        );
-                                        setStatusOpen(false);
-                                    }}
-                                >
-                                    Active
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            statusValue === 'Active'
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                                <CommandItem
-                                    key="inactive"
-                                    value="Inactive"
-                                    onSelect={(currentValue) => {
-                                        setStatusValue(
-                                            currentValue === statusValue
-                                                ? null
-                                                : currentValue,
-                                        );
-                                        setStatusOpen(false);
-                                    }}
-                                >
-                                    Inactive
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            statusValue === 'Inactive'
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
+        <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 dark:border-zinc-800">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                {/* Search Input */}
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by branch, location, or person..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 h-9"
+                    />
+                </div>
+
+                {/* Filter Controls */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <Filter className="h-4 w-4" />
+                        <span className="text-xs font-medium hidden sm:inline">Filters:</span>
+                    </div>
+
+                    {/* Branch/Unit Filter */}
+                    <Select value={branchFilter} onValueChange={setBranchFilter}>
+                        <SelectTrigger className="h-8 w-[130px] text-xs">
+                            <SelectValue placeholder="Branch" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Branches</SelectItem>
+                            {searchableUnits.map((unit) => (
+                                <SelectItem key={unit} value={unit}>
+                                    {unit}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* Responder Type Filter */}
+                    <Select value={responderFilter} onValueChange={setResponderFilter}>
+                        <SelectTrigger className="h-8 w-[120px] text-xs">
+                            <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            {responderTypes.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                    {type}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* Status Filter */}
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-8 w-[110px] text-xs">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    {/* Clear Filters */}
+                    {hasActiveFilters && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearFilters}
+                            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-3 w-3 mr-1" />
+                            Clear
+                        </Button>
+                    )}
+                </div>
+            </div>
+
+            {/* Results count */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                    Showing {filteredCount} of {contacts.data.length} contacts
+                </span>
+                {hasActiveFilters && (
+                    <span className="text-primary">Filters applied</span>
+                )}
+            </div>
         </div>
     );
 };

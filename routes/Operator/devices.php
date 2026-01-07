@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::post('devices/cctv', [CCTVController::class, 'store'])->name('devices.cctv.store');
     Route::put('devices/cctv/{cctv}', [CCTVController::class, 'update'])->name('devices.cctv.update');
     Route::delete('devices/cctv/{cctv}', [CCTVController::class, 'destroy'])->name('devices.cctv.destroy');
+    Route::patch('devices/cctv/{cctv}/toggle-yolo', [CCTVController::class, 'toggleYolo'])->name('devices.cctv.toggle-yolo');
 
     // UW Device Routes
     Route::post('devices/uwdevice', [UWDeviceController::class, 'store'])->name('devices.uwdevice.store');

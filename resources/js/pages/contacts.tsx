@@ -1,10 +1,10 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { contacts } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
 import { Contact, ContactsPageProps } from '@/types/contacts-types';
 import { Head } from '@inertiajs/react';
-import { List, Table } from 'lucide-react';
+import { LayoutGrid, Table } from 'lucide-react';
 import { useState } from 'react';
 import AddContacts from './contacts-comp/contacts-create';
 import ContactCard from './contacts-comp/contacts-card';
@@ -26,43 +26,49 @@ export default function Contacts({
     const [filtered_contacts, setFilteredContacts] = useState<Contact[]>(
         contacts?.data || [],
     );
+    const [viewMode, setViewMode] = useState<'table' | 'card'>('card');
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Contacts" />
 
             <div className="space-y-4 p-4">
-                <AddContacts />
+                <div className="flex items-center justify-between gap-4">
+                    <AddContacts />
 
-                <Tabs defaultValue="table" className="w-full space-y-2">
-                    <div className="flex flex-row gap-4">
-                        <ContactActionTab
-                            contacts={contacts}
-                            setFilteredContacts={setFilteredContacts}
-                        />
-                        <TabsList className="h-12 w-24">
+                    {/* View Toggle */}
+                    <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'table' | 'card')}>
+                        <TabsList className="h-9 p-1">
                             <TabsTrigger
                                 value="table"
-                                className="cursor-pointer"
+                                className="h-7 px-3 text-xs data-[state=active]:bg-background"
                             >
-                                <List className="h-8 w-8" />
+                                <Table className="h-3.5 w-3.5 mr-1.5" />
+                                Table
                             </TabsTrigger>
                             <TabsTrigger
                                 value="card"
-                                className="cursor-pointer"
+                                className="h-7 px-3 text-xs data-[state=active]:bg-background"
                             >
-                                <Table className="h-4 w-4" />
+                                <LayoutGrid className="h-3.5 w-3.5 mr-1.5" />
+                                Cards
                             </TabsTrigger>
                         </TabsList>
-                    </div>
+                    </Tabs>
+                </div>
 
-                    <TabsContent value="table" className="w-full">
-                        <ContactTable contacts={filtered_contacts} />
-                    </TabsContent>
-                    <TabsContent value="card" className="w-full">
-                        <ContactCard contacts={filtered_contacts} />
-                    </TabsContent>
-                </Tabs>
+                {/* Filters */}
+                <ContactActionTab
+                    contacts={contacts}
+                    setFilteredContacts={setFilteredContacts}
+                />
+
+                {/* Content */}
+                {viewMode === 'table' ? (
+                    <ContactTable contacts={filtered_contacts} />
+                ) : (
+                    <ContactCard contacts={filtered_contacts} />
+                )}
             </div>
         </AppLayout>
     );
