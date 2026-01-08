@@ -18,7 +18,7 @@ class CCTVResource extends JsonResource
             'id' => $this->id,
             'deviceName' => $this->device_name,
             'primaryRtspUrl' => $this->primary_rtsp_url,
-            'backupRtspUrl' => $this->secondary_rtsp_url,
+            'backupRtspUrl' => $this->backup_rtsp_url,
         ];
     }
 }

@@ -51,7 +51,7 @@ class YoloAccidentController extends BaseApiController
             // Validate request
             $validator = Validator::make($request->all(), [
                 'snapshot' => 'required|file|image|max:10240', // Max 10MB
-                'device_id' => 'nullable|integer|exists:cctv_devices,id',
+                'device_id' => 'required|integer|exists:cctv_devices,id',
                 'detected_at' => 'nullable|date',
             ]);
 
@@ -59,10 +59,16 @@ class YoloAccidentController extends BaseApiController
                 return $this->sendError('Validation failed', $validator->errors(), 422);
             }
 
-            // Get parameters
+            // Get parameters from Python YOLO script
             $file = $request->file('snapshot');
-            $deviceId = $request->input('device_id', self::TEST_DEVICE_ID);
+            $deviceId = $request->input('device_id');
             $detectedAt = $request->input('detected_at');
+            
+            Log::info('YOLO Snapshot received from Python', [
+                'device_id' => $deviceId,
+                'detected_at' => $detectedAt,
+                'file_size' => $file->getSize(),
+            ]);
 
             // Delegate to service for business logic
             $result = $this->yoloService->processDetection($file, $deviceId, $detectedAt);

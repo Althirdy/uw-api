@@ -141,28 +141,69 @@ class GeminiService
                 }
             }
 
-            $prompt = "You are an emergency detection AI system analyzing CCTV footage for real emergency situations.\n\n".
+            $prompt = "You are a STRICT emergency detection AI system analyzing CCTV footage. Your job is to ONLY flag REAL emergencies and REJECT anything that looks normal or is a false positive.\n\n".
+                      "BE VERY CONSERVATIVE - When in doubt, mark as FALSE ALARM. It's better to miss a minor incident than to flood the system with false alarms.\n\n".
                       "Analyze the image and determine if it shows a REAL EMERGENCY that requires immediate response.\n\n".
-                      "VALID EMERGENCIES (is_valid: true):\n".
-                      "- Fire: House/building on fire, vehicle fire, large flames, significant smoke from burning structures\n".
-                      "- Flood: Road flooding, water entering buildings, people stranded in flood water, significant water accumulation\n".
-                      "- Accident: Vehicle collision, overturned vehicles, people injured on the ground, major property damage\n\n".
-                      "FALSE ALARMS to REJECT (is_valid: false):\n".
-                      "- Fire: Candles, lighters, controlled campfires, cooking fires, cigarettes, small controlled flames\n".
-                      "- Flood: Small puddles, light rain, normal water flow, sprinklers, someone washing\n".
-                      "- Accident: Parked vehicles, minor scratches, people walking normally, staged photos\n\n".
+                      "VALID EMERGENCIES (is_valid: true) - Must show CLEAR and OBVIOUS signs:\n".
+                      "- Fire: ACTIVE large flames visible, heavy black smoke rising, building/vehicle clearly on fire, fire spreading\n".
+                      "- Flood: Water level ABOVE normal (at least ankle-deep on roads), vehicles stuck in water, water entering buildings, people wading through flood water\n".
+                      "- Accident: CLEAR vehicle collision damage visible, overturned/crashed vehicles, people lying injured on ground, debris scattered on road, emergency responders already on scene\n\n".
+                      "FALSE ALARMS TO REJECT (is_valid: false):\n\n".
+                      "FIRE FALSE ALARMS - REJECT these:\n".
+                      "- Sunlight, sun glare, or reflections on windows/metal surfaces\n".
+                      "- Fog, mist, steam, exhaust from vehicles or buildings\n".
+                      "- Dust clouds from construction or vehicles\n".
+                      "- Orange/red/yellow colored objects (cars, signs, clothing, banners)\n".
+                      "- Sunset/sunrise lighting making things look orange\n".
+                      "- Red/orange neon signs or lights\n".
+                      "- Candles, lighters, cigarettes, controlled cooking fires\n".
+                      "- Grilling, BBQ, or outdoor cooking\n".
+                      "- Bonfires or campfires in appropriate areas\n".
+                      "- Smoke from cigarettes or vaping\n".
+                      "- Heat haze or shimmer from hot surfaces\n\n".
+                      "FLOOD FALSE ALARMS - REJECT these:\n".
+                      "- Wet roads after rain (water draining normally)\n".
+                      "- Small puddles or standing water in low spots\n".
+                      "- Water from car washes, sprinklers, or cleaning\n".
+                      "- Street cleaning vehicles spraying water\n".
+                      "- Normal rain (even heavy rain without flooding)\n".
+                      "- Reflections on wet pavement\n".
+                      "- Shadows that look like water\n".
+                      "- Rivers/streams/canals at normal levels\n".
+                      "- Drainage systems working normally\n\n".
+                      "ACCIDENT FALSE ALARMS - REJECT these:\n".
+                      "- Normal traffic, even if congested or slow\n".
+                      "- Vehicles stopped at traffic lights or intersections\n".
+                      "- Parked vehicles (even if parked badly)\n".
+                      "- Motorcycles lane splitting or weaving\n".
+                      "- Delivery trucks loading/unloading\n".
+                      "- Construction work or road repairs\n".
+                      "- People crossing streets or jaywalking\n".
+                      "- People running (could be exercise or late)\n".
+                      "- Kids playing, sports, or games on streets\n".
+                      "- People arguing or having discussions\n".
+                      "- Minor fender benders with no visible damage\n".
+                      "- Vehicles pulling over to the side\n".
+                      "- Emergency vehicles passing through (not stopped at scene)\n".
+                      "- Tow trucks picking up normally parked vehicles\n".
+                      "- Blurry or unclear images where you cannot confirm emergency\n\n".
+                      "IMPORTANT RULES:\n".
+                      "- If the image is blurry, dark, or unclear - mark as FALSE ALARM\n".
+                      "- If you're less than 70% confident it's a real emergency - mark as FALSE ALARM\n".
+                      "- Normal daily activities should NEVER be flagged as emergencies\n".
+                      "- When in doubt, choose FALSE ALARM\n\n".
                       "If the image shows a REAL EMERGENCY (is_valid: true):\n".
                       "1. accident_type: Choose exactly one: 'Fire', 'Flood', or 'Accident'\n".
                       "2. severity: Choose exactly one: 'Low', 'Medium', or 'High' based on danger level\n".
-                      "3. title: Generate a clear, concise 5-8 word title in Tagalog (Filipino) describing the emergency\n".
-                      "4. description: Generate a detailed 2-3 sentence description in Tagalog (Filipino) explaining what you see, the severity, and potential impact\n".
-                      "5. confidence: Number from 0-100 indicating your confidence this is a real emergency\n".
+                      "3. title: Generate a clear, simple 5-8 word title in conversational Filipino/Tagalog. Use everyday words, not deep or poetic language. Examples: 'Sunog sa Bahay sa Main Street', 'Aksidente ng Dalawang Sasakyan', 'Baha sa Kalsada'\n".
+                      "4. description: Generate a natural 2-3 sentence description in conversational Filipino/Tagalog. Write like you're reporting to someone casually - simple, clear, easy to understand. Avoid formal or poetic words. Just describe what happened, where, and what the situation is.\n".
+                      "5. confidence: Number from 70-100 indicating your confidence this is a real emergency (must be 70+ to be valid)\n".
                       "6. detected_objects: Array of key objects/elements you detected (e.g., ['flames', 'smoke', 'building'])\n".
                       "7. reasoning: Brief explanation in English of why this is a real emergency\n\n".
                       "If the image is a FALSE ALARM (is_valid: false):\n".
                       "1. Set is_valid to false\n".
                       "2. Set all other fields to null except reasoning\n".
-                      "3. reasoning: Explain in English why this is NOT a real emergency\n".
+                      "3. reasoning: Explain in English why this is NOT a real emergency (be specific about what you see)\n".
                       $contextInfo."\n".
                       "Return ONLY valid JSON with this exact structure:\n".
                       "{\n".

@@ -10,4 +10,5 @@ Route::post('yolo/process-snapshot', [YoloAccidentController::class, 'ProcessSna
 Route::get('yolo/active-cctvs', [CCTVController::class, 'getActiveCCTVs']);
 
 // Get CCTVs that have YOLO detection enabled (used by Python YOLO script)
-Route::get('yolo/enabled-cctvs', [CCTVController::class, 'getYoloEnabledCCTVs']);
+// Protected with API key authentication
+Route::get('yolo/enabled-cctvs', [CCTVController::class, 'getYoloEnabledCCTVs'])->middleware('api.key');
