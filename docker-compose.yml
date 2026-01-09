@@ -22,6 +22,14 @@ services:
       - DB_DATABASE=urbanwatch
       - DB_USERNAME=urban_user
       - DB_PASSWORD=urban_password
+    queue:
+    build: .
+    container_name: urbanwatch-queue
+    restart: always
+    volumes:
+      - ./:/var/www/html
+      - /var/www/html/vendor
+    command: php artisan queue:work --verbose --tries=3 --timeout=90
     depends_on:
       - db
 
