@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Events\AccidentDetected;
+use App\Events\FalseAlarmDetected;
 use App\Models\Accident;
 use App\Models\cctvDevices;
+use App\Models\FalseAlarm;
 use App\Models\IncidentMedia;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -117,7 +119,7 @@ class YoloAccidentService
     }
 
     /**
-     * Handle false alarm case - log and return without creating records.
+     * Handle false alarm case - save to database, broadcast event, and return.
      *
      * @param  array  $aiAnalysis  The AI analysis result
      * @param  cctvDevices  $cctvDevice  The CCTV device
@@ -128,16 +130,24 @@ class YoloAccidentService
     {
         $processingTimeMs = round($processingTime * 1000, 2);
 
+        // Save false alarm to database for tracking
+        $falseAlarm = FalseAlarm::createFromDetection($cctvDevice->id, $aiAnalysis);
+
         Log::warning('YOLO Service: False alarm detected - Image discarded, no Cloudinary upload', [
+            'false_alarm_id' => $falseAlarm->id,
             'device_id' => $cctvDevice->id,
             'device_name' => $cctvDevice->device_name,
             'reasoning' => $aiAnalysis['reasoning'] ?? 'Unknown',
             'processing_time_ms' => $processingTimeMs,
         ]);
 
+        // Broadcast false alarm event for real-time monitoring
+        broadcast(new FalseAlarmDetected($falseAlarm));
+
         return [
             'success' => true,
             'false_alarm' => true,
+            'false_alarm_id' => $falseAlarm->id,
             'message' => 'Detection verified as false alarm by AI - Image not stored',
             'reasoning' => $aiAnalysis['reasoning'] ?? 'Not a real emergency',
             'device_name' => $cctvDevice->device_name,
