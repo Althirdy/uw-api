@@ -7,6 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 
+/**
+ * User Suspension Model
+ * 
+ * SUSPENSION POLICY:
+ * - Suspended users CAN login and view content (announcements, accidents, concerns)
+ * - Suspended users CANNOT perform write operations (create/delete concerns)
+ * - This allows citizens to stay informed while preventing misuse
+ * 
+ * PUNISHMENT LEVELS:
+ * 1. warning_1: 3-day temporary suspension
+ * 2. warning_2: 7-day temporary suspension  
+ * 3. suspension: Permanent ban (stores identity to prevent re-registration)
+ * 
+ * IMPLEMENTATION:
+ * - Login: No suspension check (intentionally allows suspended users)
+ * - Registration: Checks isIdentityBanned() to prevent banned users from re-registering
+ * - Write Operations: Controllers check isUserSuspended() before allowing actions
+ */
 class UserSuspension extends Model
 {
     use HasFactory;

@@ -10,6 +10,17 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
+    /**
+     * Authenticate user with email and password.
+     * 
+     * NOTE: Suspended users are intentionally allowed to login.
+     * They can view announcements and active accidents but cannot submit concerns.
+     * Suspension is checked at the controller level for write operations only.
+     * 
+     * @param string $email
+     * @param string $password
+     * @return array|null Returns auth data with tokens or null if credentials invalid
+     */
     public function login(string $email, string $password)
     {
         $user = User::with(['role', 'officialDetails', 'citizenDetails'])
@@ -23,6 +34,14 @@ class AuthService
         return $this->generateAuthData($user);
     }
 
+    /**
+     * Authenticate Purok Leader with PIN.
+     * 
+     * NOTE: Suspended users are intentionally allowed to login.
+     * 
+     * @param string $pin
+     * @return array|null Returns auth data with tokens or null if PIN invalid
+     */
     public function loginPurokLeader(string $pin)
     {
         $purokLeaders = User::with(['role', 'officialDetails'])
