@@ -52,4 +52,9 @@ return [
         'device_id' => env('TEXTBEE_DEVICE_ID'),
     ],
 
+    'abstract_api' => [
+        'api_key' => env('ABSTRACT_API_KEY'),
+        'enabled' => env('ABSTRACT_API_ENABLED', true),
+    ],
+
 ];
