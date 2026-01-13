@@ -52,4 +52,7 @@ return [
         'device_id' => env('TEXTBEE_DEVICE_ID'),
     ],
 
+    // YOLO Python Script API Key
+    'yolo_api_key' => env('YOLO_API_KEY'),
+
 ];

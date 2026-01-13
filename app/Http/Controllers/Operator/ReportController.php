@@ -17,8 +17,8 @@ class ReportController extends Controller
 {
     public function index(Request $request): Response
     {
-        // Get accidents with media instead of reports
-        $query = Accident::with(['media']);
+        // Get accidents with media and cctv device location
+        $query = Accident::with(['media', 'cctvDevice.location']);
 
         // Search functionality
         if ($request->has('search') && $request->search) {
@@ -53,33 +53,38 @@ class ReportController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Fetch all locations for nearest neighbor search
+        // Fetch all locations for nearest neighbor search (fallback for accidents without CCTV device)
         $locations = Locations::all(['location_name', 'latitude', 'longitude']);
 
         // Transform accidents data to match reports structure
         $accidents->getCollection()->transform(function ($accident) use ($locations) {
-            // Find nearest location
-            $nearestLocationName = null;
-            $shortestDistance = PHP_FLOAT_MAX;
+            // First, try to get location from CCTV device (most accurate for YOLO detections)
+            $displayLocation = null;
+            
+            if ($accident->cctvDevice && $accident->cctvDevice->location) {
+                $displayLocation = $accident->cctvDevice->location->location_name;
+            } else {
+                // Fallback: Find nearest location using Haversine formula
+                $nearestLocationName = null;
+                $shortestDistance = PHP_FLOAT_MAX;
 
-            foreach ($locations as $location) {
-                $distance = $this->calculateDistance(
-                    $accident->latitude,
-                    $accident->longitude,
-                    $location->latitude,
-                    $location->longitude
-                );
+                foreach ($locations as $location) {
+                    $distance = $this->calculateDistance(
+                        $accident->latitude,
+                        $accident->longitude,
+                        $location->latitude,
+                        $location->longitude
+                    );
 
-                if ($distance < $shortestDistance) {
-                    $shortestDistance = $distance;
-                    $nearestLocationName = $location->location_name;
+                    if ($distance < $shortestDistance) {
+                        $shortestDistance = $distance;
+                        $nearestLocationName = $location->location_name;
+                    }
                 }
-            }
 
-            // Only assign location name if within a reasonable distance (e.g., 500 meters)
-            // If distance is too far, we might just keep it as coordinates or null.
-            // For now, let's just use the nearest one if it's within 1km (1000m)
-            $displayLocation = ($shortestDistance <= 1000) ? $nearestLocationName : null;
+                // Only assign location name if within a reasonable distance (1km)
+                $displayLocation = ($shortestDistance <= 1000) ? $nearestLocationName : null;
+            }
 
             return [
                 'id' => $accident->id,
@@ -88,7 +93,7 @@ class ReportController extends Controller
                 'description' => $accident->description,
                 'latitude' => $accident->latitude,
                 'longtitude' => $accident->longitude,
-                'location_name' => $displayLocation, // Added field
+                'location_name' => $displayLocation,
                 'is_acknowledge' => strtolower($accident->status) !== 'pending',
                 'status' => ucfirst($accident->status),
                 'created_at' => $accident->created_at,

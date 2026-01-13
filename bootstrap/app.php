@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'ability.access' => \App\Http\Middleware\CheckAccessTokenAbility::class,
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+            'api.key' => \App\Http\Middleware\ValidateApiKey::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

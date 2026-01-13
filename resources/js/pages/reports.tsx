@@ -14,8 +14,9 @@ import { reports as reportRoutes } from '@/routes';
 import { BreadcrumbItem } from '@/types';
 import { ReportsProps, reports_T } from '@/types/report-types';
 import { Head } from '@inertiajs/react';
-import { Wifi, WifiOff } from 'lucide-react';
+import { WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import FalseAlarmMonitor from './reports-comp/false-alarm-monitor';
 import ReportsCard from './reports-comp/reports-card';
 import ReportActionTab from './reports-comp/reports-tab';
 
@@ -54,6 +55,7 @@ const Reports = ({ reports, reportTypes }: ReportsProps) => {
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
+                        <FalseAlarmMonitor />
                         <Badge
                             variant={isConnected ? 'outline' : 'destructive'}
                             className={`gap-1.5 px-3 py-1 ${isConnected ? 'border-green-500 text-green-600 bg-green-50 dark:bg-green-950/20' : ''}`}
