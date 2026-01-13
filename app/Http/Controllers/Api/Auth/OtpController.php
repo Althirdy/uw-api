@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Otp;
 use App\Models\User;
+use App\Services\AbstractApiService;
 use App\Services\MailService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,9 +18,12 @@ class OtpController extends Controller
 {
     protected MailService $mailService;
 
-    public function __construct(MailService $mailService)
+    protected AbstractApiService $abstractApiService;
+
+    public function __construct(MailService $mailService, AbstractApiService $abstractApiService)
     {
         $this->mailService = $mailService;
+        $this->abstractApiService = $abstractApiService;
     }
 
     /**
@@ -43,6 +48,44 @@ class OtpController extends Controller
         $email = $request->email;
         $type = $request->type;
         $name = $request->name ?? 'User';
+
+        // Validate email using AbstractAPI (only for registration)
+        if ($type === 'registration') {
+            $emailValidation = $this->abstractApiService->validateEmail($email);
+
+            // Check if email is disposable
+            if ($emailValidation['disposable'] ?? false) {
+                Log::info('Disposable email rejected', ['email' => $email]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Disposable or temporary email addresses are not allowed. Please use a valid email address.',
+                ], 400);
+            }
+
+            // Check if email is deliverable (only if not bypassed due to API error)
+            if (! ($emailValidation['bypass'] ?? false) && ! ($emailValidation['deliverable'] ?? true)) {
+                Log::info('Undeliverable email rejected', ['email' => $email]);
+
+                $response = [
+                    'success' => false,
+                    'message' => 'This email address cannot receive messages. Please check and try again.',
+                ];
+
+                // Include typo suggestion if available
+                if (! empty($emailValidation['suggestion'])) {
+                    $response['suggestion'] = 'Did you mean: '.$emailValidation['suggestion'].'?';
+                }
+
+                return response()->json($response, 400);
+            }
+
+            // Include typo suggestion even if email is valid but has a common typo
+            $typeSuggestion = null;
+            if (! empty($emailValidation['suggestion'])) {
+                $typeSuggestion = $emailValidation['suggestion'];
+            }
+        }
 
         // Rate limiting: 3 attempts per email per 10 minutes
         $key = 'otp:send:'.$email;
@@ -105,13 +148,20 @@ class OtpController extends Controller
 
         RateLimiter::hit($key, 600); // 10 minutes
 
+        $responseData = [
+            'email' => $email,
+            'expires_in' => 10, // minutes
+        ];
+
+        // Include typo suggestion in response if available
+        if (isset($typeSuggestion)) {
+            $responseData['email_suggestion'] = $typeSuggestion;
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'OTP sent successfully',
-            'data' => [
-                'email' => $email,
-                'expires_in' => 10, // minutes
-            ],
+            'data' => $responseData,
         ]);
     }
 

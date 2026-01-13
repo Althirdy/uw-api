@@ -294,4 +294,153 @@ class GeminiService
             return null;
         }
     }
+
+    /**
+     * Analyze Philippine National ID image for authenticity verification and data extraction.
+     *
+     * @param  string  $fileContent  Raw binary content of the image file
+     * @param  string  $mimeType  Mime type of the file (e.g., 'image/jpeg')
+     * @return array Returns array with 'is_authentic', 'data' containing extracted fields, or throws exception on API failure
+     *
+     * @throws \Exception When Gemini API fails
+     */
+    public function analyzeNationalId(string $fileContent, string $mimeType): array
+    {
+        if (! $this->apiKey) {
+            Log::error('Gemini API Key is missing.');
+            throw new \Exception('Gemini API configuration error');
+        }
+
+        $base64Data = base64_encode($fileContent);
+
+        $prompt = <<<'PROMPT'
+You are an expert document verification AI specialized in Philippine National ID (PhilSys ID) authentication and data extraction.
+
+REFERENCE - AUTHENTIC PHILIPPINE NATIONAL ID CHARACTERISTICS:
+1. Header: "REPUBLIKA NG PILIPINAS" at top, "Republic of the Philippines" below
+2. Title: "PAMBANSANG PAGKAKAKILANLAN" with "Philippine Identification Card" subtitle
+3. PhilSys Logo: Official government seal on the left side
+4. PCN Number: 16-digit format XXXX-XXXX-XXXX-XXXX (e.g., 3243-7486-4027-9268)
+5. Bilingual Field Labels (Filipino/English):
+   - "Apelyido/Last Name"
+   - "Mga Pangalan/Given Names"
+   - "Gitnang Apelyido/Middle Name"
+   - "Petsa ng Kapanganakan/Date of Birth"
+   - "Tirahan/Address"
+6. Security Features: Holographic gradient background with wavy patterns (orange/yellow/blue tones)
+7. Fingerprint icon on the right side
+8. "PHL" country code indicator
+9. Photo area on the left with ghost image security feature
+
+TASK: Analyze the provided image and perform TWO functions:
+
+FUNCTION 1 - AUTHENTICITY VERIFICATION:
+Determine if this is a GENUINE Philippine National ID by checking:
+- Presence of official header text and government seal
+- Correct bilingual field label format
+- Valid PCN number format (16 digits)
+- Holographic/gradient background pattern
+- Proper layout and typography consistent with official PhilSys ID
+- NOT a photocopy, screenshot, or digitally manipulated image
+
+FUNCTION 2 - DATA EXTRACTION:
+If authentic, extract the following fields:
+- PCN Number (format: XXXX-XXXX-XXXX-XXXX)
+- Last Name (Apelyido)
+- Given Names (Mga Pangalan)
+- Middle Name (Gitnang Apelyido)
+- Date of Birth (convert to MM/DD/YYYY format)
+- Address components: Street, Barangay, City, Region
+- Postal Code: INFER the correct Philippine postal code based on the Barangay and City combination
+
+IMPORTANT NOTES:
+- If this is the BACK side of the ID (contains "Date of Issue", "Blood Type", "Marital Status"), mark as back_side_detected
+- If image is blurry, partial, or unreadable, mark as image_quality_issue
+- For postal code, use your knowledge of Philippine postal codes to match the barangay/city
+
+Return ONLY valid JSON with this exact structure:
+{
+    "is_authentic": boolean,
+    "back_side_detected": boolean,
+    "image_quality_issue": boolean,
+    "confidence": number (0-100),
+    "data": {
+        "pcn_number": "XXXX-XXXX-XXXX-XXXX" or null,
+        "last_name": "string" or null,
+        "given_name": "string" or null,
+        "middle_name": "string" or null,
+        "date_of_birth": "MM/DD/YYYY" or null,
+        "address": "street address" or null,
+        "barangay": "string" or null,
+        "city": "string" or null,
+        "region": "string" or null,
+        "full_address": "complete address string" or null,
+        "postal_code": "4-digit code" or null
+    },
+    "reasoning": "Brief explanation of authenticity determination"
+}
+
+Do not include markdown formatting (like ```json) in the response.
+PROMPT;
+
+        $response = Http::timeout(60)->withHeaders([
+            'Content-Type' => 'application/json',
+        ])->post("{$this->baseUrl}?key={$this->apiKey}", [
+            'contents' => [
+                [
+                    'parts' => [
+                        [
+                            'inline_data' => [
+                                'mime_type' => $mimeType,
+                                'data' => $base64Data,
+                            ],
+                        ],
+                        [
+                            'text' => $prompt,
+                        ],
+                    ],
+                ],
+            ],
+            'generationConfig' => [
+                'response_mime_type' => 'application/json',
+                'temperature' => 0.2, // Low temperature for consistent document analysis
+            ],
+        ]);
+
+        if ($response->failed()) {
+            Log::error('Gemini API Error (National ID Analysis)', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \Exception('Gemini API request failed');
+        }
+
+        $responseData = $response->json();
+
+        if (! isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+            Log::error('Gemini API: Unexpected response format (National ID Analysis)', ['response' => $responseData]);
+            throw new \Exception('Gemini API returned unexpected response format');
+        }
+
+        $jsonString = $responseData['candidates'][0]['content']['parts'][0]['text'];
+        $jsonString = preg_replace('/^```json\s*|\s*```$/', '', trim($jsonString));
+
+        $result = json_decode($jsonString, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('Gemini API: Failed to parse JSON response (National ID Analysis)', [
+                'error' => json_last_error_msg(),
+                'raw' => $jsonString,
+            ]);
+            throw new \Exception('Failed to parse Gemini response');
+        }
+
+        Log::info('Gemini National ID Analysis Complete', [
+            'is_authentic' => $result['is_authentic'] ?? false,
+            'confidence' => $result['confidence'] ?? null,
+            'has_pcn' => ! empty($result['data']['pcn_number'] ?? null),
+        ]);
+
+        return $result;
+    }
 }
