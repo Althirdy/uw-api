@@ -23,6 +23,8 @@ class ConcernController extends BaseApiController
      * Display a listing of the resource.
      * Optimized for FlashList with cursor pagination and simplified data.
      * Supports filtering by status, category, and severity.
+     * 
+     * NOTE: Suspended users CAN view their concerns (read-only access).
      */
     public function index(Request $request)
     {
@@ -54,6 +56,9 @@ class ConcernController extends BaseApiController
 
     /**
      * Store a newly created resource in storage.
+     * 
+     * SUSPENSION CHECK: Suspended users are blocked from creating concerns.
+     * This allows them to view announcements/accidents but prevents misuse.
      */
     public function store(StoreConcernRequest $request)
     {
@@ -102,6 +107,8 @@ class ConcernController extends BaseApiController
     /**
      * Display the specified resource.
      * Returns full details for when the user selects an item from the list.
+     * 
+     * NOTE: Suspended users CAN view concern details (read-only access).
      */
     public function show(string $id)
     {
@@ -151,9 +158,31 @@ class ConcernController extends BaseApiController
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * SUSPENSION CHECK: Suspended users are blocked from deleting concerns.
      */
     public function destroy(string $id)
     {
+        // Check if user is suspended
+        if (\App\Models\UserSuspension::isUserSuspended(auth()->id())) {
+            $activeSuspension = \App\Models\UserSuspension::getActiveSuspension(auth()->id());
+            
+            $message = 'Your account is currently suspended and cannot delete concerns.';
+            if ($activeSuspension) {
+                if ($activeSuspension->punishment_type === 'suspension') {
+                    $message = 'Your account has been permanently suspended and cannot delete concerns.';
+                } else {
+                    $expiresAt = $activeSuspension->expires_at->format('F j, Y \\a\\t g:i A');
+                    $message = "Your account is suspended until {$expiresAt} and cannot delete concerns.";
+                }
+                
+                if ($activeSuspension->reason) {
+                    $message .= " Reason: {$activeSuspension->reason}";
+                }
+            }
+            
+            return $this->sendError($message, [], 403);
+        }
 
         $this->concernService->deleteConcern($id, auth()->id());
 

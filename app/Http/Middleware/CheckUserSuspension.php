@@ -7,6 +7,14 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * DEPRECATED: This middleware is no longer used.
+ * 
+ * Suspended users are allowed to login and view content (announcements, accidents, etc.)
+ * but are blocked from write operations (submitting/deleting concerns) via controller-level checks.
+ * 
+ * This approach allows suspended citizens to stay informed while preventing misuse.
+ */
 class CheckUserSuspension
 {
     /**
@@ -16,6 +24,13 @@ class CheckUserSuspension
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // MIDDLEWARE DISABLED
+        // Suspension is now checked at controller level for write operations only
+        // Suspended users can login and view content
+        
+        return $next($request);
+        
+        /* ORIGINAL LOGIC - NOW DISABLED
         if (auth()->check()) {
             $userId = auth()->id();
             
@@ -52,5 +67,6 @@ class CheckUserSuspension
         }
         
         return $next($request);
+        */
     }
 }
