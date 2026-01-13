@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\PurokLeader;
 use App\Events\ConcernStatusUpdated;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Resources\Api\PurokLeader\AssignedConcernResource;
+use App\Jobs\SendConcernStatusNotificationJob;
 use App\Models\Citizen\Concern;
 use App\Models\ConcernDistribution;
 use App\Models\ConcernHistory;
@@ -141,6 +142,15 @@ class ConcernController extends BaseApiController
                 $purokLeader,
                 $remarks
             ));
+
+            // Dispatch job to send email notification to citizen
+            SendConcernStatusNotificationJob::dispatch(
+                $concern->fresh(),
+                $purokLeader,
+                $previousStatus,
+                $status,
+                $remarks
+            );
 
             return $this->sendResponse([
                 'concern_id' => $id,

@@ -84,6 +84,33 @@ class MailService
     }
 
     /**
+     * Send concern status update notification email
+     */
+    public function sendConcernStatusNotification(string $to, $mailable): bool
+    {
+        try {
+            Log::info('Sending concern status notification email', [
+                'to' => $to,
+                'mailable' => get_class($mailable),
+            ]);
+
+            Mail::to($to)->send($mailable);
+
+            Log::info('Concern status notification email sent successfully', ['to' => $to]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to send concern status notification email', [
+                'to' => $to,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Get the last error message
      */
     public function getLastError(): ?string
