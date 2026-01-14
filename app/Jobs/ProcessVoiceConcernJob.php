@@ -77,7 +77,7 @@ class ProcessVoiceConcernJob implements ShouldQueue
             $analysis = $geminiService->analyzeAudio($fileContent, $mimeType);
 
             if ($analysis) {
-                // Update Concern
+                // Update Concern with transcription
                 $concern->update([
                     'title' => $analysis['title'] ?? $concern->title,
                     'description' => $analysis['description'] ?? $concern->description,
@@ -88,7 +88,68 @@ class ProcessVoiceConcernJob implements ShouldQueue
                     'concern_id' => $concern->id,
                 ]);
 
-                // Fire Event (load distribution for broadcasting)
+                // Analyze category and severity from transcript
+                $transcriptText = $analysis['transcription_text'] ?? $analysis['description'] ?? '';
+                
+                if (!empty($transcriptText)) {
+                    $categoryAnalysis = $geminiService->analyzeConcernCategoryAndSeverity($transcriptText);
+                    
+                    if ($categoryAnalysis) {
+                        $updateData = [
+                            'ai_category' => $categoryAnalysis['category'] ?? null,
+                            'ai_severity' => $categoryAnalysis['severity'] ?? null,
+                            'ai_confidence' => $categoryAnalysis['confidence'] ?? null,
+                            'ai_processed_at' => now(),
+                        ];
+
+                        // If confidence is high enough, update the main category and severity
+                        $confidenceThreshold = 0.7;
+                        if (isset($categoryAnalysis['confidence']) && $categoryAnalysis['confidence'] >= $confidenceThreshold) {
+                            $updateData['category'] = $categoryAnalysis['category'];
+                            $updateData['severity'] = $categoryAnalysis['severity'];
+                        }
+
+                        $concern->update($updateData);
+
+                        Log::info('ProcessVoiceConcernJob: Concern updated with AI category analysis', [
+                            'concern_id' => $concern->id,
+                            'ai_category' => $categoryAnalysis['category'] ?? null,
+                            'ai_severity' => $categoryAnalysis['severity'] ?? null,
+                            'confidence' => $categoryAnalysis['confidence'] ?? null,
+                        ]);
+
+                        // Refresh the model to get the latest data
+                        $concern->refresh();
+
+                        Log::info('ProcessVoiceConcernJob: Concern refreshed, preparing to fire event', [
+                            'concern_id' => $concern->id,
+                            'ai_processed_at_type' => gettype($concern->ai_processed_at),
+                        ]);
+
+                        // Fire AI Category Updated Event
+                        $concern->load('distribution');
+                        
+                        Log::info('ProcessVoiceConcernJob: Firing ConcernAICategoryUpdated event', [
+                            'concern_id' => $concern->id,
+                        ]);
+
+                        event(new \App\Events\ConcernAICategoryUpdated($concern));
+
+                        Log::info('ProcessVoiceConcernJob: Event fired successfully', [
+                            'concern_id' => $concern->id,
+                        ]);
+                    } else {
+                        Log::warning('ProcessVoiceConcernJob: AI category analysis returned null or failed', [
+                            'concern_id' => $concern->id,
+                        ]);
+                    }
+                } else {
+                    Log::warning('ProcessVoiceConcernJob: No transcript text available for category analysis', [
+                        'concern_id' => $concern->id,
+                    ]);
+                }
+
+                // Fire Transcribed Event
                 $concern->load('distribution');
                 event(new ConcernTranscribed($concern));
             } else {

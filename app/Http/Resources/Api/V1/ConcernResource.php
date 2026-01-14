@@ -71,7 +71,8 @@ class ConcernResource extends JsonResource
             ])),
 
 
-            'createdAt' => $this->created_at->diffForHumans(),
+            'createdAt' => $this->created_at->toIso8601String(),
+            'updatedAt' => $this->updated_at->toIso8601String(),
         ];
     }
 }

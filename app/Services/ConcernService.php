@@ -9,6 +9,7 @@ use App\Models\ConcernDistribution;
 use App\Models\ConcernHistory;
 use App\Models\IncidentMedia;
 use App\Jobs\ProcessVoiceConcernJob;
+use App\Jobs\ProcessManualConcernJob;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -157,6 +158,8 @@ class ConcernService
                 'status' => 'pending',
                 'category' => $data['category'],
                 'severity' => $data['severity'] ?? 'low',
+                'user_selected_category' => $data['category'], // Store user's selection
+                'user_selected_severity' => $data['severity'] ?? 'low', // Store user's selection
                 'transcript_text' => $data['transcript_text'] ?? null,
                 'longitude' => $data['longitude'] ?? null,
                 'latitude' => $data['latitude'] ?? null,
@@ -220,6 +223,9 @@ class ConcernService
             // Dispatch Voice Processing Job
             if ($concernType === 'voice') {
                 ProcessVoiceConcernJob::dispatch($concern->id);
+            } else {
+                // Dispatch Manual Concern AI Processing Job
+                ProcessManualConcernJob::dispatch($concern->id);
             }
 
             return $concern->load(['media', 'distribution.purokLeader.officialDetails']);

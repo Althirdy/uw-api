@@ -111,6 +111,119 @@ class GeminiService
     }
 
     /**
+     * Analyze concern text to determine category and severity.
+     *
+     * @param  string  $text  The concern text (transcript, title, or description)
+     * @return array|null Returns array with 'category', 'severity', 'confidence', 'reasoning' or null on failure
+     */
+    public function analyzeConcernCategoryAndSeverity(string $text)
+    {
+        try {
+            if (! $this->apiKey) {
+                Log::error('Gemini API Key is missing.');
+
+                return null;
+            }
+
+            $prompt = 'Analyze the following citizen concern text (in Filipino/Taglish or English). '.
+                      'Determine the most appropriate category and severity level. '.
+                      "\n\n".
+                      'CATEGORIES (choose one):'."\n".
+                      '- safety: Threats to personal safety, fire (sunog), accidents (aksidente), dangerous situations'."\n".
+                      '- security: Crime, theft (nakawan), suspicious activity (kahina-hinala), violence'."\n".
+                      '- infrastructure: Roads (daan), utilities (kuryente/tubig), broken facilities (sira), construction issues'."\n".
+                      '- environment: Garbage (basura), pollution (polusyon), flooding (baha), sanitation (kalinisan)'."\n".
+                      '- noise: Loud noise (ingay), disturbances, noise pollution'."\n".
+                      '- other: Anything that doesn\'t fit the above categories'."\n".
+                      "\n".
+                      'SEVERITY LEVELS (choose one):'."\n".
+                      '- high: Immediate danger, emergency, requires urgent action'."\n".
+                      '- medium: Significant issue, needs attention soon'."\n".
+                      '- low: Minor issue, can be addressed in normal schedule'."\n".
+                      "\n".
+                      'EXAMPLES:'."\n".
+                      '- "May sunog sa bahay" → category: safety, severity: high'."\n".
+                      '- "Maraming basura sa kalsada" → category: environment, severity: medium'."\n".
+                      '- "Sira ang kalsada" → category: infrastructure, severity: medium'."\n".
+                      '- "Napakalakas ng ingay ng kapitbahay" → category: noise, severity: low'."\n".
+                      '- "May nakawan sa amin" → category: security, severity: high'."\n".
+                      "\n".
+                      'Concern Text: '.$text."\n\n".
+                      'Return strictly valid JSON with keys: '.
+                      '"category" (one of: safety, security, infrastructure, environment, noise, other), '.
+                      '"severity" (one of: low, medium, high), '.
+                      '"confidence" (decimal 0.0 to 1.0 indicating how confident you are), '.
+                      '"reasoning" (brief explanation in English). '.
+                      'Do not include markdown formatting.';
+
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post("{$this->baseUrl}?key={$this->apiKey}", [
+                'contents' => [
+                    [
+                        'parts' => [
+                            [
+                                'text' => $prompt,
+                            ],
+                        ],
+                    ],
+                ],
+                'generationConfig' => [
+                    'response_mime_type' => 'application/json',
+                ],
+            ]);
+
+            if ($response->failed()) {
+                Log::error('Gemini API Error (Category Analysis)', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return null;
+            }
+
+            $responseData = $response->json();
+
+            if (! isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
+                Log::error('Gemini API: Unexpected response format (Category Analysis)', ['response' => $responseData]);
+
+                return null;
+            }
+
+            $jsonString = $responseData['candidates'][0]['content']['parts'][0]['text'];
+            $jsonString = preg_replace('/^```json\s*|\s*```$/', '', $jsonString);
+
+            $result = json_decode($jsonString, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('Gemini API: Failed to parse JSON response (Category Analysis)', [
+                    'error' => json_last_error_msg(),
+                    'raw' => $jsonString,
+                ]);
+
+                return null;
+            }
+
+            // Validate response structure
+            if (! isset($result['category']) || ! isset($result['severity']) || ! isset($result['confidence'])) {
+                Log::error('Gemini API: Missing required fields in response', ['result' => $result]);
+
+                return null;
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error('GeminiService Exception (Category Analysis)', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
      * Analyze image content to verify emergency validity and extract incident details.
      *
      * @param  string  $fileContent  Raw binary content of the image file
