@@ -37,7 +37,7 @@ class ActiveAccidentResource extends JsonResource
         // Get coordinates from CCTV device's location relationship
         $coordinates = $this->getCoordinatesFromCctvLocation();
 
-        // Base data for Role 3 (limited access)
+        // Base data for both Role 3 (Citizen) and Role 2 (Purok Leader)
         $baseData = [
             'id' => $this->id,
             'title' => $this->title,
@@ -47,29 +47,12 @@ class ActiveAccidentResource extends JsonResource
             'status' => $this->status,
             'severity' => $this->severity,
             'accident_type' => $this->accident_type,
-            'occurred_at' => $this->occurred_at?->diffForHumans(),
+            'occurred_at' => $this->occurred_at?->toIso8601String(),
             'location' => $this->getLocationDetails(),
-
-
+            'media' => MediaResource::collection($this->whenLoaded('media')),
         ];
 
-        // Return limited data for Role 3
-        if ($this->roleId === 3) {
-            return $baseData;
-        }
-
-        // Return full data for Role 2
-        if ($this->roleId === 2) {
-            return array_merge($baseData, [
-                'accident_type' => $this->accident_type,
-                'status' => $this->status,
-                'severity' => $this->severity,
-                'occurred_at' => $this->occurred_at?->diffForHumans(),
-                'media' => MediaResource::collection($this->whenLoaded('media')),
-            ]);
-        }
-
-        // Default: return base data
+        // Both roles now get the same data including media/images
         return $baseData;
     }
 

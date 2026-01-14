@@ -73,85 +73,74 @@ class ProcessVoiceConcernJob implements ShouldQueue
             $fileContent = Storage::disk($disk)->get($storagePath);
             $mimeType = $audioMedia->mime_type ?? 'audio/mp3'; // Default fallback
 
-            // Call Gemini Service
+            // Call Gemini Service - now includes category and severity analysis
             $analysis = $geminiService->analyzeAudio($fileContent, $mimeType);
 
             if ($analysis) {
-                // Update Concern with transcription
-                $concern->update([
+                // Prepare update data with transcription
+                $updateData = [
                     'title' => $analysis['title'] ?? $concern->title,
                     'description' => $analysis['description'] ?? $concern->description,
                     'transcript_text' => $analysis['transcription_text'] ?? null,
-                ]);
+                ];
 
-                Log::info('ProcessVoiceConcernJob: Concern updated with transcription', [
-                    'concern_id' => $concern->id,
-                ]);
+                // Add AI category and severity if available from audio analysis
+                if (isset($analysis['category']) && isset($analysis['severity'])) {
+                    $updateData['ai_category'] = $analysis['category'];
+                    $updateData['ai_severity'] = $analysis['severity'];
+                    $updateData['ai_confidence'] = $analysis['confidence'] ?? 0.95;
+                    $updateData['ai_processed_at'] = now();
 
-                // Analyze category and severity from transcript
-                $transcriptText = $analysis['transcription_text'] ?? $analysis['description'] ?? '';
-                
-                if (!empty($transcriptText)) {
-                    $categoryAnalysis = $geminiService->analyzeConcernCategoryAndSeverity($transcriptText);
-                    
-                    if ($categoryAnalysis) {
-                        $updateData = [
-                            'ai_category' => $categoryAnalysis['category'] ?? null,
-                            'ai_severity' => $categoryAnalysis['severity'] ?? null,
-                            'ai_confidence' => $categoryAnalysis['confidence'] ?? null,
-                            'ai_processed_at' => now(),
-                        ];
-
-                        // If confidence is high enough, update the main category and severity
-                        $confidenceThreshold = 0.7;
-                        if (isset($categoryAnalysis['confidence']) && $categoryAnalysis['confidence'] >= $confidenceThreshold) {
-                            $updateData['category'] = $categoryAnalysis['category'];
-                            $updateData['severity'] = $categoryAnalysis['severity'];
-                        }
-
-                        $concern->update($updateData);
-
-                        Log::info('ProcessVoiceConcernJob: Concern updated with AI category analysis', [
-                            'concern_id' => $concern->id,
-                            'ai_category' => $categoryAnalysis['category'] ?? null,
-                            'ai_severity' => $categoryAnalysis['severity'] ?? null,
-                            'confidence' => $categoryAnalysis['confidence'] ?? null,
-                        ]);
-
-                        // Refresh the model to get the latest data
-                        $concern->refresh();
-
-                        Log::info('ProcessVoiceConcernJob: Concern refreshed, preparing to fire event', [
-                            'concern_id' => $concern->id,
-                            'ai_processed_at_type' => gettype($concern->ai_processed_at),
-                        ]);
-
-                        // Fire AI Category Updated Event
-                        $concern->load('distribution');
-                        
-                        Log::info('ProcessVoiceConcernJob: Firing ConcernAICategoryUpdated event', [
-                            'concern_id' => $concern->id,
-                        ]);
-
-                        event(new \App\Events\ConcernAICategoryUpdated($concern));
-
-                        Log::info('ProcessVoiceConcernJob: Event fired successfully', [
-                            'concern_id' => $concern->id,
-                        ]);
-                    } else {
-                        Log::warning('ProcessVoiceConcernJob: AI category analysis returned null or failed', [
-                            'concern_id' => $concern->id,
-                        ]);
+                    // If confidence is high enough, update the main category and severity
+                    $confidenceThreshold = 0.7;
+                    if (isset($analysis['confidence']) && $analysis['confidence'] >= $confidenceThreshold) {
+                        $updateData['category'] = $analysis['category'];
+                        $updateData['severity'] = $analysis['severity'];
                     }
-                } else {
-                    Log::warning('ProcessVoiceConcernJob: No transcript text available for category analysis', [
+
+                    Log::info('ProcessVoiceConcernJob: Category and severity detected from audio', [
                         'concern_id' => $concern->id,
+                        'category' => $analysis['category'],
+                        'severity' => $analysis['severity'],
+                        'confidence' => $analysis['confidence'] ?? 0.95,
                     ]);
                 }
 
-                // Fire Transcribed Event
+                // Update concern with all data
+                $concern->update($updateData);
+
+                Log::info('ProcessVoiceConcernJob: Concern updated with transcription and AI analysis', [
+                    'concern_id' => $concern->id,
+                    'has_category' => isset($analysis['category']),
+                ]);
+
+                // Refresh to get latest data
+                $concern->refresh();
                 $concern->load('distribution');
+
+                // Fire AI Category Updated Event if we have AI data
+                if (isset($analysis['category']) && isset($analysis['severity'])) {
+                    Log::info('ProcessVoiceConcernJob: Firing ConcernAICategoryUpdated event', [
+                        'concern_id' => $concern->id,
+                        'category' => $concern->category,
+                        'severity' => $concern->severity,
+                        'ai_category' => $concern->ai_category,
+                        'ai_severity' => $concern->ai_severity,
+                    ]);
+
+                    event(new \App\Events\ConcernAICategoryUpdated($concern));
+
+                    Log::info('ProcessVoiceConcernJob: ConcernAICategoryUpdated event fired');
+                }
+
+                // Fire Transcribed Event
+                Log::info('ProcessVoiceConcernJob: Firing ConcernTranscribed event', [
+                    'concern_id' => $concern->id,
+                ]);
+                
                 event(new ConcernTranscribed($concern));
+
+                Log::info('ProcessVoiceConcernJob: ConcernTranscribed event fired');
             } else {
                 Log::warning('ProcessVoiceConcernJob: Gemini analysis failed or returned null', [
                     'concern_id' => $concern->id,

@@ -22,6 +22,14 @@ class ConcernResource extends JsonResource
             'status' => $this->status,
             'severity' => $this->severity,
             'category' => $this->category,
+            
+            // AI Category Detection Fields
+            // 'userSelectedCategory' => $this->user_selected_category,
+            // 'userSelectedSeverity' => $this->user_selected_severity,
+            // 'aiCategory' => $this->ai_category,
+            // 'aiSeverity' => $this->ai_severity,
+            // 'aiConfidence' => $this->ai_confidence,
+            // 'aiProcessedAt' => $this->ai_processed_at?->toIso8601String(),
 
             // 2. Conditional Location (Only send if latitude exists)
             // Grouping lat/lng is cleaner for Maps API
@@ -71,8 +79,8 @@ class ConcernResource extends JsonResource
             ])),
 
 
-            'createdAt' => $this->created_at->toIso8601String(),
-            'updatedAt' => $this->updated_at->toIso8601String(),
+            'createdAt' => $this->created_at->diffForHumans(),
+            // 'updatedAt' => $this->updated_at->diffForHumans(),
         ];
     }
 }

@@ -17,11 +17,11 @@ class GeminiService
     }
 
     /**
-     * Transcribe and analyze audio content.
+     * Transcribe and analyze audio content with category and severity detection.
      *
      * @param  string  $fileContent  Raw binary content of the file
      * @param  string  $mimeType  Mime type of the file (e.g., 'audio/mp3')
-     * @return array|null Returns array with 'transcription_text', 'title', 'description' or null on failure
+     * @return array|null Returns array with 'transcription_text', 'title', 'description', 'category', 'severity', 'confidence' or null on failure
      */
     public function analyzeAudio(string $fileContent, string $mimeType)
     {
@@ -38,7 +38,18 @@ class GeminiService
                       'Provide the transcription text verbatim. '.
                       'Generate a concise 3-5 word title in Tagalog (Filipino). '.
                       'Generate a brief 1-sentence summary description in Tagalog (Filipino). '.
-                      "Return strictly valid JSON with keys: 'transcription_text', 'title', 'description'. ".
+                      "\n\n".
+                      'Also analyze the concern to determine the category and severity:'."\n".
+                      'CATEGORIES: safety, security, infrastructure, environment, noise, other'."\n".
+                      'SEVERITY LEVELS: low, medium, high'."\n".
+                      "\n".
+                      'EXAMPLES:'."\n".
+                      '- "May sunog" → category: safety, severity: high'."\n".
+                      '- "Maraming basura" → category: environment, severity: medium'."\n".
+                      '- "Sira ang daan" → category: infrastructure, severity: medium'."\n".
+                      '- "Malakas ang ingay" → category: noise, severity: low'."\n".
+                      "\n".
+                      "Return strictly valid JSON with keys: 'transcription_text', 'title', 'description', 'category', 'severity', 'confidence'. ".
                       'Do not include markdown formatting (like ```json) in the response.';
 
             $response = Http::withHeaders([
