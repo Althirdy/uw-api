@@ -1,70 +1,51 @@
 version: '3.8'
 
 services:
+  # --- UAT APP ---
   uat-app:
     build: .
     container_name: urbanwatch-uat-app
     restart: always
     ports:
-      - "8001:80"
+      - "8001:80" 
     volumes:
       - ./:/var/www/html
     environment:
-<<<<<<<< HEAD:docker-compose.uat.yml
       - APP_ENV=uat
-      - APP_DEBUG=true # Helpful for UAT to see errors
-      - APP_KEY=${APP_KEY}
+      - APP_DEBUG=true # Essential for UAT debugging
       - APP_URL=https://uat.urbanwatch.me
-========
-      - APP_ENV=production
-      - APP_DEBUG=false
-      - APP_KEY=${APP_KEY}
-      - APP_URL=https://urbanwatch.me
->>>>>>>> 461207d (Refactor docker-compose.yml; remove comment from APP_KEY and adjust indentation for queue and tunnel services):docker-compose.yml
-      - DB_CONNECTION=mysql
       - DB_HOST=uat-db
-      - DB_PORT=3306
       - DB_DATABASE=urbanwatch_uat 
-      - DB_USERNAME=urban_user
-      - DB_PASSWORD=urban_password
+    networks:
+      - default
 
-<<<<<<<< HEAD:docker-compose.uat.yml
   uat-queue:
-========
-  queue:
->>>>>>>> 461207d (Refactor docker-compose.yml; remove comment from APP_KEY and adjust indentation for queue and tunnel services):docker-compose.yml
     build: .
     container_name: urbanwatch-uat-queue
     restart: always
-    volumes:
-      - ./:/var/www/html
-      - /var/www/html/vendor
-    command: php artisan queue:work --verbose --tries=3 --timeout=90
+    command: php artisan queue:work --tries=3
     depends_on:
       - uat-db
+    networks:
+      - default
 
   uat-db:
     image: mysql:8.0
     container_name: urbanwatch-uat-db
     restart: always
     environment:
-      MYSQL_DATABASE: urbanwatch_uat 
+      MYSQL_DATABASE: urbanwatch_uat
       MYSQL_USER: urban_user
       MYSQL_PASSWORD: urban_password
       MYSQL_ROOT_PASSWORD: root
     volumes:
-<<<<<<<< HEAD:docker-compose.uat.yml
       - uat_db_data:/var/lib/mysql
-========
-      - db_data:/var/lib/mysql
-  tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: urbanwatch-tunnel
-    restart: always
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    command: tunnel run -token ${TUNNEL_TOKEN}
->>>>>>>> 461207d (Refactor docker-compose.yml; remove comment from APP_KEY and adjust indentation for queue and tunnel services):docker-compose.yml
+    networks:
+      - default
+
+networks:
+  default:
+    name: uat-api_default 
 
 volumes:
   uat_db_data:
