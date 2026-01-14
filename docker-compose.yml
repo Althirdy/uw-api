@@ -14,7 +14,7 @@ services:
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_KEY=${APP_KEY}
+      - APP_KEY=${APP_KEY} # We will set this in .env
       - APP_URL=https://urbanwatch.me
       - DB_CONNECTION=mysql
       - DB_HOST=db
@@ -22,8 +22,7 @@ services:
       - DB_DATABASE=urbanwatch
       - DB_USERNAME=urban_user
       - DB_PASSWORD=urban_password
-
-  queue:
+    queue:
     build: .
     container_name: urbanwatch-queue
     restart: always
