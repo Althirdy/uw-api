@@ -463,6 +463,7 @@ class GeminiService
                             "pcnNumber": "string" or null,
                             "lastName": "string" or null,
                             "firstName": "string" or null,
+                            "suffix": string" or null,  
                             "middleName": "string" or null,
                             "dateOfBirth": "MM/DD/YYYY" or null,
                             "address": "string" or null,

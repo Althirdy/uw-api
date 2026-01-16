@@ -29,13 +29,13 @@ class RegisterRequest extends FormRequest
             'lastName' => 'required|string|max:255',
             'suffix' => 'nullable|string|max:10',
             'dateOfBirth' => 'required|date|before:today',
-            'phoneNumber' => 'required|string|max:20|unique:citizens,phone_number',
+            'phoneNumber' => 'required|string|max:20|unique:citizen_details,phone_number',
             'address' => 'required|string|max:255',
             'barangay' => 'required|string|max:255',
             'city' => 'required|string|max:255',
             'province' => 'required|string|max:255',
             'postalCode' => 'required|string|max:10',
-            'pcnNumber' => 'required|string|max:50|unique:citizens,pcn_number',
+            'pcnNumber' => 'required|string|max:50|unique:citizen_details,pcn_number',
         ];
     }
 

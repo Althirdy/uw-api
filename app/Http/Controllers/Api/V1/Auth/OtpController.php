@@ -92,6 +92,8 @@ class OtpController extends Controller
                 'data' => $emailReputationResult
             ], 422);
         }
+
+        
         
         return $this->requestOtp($request);
     }
