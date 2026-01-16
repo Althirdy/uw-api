@@ -151,11 +151,12 @@ class YoloAccidentController extends BaseApiController
                     ];
                 });
 
-            // Get recent false alarms (last 20)
+            // Get recent false alarms (today only, limit 50 for performance)
             $recentFalseAlarms = FalseAlarm::with('cctvDevice.location')
+                ->today()
                 ->when($deviceId, fn($q) => $q->where('cctv_device_id', $deviceId))
                 ->orderByDesc('created_at')
-                ->limit(20)
+                ->limit(50)
                 ->get()
                 ->map(function ($falseAlarm) {
                     return [

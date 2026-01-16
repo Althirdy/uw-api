@@ -175,23 +175,25 @@ export const columns = (
                             </TooltipContent>
                         </Tooltip>
                     )}
-                    <Tooltip>
-                        <SuspensionUser user={user}>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="cursor-pointer"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <BadgeAlert className="h-4 w-4" />
-                                </Button>
-                            </TooltipTrigger>
-                        </SuspensionUser>
-                        <TooltipContent>
-                            <p>Suspend User</p>
-                        </TooltipContent>
-                    </Tooltip>
+                    {user.role?.name?.toLowerCase() === 'citizen' && (
+                        <Tooltip>
+                            <SuspensionUser user={user}>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="cursor-pointer"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <BadgeAlert className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                            </SuspensionUser>
+                            <TooltipContent>
+                                <p>Suspend User</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
 
                     <Tooltip>
                         <ArchiveUser user={user}>

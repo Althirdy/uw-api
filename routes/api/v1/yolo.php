@@ -11,9 +11,11 @@ Route::middleware('api.key')->group(function () {
 });
 
 // False Alarm Monitoring Routes (protected with Sanctum - accessed by authenticated operators)
-Route::middleware(['auth:sanctum', 'ability.access'])->group(function () {
-    Route::get('yolo/false-alarms/stats', [YoloAccidentController::class, 'getFalseAlarmStats']);
-    Route::get('yolo/false-alarms', [YoloAccidentController::class, 'getFalseAlarms']);
-});
+// Route::middleware('auth')->group(function () {
+   
+// });
+
+ Route::get('yolo/false-alarms/stats', [YoloAccidentController::class, 'getFalseAlarmStats']);
+Route::get('yolo/false-alarms', [YoloAccidentController::class, 'getFalseAlarms']);
 
 Route::get('yolo/active-cctvs', [CCTVController::class, 'getActiveCCTVs']);

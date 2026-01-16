@@ -1,84 +1,23 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import {
     useFalseAlarmRealtime,
-    FalseAlarmStats,
 } from '@/hooks/use-false-alarm-realtime';
 import {
     AlertTriangle,
-    Camera,
-    Clock,
     RefreshCw,
-    TrendingUp,
-    Wifi,
-    WifiOff,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
-
-interface DeviceBarProps {
-    deviceName: string;
-    count: number;
-    percentage: number;
-}
-
-function DeviceBar({ deviceName, count, percentage }: DeviceBarProps) {
-    return (
-        <div className="space-y-1">
-            <div className="flex items-center justify-between text-sm">
-                <span className="truncate font-medium">{deviceName}</span>
-                <span className="text-muted-foreground">
-                    {count} ({percentage}%)
-                </span>
-            </div>
-            <div className="bg-muted h-2 w-full overflow-hidden rounded-full">
-                <div
-                    className="bg-amber-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${percentage}%` }}
-                />
-            </div>
-        </div>
-    );
-}
-
-interface StatCardProps {
-    title: string;
-    value: string | number;
-    icon: React.ReactNode;
-    description?: string;
-}
-
-function StatCard({ title, value, icon, description }: StatCardProps) {
-    return (
-        <Card>
-            <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                        <p className="text-muted-foreground mb-1 text-xs font-medium">
-                            {title}
-                        </p>
-                        <p className="text-3xl font-bold">{value}</p>
-                        {description && (
-                            <p className="text-muted-foreground mt-1 text-xs">
-                                {description}
-                            </p>
-                        )}
-                    </div>
-                    <div className="bg-amber-100 dark:bg-amber-950/50 rounded-full p-3">
-                        {icon}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
+import { useState } from 'react';
 
 interface FalseAlarmItemProps {
     deviceName: string;
@@ -97,12 +36,21 @@ function FalseAlarmItem({
     timeAgo,
     attemptedType,
 }: FalseAlarmItemProps) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const shouldShowToggle = reasoning.length > 150;
+
     return (
-        <div className="border-border hover:bg-muted/50 space-y-2.5 rounded-lg border p-4 transition-colors">
+        <div className="border-border hover:bg-muted/50 space-y-3 rounded-lg border p-4 transition-colors">
             <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
-                    <span className="text-sm font-semibold">{deviceName}</span>
+                <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium text-muted-foreground">Device:</span>
+                        <span className="text-sm font-semibold">{deviceName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-muted-foreground">Location:</span>
+                        <span className="text-xs text-muted-foreground">{locationName}</span>
+                    </div>
                 </div>
                 {attemptedType && (
                     <Badge variant="outline" className="shrink-0 text-xs">
@@ -110,13 +58,36 @@ function FalseAlarmItem({
                     </Badge>
                 )}
             </div>
-            <p className="text-muted-foreground text-xs">{locationName}</p>
-            <p className="line-clamp-2 text-sm leading-relaxed">{reasoning}</p>
-            <div className="text-muted-foreground flex items-center justify-between pt-1 text-xs">
-                <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {timeAgo}
-                </span>
+            
+            <div className="space-y-2">
+                <span className="text-xs font-medium text-muted-foreground">Reasoning:</span>
+                <p className={`text-sm leading-relaxed ${!isExpanded && shouldShowToggle ? 'line-clamp-2' : ''}`}>
+                    {reasoning}
+                </p>
+                {shouldShowToggle && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="h-auto p-0 text-xs text-primary hover:bg-transparent"
+                    >
+                        {isExpanded ? (
+                            <>
+                                <span>Show less</span>
+                                <ChevronUp className="ml-1 h-3 w-3" />
+                            </>
+                        ) : (
+                            <>
+                                <span>See more</span>
+                                <ChevronDown className="ml-1 h-3 w-3" />
+                            </>
+                        )}
+                    </Button>
+                )}
+            </div>
+
+            <div className="text-muted-foreground flex items-center justify-between pt-1 text-xs border-t">
+                <span>{timeAgo}</span>
                 {confidence !== null && (
                     <span>Confidence: {confidence}%</span>
                 )}
@@ -130,8 +101,8 @@ export function FalseAlarmMonitor() {
         useFalseAlarmRealtime();
 
     return (
-        <Sheet>
-            <SheetTrigger asChild>
+        <Dialog>
+            <DialogTrigger asChild>
                 <Button
                     variant="outline"
                     size="sm"
@@ -148,17 +119,18 @@ export function FalseAlarmMonitor() {
                         </Badge>
                     )}
                 </Button>
-            </SheetTrigger>
-            <SheetContent
-                side="right"
-                className="flex w-full flex-col gap-0 p-0 sm:max-w-md"
-            >
-                <SheetHeader className="border-b px-6 py-4">
+            </DialogTrigger>
+            <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col gap-0 overflow-hidden p-0">
+                <DialogHeader className="flex-shrink-0 border-b px-6 py-4">
                     <div className="flex items-center justify-between gap-4">
-                        <SheetTitle className="flex items-center gap-2 text-lg">
-                            <AlertTriangle className="h-5 w-5 text-amber-500" />
-                            False Alarm Monitor
-                        </SheetTitle>
+                        <div>
+                            <DialogTitle className="text-lg">
+                                False Alarm Monitor
+                            </DialogTitle>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Showing today's false alarms only
+                            </p>
+                        </div>
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="ghost"
@@ -175,98 +147,28 @@ export function FalseAlarmMonitor() {
                                 variant={
                                     isConnected ? 'outline' : 'destructive'
                                 }
-                                className={`gap-1 ${isConnected ? 'border-green-500 text-green-600' : ''}`}
+                                className={`${isConnected ? 'border-green-500 text-green-600' : ''}`}
                             >
-                                {isConnected ? (
-                                    <Wifi className="h-3 w-3" />
-                                ) : (
-                                    <WifiOff className="h-3 w-3" />
-                                )}
+                                {isConnected ? 'Connected' : 'Disconnected'}
                             </Badge>
                         </div>
                     </div>
-                </SheetHeader>
+                </DialogHeader>
 
-                <ScrollArea className="flex-1 px-6">
-                    <div className="space-y-6 py-6">
-                        {/* Statistics Cards */}
-                        <div>
-                            <h3 className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-                                Today's Statistics
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                <StatCard
-                                    title="Total Today"
-                                    value={stats?.statistics.today ?? 0}
-                                    icon={
-                                        <AlertTriangle className="h-4 w-4 text-amber-600" />
-                                    }
-                                />
-                                <StatCard
-                                    title="This Hour"
-                                    value={stats?.statistics.this_hour ?? 0}
-                                    icon={
-                                        <Clock className="h-4 w-4 text-amber-600" />
-                                    }
-                                />
-                                <StatCard
-                                    title="This Week"
-                                    value={stats?.statistics.this_week ?? 0}
-                                    icon={
-                                        <TrendingUp className="h-4 w-4 text-amber-600" />
-                                    }
-                                />
-                                <StatCard
-                                    title="Peak Hour"
-                                    value={
-                                        stats?.statistics.peak_hour?.formatted ??
-                                        '--:--'
-                                    }
-                                    icon={
-                                        <Camera className="h-4 w-4 text-amber-600" />
-                                    }
-                                    description={
-                                        stats?.statistics.peak_hour
-                                            ? `${stats.statistics.peak_hour.count} detections`
-                                            : undefined
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        {/* Device Breakdown */}
-                        {stats?.device_breakdown &&
-                            stats.device_breakdown.length > 0 && (
-                                <div>
-                                    <h3 className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-                                        By Camera Device
-                                    </h3>
-                                    <Card>
-                                        <CardContent className="space-y-4 p-4">
-                                            {stats.device_breakdown.map(
-                                                (device) => (
-                                                    <DeviceBar
-                                                        key={device.device_id}
-                                                        deviceName={
-                                                            device.device_name
-                                                        }
-                                                        count={device.count}
-                                                        percentage={
-                                                            device.percentage
-                                                        }
-                                                    />
-                                                ),
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                </div>
-                            )}
-
+                <ScrollArea className="flex-1 overflow-y-auto">
+                    <div className="px-6 py-4">
                         {/* Recent False Alarms */}
                         <div>
-                            <h3 className="text-muted-foreground mb-4 text-xs font-semibold uppercase tracking-wider">
-                                Recent False Alarms
-                            </h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                                    Today's False Alarms
+                                </h3>
+                                {stats?.recent_false_alarms && stats.recent_false_alarms.length > 0 && (
+                                    <Badge variant="secondary" className="text-xs">
+                                        {stats.recent_false_alarms.length} records
+                                    </Badge>
+                                )}
+                            </div>
                             <div className="space-y-3">
                                 {isLoading ? (
                                     <div className="text-muted-foreground flex items-center justify-center py-8 text-sm">
@@ -300,11 +202,9 @@ export function FalseAlarmMonitor() {
                                     )
                                 ) : (
                                     <div className="text-muted-foreground py-8 text-center text-sm">
-                                        <AlertTriangle className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                                        <p>No false alarms yet today</p>
-                                        <p className="text-xs">
-                                            YOLO detections are working
-                                            correctly
+                                        <p className="font-medium">No false alarms yet today</p>
+                                        <p className="text-xs mt-1">
+                                            YOLO detections are working correctly
                                         </p>
                                     </div>
                                 )}
@@ -322,8 +222,8 @@ export function FalseAlarmMonitor() {
                         {isConnected ? 'Live updates enabled' : 'Reconnecting...'}
                     </p>
                 </div>
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
 

@@ -35,7 +35,7 @@ export default function Locations({
             <div className="space-y-4 p-4">
                 <CreateLocation packages={packages} />
 
-                <Tabs defaultValue="table" className="w-full space-y-2">
+                <Tabs defaultValue="card" className="w-full space-y-2">
                     <div className="flex flex-row gap-4">
                         <LocationActionTab
                             locations={locations!}

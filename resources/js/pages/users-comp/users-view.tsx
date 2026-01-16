@@ -11,13 +11,24 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MoveLeft } from 'lucide-react';
+import { MoveLeft, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { useIdentifyNumber } from '@/hooks/use-identify-number';
 import { AvailablePunishmentsData, users_T } from '@/types/user-types';
+import { router } from '@inertiajs/react';
 
 // Network provider color configurations
 const networkColors: Record<
@@ -65,6 +76,8 @@ function ViewUser({ user, children }: ViewUserProps) {
     const [suspensionData, setSuspensionData] =
         useState<AvailablePunishmentsData | null>(null);
     const [loadingSuspension, setLoadingSuspension] = useState(true);
+    const [liftingSuspension, setLiftingSuspension] = useState(false);
+    const [showLiftConfirmation, setShowLiftConfirmation] = useState(false);
 
     useEffect(() => {
         fetchSuspensionData();
@@ -83,6 +96,27 @@ function ViewUser({ user, children }: ViewUserProps) {
         } finally {
             setLoadingSuspension(false);
         }
+    };
+
+    const handleLiftSuspension = () => {
+        setLiftingSuspension(true);
+        router.patch(
+            `/user/${user.id}/revoke-suspension`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    fetchSuspensionData(); // Refresh suspension data
+                    setShowLiftConfirmation(false);
+                },
+                onError: (errors) => {
+                    console.error('Failed to lift suspension:', errors);
+                },
+                onFinish: () => {
+                    setLiftingSuspension(false);
+                },
+            }
+        );
     };
 
     const formatFullPunishmentType = (type: string): string => {
@@ -166,10 +200,20 @@ function ViewUser({ user, children }: ViewUserProps) {
                         suspensionData?.is_suspended &&
                         suspensionData.active_suspension && (
                             <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
-                                <div className="mb-2 flex items-center gap-2">
+                                <div className="mb-2 flex items-center justify-between gap-2">
                                     <Badge className="inline-flex items-center rounded-[var(--radius)] bg-red-800 px-2.5 py-1 text-xs font-medium text-foreground dark:bg-red-900">
                                         Suspended
                                     </Badge>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setShowLiftConfirmation(true)}
+                                        disabled={liftingSuspension}
+                                        className="h-8 gap-2"
+                                    >
+                                        <ShieldCheck className="h-4 w-4" />
+                                        {liftingSuspension ? 'Lifting...' : 'Lift Suspension'}
+                                    </Button>
                                 </div>
                                 <p className="text-sm text-muted-foreground">
                                     Type:{' '}
@@ -336,6 +380,26 @@ function ViewUser({ user, children }: ViewUserProps) {
                     </DialogClose>
                 </DialogFooter>
             </DialogContent>
+
+            <AlertDialog open={showLiftConfirmation} onOpenChange={setShowLiftConfirmation}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Lift Suspension</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to lift this suspension? This will immediately restore the user's ability to submit concerns.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={liftingSuspension}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleLiftSuspension}
+                            disabled={liftingSuspension}
+                        >
+                            {liftingSuspension ? 'Lifting...' : 'Confirm'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </Dialog>
     );
 }
