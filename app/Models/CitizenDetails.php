@@ -10,6 +10,7 @@ class CitizenDetails extends Model
 
     protected $fillable = [
         'user_id',
+        'pcn_number',
         'first_name',
         'middle_name',
         'last_name',

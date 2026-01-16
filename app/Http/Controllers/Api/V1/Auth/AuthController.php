@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Api\BaseApiController;
+use App\Exceptions\UrbanWatchException;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\PurokLeaderLoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Http\Resources\Api\V1\AuthUserResource;
 use App\Models\CitizenDetails;
 use App\Models\User;
+use App\Services\AbstractApiService;
 use App\Services\AuthService;
+use App\Services\GeminiService;
+use App\Services\ImageProcessingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -18,10 +22,15 @@ use Illuminate\Support\Facades\Validator;
 class AuthController extends BaseApiController
 {
     protected $authService;
-
-    public function __construct(AuthService $authService)
+    protected $abstractApiService;
+    protected $geminiService;
+    protected $imageService;
+    public function __construct(AuthService $authService, AbstractApiService $abstractApiService, GeminiService $geminiService, ImageProcessingService $imageService)
     {
         $this->authService = $authService;
+        $this->abstractApiService = $abstractApiService;
+        $this->geminiService = $geminiService;
+        $this->imageService = $imageService;
     }
 
     // ****LOGIN METHODD */
@@ -33,23 +42,19 @@ class AuthController extends BaseApiController
         try {
             $authData = $this->authService->login($validated['email'], $validated['password']);
 
-            if (! $authData) {
-                return $this->sendUnauthorized('Invalid credentials');
+            if (!$authData) {
+                throw new UrbanWatchException('Invalid credentials');
             }
 
             $user = $authData['user'];
 
-            if (($user->role_id == 1 || $user->role_id == 2) && ! $user->officialDetails) {
-                return $this->sendError('Official details not found for this user');
-            }
+            // if (($user->role_id == 1 || $user->role_id == 2) && !$user->officialDetails) {
+            //     return $this->sendError(message: 'Official details not found for this user');
+            // }
 
-            if ($user->role_id == 3 && ! $user->citizenDetails) {
-                return $this->sendError('Citizen details not found for this user');
-            }
-
-            if (! in_array($user->role_id, [1, 2, 3])) {
-                return $this->sendError('Invalid user role');
-            }
+            // if ($user->role_id == 3 && !$user->citizenDetails) {
+            //     return $this->sendError(message: 'Citizen details not found for this user');
+            // }
 
             return $this->sendResponse([
                 'token' => $authData['token'],
@@ -57,10 +62,50 @@ class AuthController extends BaseApiController
                 'user' => new AuthUserResource($user),
             ]);
 
+        } catch (UrbanWatchException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            return $this->sendError('Invalid Credentials');
+            return $this->sendError(message: 'Invalid Credentials');
         }
     }
+
+    public function uploadNationalId(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:5120', // max 5MB
+        ]);
+        
+        try {
+            $image = $request->file('image');
+            $rawContent = $image->get();
+            $mimeType = $image->getMimeType();
+
+            $optimizedContent = $this->imageService->optimizeForAi($rawContent, $mimeType);
+
+            $analysis = $this->geminiService->analyzeNationalId(
+                $optimizedContent, 
+                $image->getMimeType()
+            );
+
+            if ($analysis['backSideDetected']) return $this->sendError('You uploaded the back of the ID. Please upload the front.', 400);
+
+            if (!$analysis['isAuthentic']) return $this->sendError('ID verification failed: ' . ($analysis['reasoning'] ?? 'Image not recognized as a valid PhilID'), 400);
+            
+            if($this->authService->checkPcnNumberExists($analysis['data']['pcnNumber'])){
+                return $this->sendError('The PCN number on this ID is already registered.', 400);
+            }
+            
+            return $this->sendResponse([
+                'verificationId' => uniqid('ver_'),
+                'extractedData' => $analysis['data'],
+                'confidence_score' => $analysis['confidence'],
+            ], 'ID uploaded and verified successfully.');
+
+        }catch(Exception $e){
+            Log::error('ID Upload Error', ['msg' => $e->getMessage()]);
+            return $this->sendError('Unable to process ID card at this time.', 500);
+        }
+    } 
 
     // Login for Purok Leader
     public function loginPurokLeader(PurokLeaderLoginRequest $request): \Illuminate\Http\JsonResponse
@@ -70,23 +115,21 @@ class AuthController extends BaseApiController
         try {
             $authData = $this->authService->loginPurokLeader($validated['pin']);
 
-            if (! $authData) {
-                return $this->sendUnauthorized('Invalid PIN');
-            }
-
+            if (!$authData) throw new UrbanWatchException('Invalid PIN');
+                
             $user = $authData['user'];
 
-            if (! $user->officialDetails) {
-                return $this->sendError('Official details not found for this user');
-            }
+            if (!$user->officialDetails) throw new UrbanWatchException('Official details not found for this user');
 
             return $this->sendResponse([
                 'token' => $authData['token'],
                 'refreshToken' => $authData['refreshToken'],
                 'user' => new AuthUserResource($user),
             ], 'Login successful');
+        } catch (UrbanWatchException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            return $this->sendUnauthorized('Invalid PIN');
+            return $this->sendUnauthorized(message: 'Invalid PIN');
         }
     }
 
@@ -111,17 +154,17 @@ class AuthController extends BaseApiController
         try {
             $user = $request->user()->load(['role', 'officialDetails', 'citizenDetails']);
 
-            if (($user->role_id == 1 || $user->role_id == 2) && ! $user->officialDetails) {
-                return $this->sendError('Official details not found for this user');
-            }
+            // if (($user->role_id == 1 || $user->role_id == 2) && !$user->officialDetails) {
+            //     return $this->sendError('Official details not found for this user');
+            // }
 
-            if ($user->role_id == 3 && ! $user->citizenDetails) {
-                return $this->sendError('Citizen details not found for this user');
-            }
+            // if ($user->role_id == 3 && !$user->citizenDetails) {
+            //     return $this->sendError('Citizen details not found for this user');
+            // }
 
-            if (! in_array($user->role_id, [1, 2, 3])) {
-                return $this->sendError('Invalid user role');
-            }
+            // if (!in_array($user->role_id, [1, 2, 3])) {
+            //     return $this->sendError('Invalid user role');
+            // }
 
             return $this->sendResponse([
                 'user' => new AuthUserResource($user),
@@ -135,7 +178,7 @@ class AuthController extends BaseApiController
     {
         try {
             // Verify the token has 'refresh-token' ability
-            if (! $request->user()->tokenCan('refresh-token')) {
+            if (!$request->user()->tokenCan('refresh-token')) {
                 return $this->sendUnauthorized('Invalid token type. Please use refresh token.');
             }
 
@@ -147,129 +190,21 @@ class AuthController extends BaseApiController
         }
     }
 
-    /**
-     * Verify registration information availability (name and email)
-     */
-    public function verifyRegistrationInfo(Request $request): \Illuminate\Http\JsonResponse
-    {
-        try {
-            $validated = $request->validate([
-                'email' => 'nullable|email',
-                'first_name' => 'nullable|string|max:255',
-                'middle_name' => 'nullable|string|max:255',
-                'last_name' => 'nullable|string|max:255',
-                'suffix' => 'nullable|string|max:10',
-            ]);
-
-            $results = [];
-
-            // Check email availability if provided
-            if (! empty($validated['email'])) {
-                $existingEmail = User::where('email', $validated['email'])->first();
-                $results['email'] = [
-                    'available' => ! $existingEmail,
-                    'message' => $existingEmail
-                        ? 'This email is already registered.'
-                        : 'Email is available.',
-                ];
-            }
-
-            // Check name availability if first_name and last_name are provided
-            if (! empty($validated['first_name']) && ! empty($validated['last_name'])) {
-                $query = CitizenDetails::where('first_name', $validated['first_name'])
-                    ->where('last_name', $validated['last_name']);
-
-                if (isset($validated['middle_name'])) {
-                    $query->where('middle_name', $validated['middle_name']);
-                }
-
-                if (isset($validated['suffix'])) {
-                    $query->where('suffix', $validated['suffix']);
-                }
-
-                $existingCitizen = $query->first();
-                $results['name'] = [
-                    'available' => ! $existingCitizen,
-                    'message' => $existingCitizen
-                        ? 'A user with this name is already registered.'
-                        : 'Name is available.',
-                ];
-            }
-
-            if (empty($results)) {
-                return $this->sendError('Please provide email or name information to verify', null, 400);
-            }
-
-            return $this->sendResponse($results, 'Verification completed');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return $this->sendError('Validation failed', $e->errors(), 422);
-        } catch (\Exception $e) {
-            return $this->sendError('An error occurred while verifying registration information: '.$e->getMessage());
-        }
-    }
-
-    /**
-     * Register a new citizen user
-     */
     public function register(RegisterRequest $request): \Illuminate\Http\JsonResponse
     {
-        try {
-            $authData = $this->authService->register($request->validated());
+        $validated = $request->validated();
 
+        try {
+            $authData = $this->authService->register($validated);
             return $this->sendResponse([
                 'token' => $authData['token'],
                 'refreshToken' => $authData['refreshToken'],
                 'user' => new AuthUserResource($authData['user']),
             ], 'Registration successful');
+        } catch (UrbanWatchException $e) {
+            throw $e;
         } catch (\Exception $e) {
-            return $this->sendError('Registration failed: '.$e->getMessage());
-        }
-    }
-
-    public function scanFrontId(Request $request): \Illuminate\Http\JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors(), 400);
-        }
-
-        try {
-            $flaskServiceUrl = env('FLASK_SERVICE_URL');
-            $serviceApiKey = env('SERVICE_API_KEY');
-
-            if (! $flaskServiceUrl || ! $serviceApiKey) {
-                Log::error('Flask service URL or API key not configured.');
-
-                return $this->sendError('Service configuration error.', [], 500);
-            }
-
-            $response = Http::withHeaders([
-                'X-Key-Service' => $serviceApiKey,
-            ])->attach(
-                'image',
-                file_get_contents($request->file('image')->getRealPath()),
-                $request->file('image')->getClientOriginalName()
-            )->post("{$flaskServiceUrl}/api/v1/ocr-front-id");
-
-            if ($response->successful()) {
-                return response()->json($response->json(), $response->status());
-            } else {
-                Log::error('Flask OCR service responded with an error.', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-
-                return $this->sendError('Failed to process image with OCR service.', $response->json(), $response->status());
-            }
-        } catch (\Exception $e) {
-            Log::error('Error calling Flask OCR service: '.$e->getMessage(), [
-                'exception' => $e,
-            ]);
-
-            return $this->sendError('An internal server error occurred.', $e->getMessage(), 500);
+            return $this->sendError('Registration failed: ' . $e->getMessage());
         }
     }
 }

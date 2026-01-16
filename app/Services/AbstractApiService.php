@@ -8,9 +8,7 @@ use Illuminate\Support\Facades\Log;
 class AbstractApiService
 {
     protected $apiKey;
-
-    protected $baseUrl = 'https://emailvalidation.abstractapi.com/v1/';
-
+    protected $baseUrl = 'https://emailreputation.abstractapi.com/v1/';
     protected $enabled;
 
     public function __construct()
@@ -19,137 +17,73 @@ class AbstractApiService
         $this->enabled = config('services.abstract_api.enabled', true);
     }
 
-    /**
-     * Validate an email address using AbstractAPI Email Validation.
-     *
-     * @param  string  $email  The email address to validate
-     * @return array Returns validation result with keys:
-     *               - valid: bool (overall validity)
-     *               - deliverable: bool (can receive emails)
-     *               - disposable: bool (is temporary/disposable email)
-     *               - quality_score: float (0-1 quality score)
-     *               - suggestion: string|null (typo suggestion if detected)
-     *               - bypass: bool (true if validation was skipped due to error)
-     *               - error: string|null (error message if bypass is true)
-     */
+
     public function validateEmail(string $email): array
     {
-        // If service is disabled, bypass validation
-        if (! $this->enabled) {
-            Log::info('AbstractAPI email validation disabled, bypassing', ['email' => $email]);
-
-            return [
-                'valid' => true,
-                'deliverable' => true,
-                'disposable' => false,
-                'quality_score' => 1.0,
-                'suggestion' => null,
-                'bypass' => true,
-                'error' => null,
-            ];
-        }
-
-        if (! $this->apiKey) {
-            Log::warning('AbstractAPI key is missing, bypassing validation', ['email' => $email]);
-
-            return [
-                'valid' => true,
-                'deliverable' => true,
-                'disposable' => false,
-                'quality_score' => 1.0,
-                'suggestion' => null,
-                'bypass' => true,
-                'error' => 'API key not configured',
-            ];
-        }
+        if (!$this->isEnabled())
+            return $this->getFallBackResponse(true, 'Abstract API service is disabled.');
 
         try {
-            $response = Http::timeout(10)->get($this->baseUrl, [
-                'api_key' => $this->apiKey,
-                'email' => $email,
-            ]);
-
-            if ($response->failed()) {
-                Log::warning('AbstractAPI request failed, bypassing validation', [
+            $response = Http::timeout(5)
+                ->retry(2, 100)
+                ->get($this->baseUrl, [
+                    'api_key' => $this->apiKey,
                     'email' => $email,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
                 ]);
 
-                return [
-                    'valid' => true,
-                    'deliverable' => true,
-                    'disposable' => false,
-                    'quality_score' => 1.0,
-                    'suggestion' => null,
-                    'bypass' => true,
-                    'error' => 'API request failed with status '.$response->status(),
-                ];
+            if ($response->failed()) {
+                Log::warning('AbstractAPI request failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return $this->getFallBackResponse(false, 'Failed to connect to Abstract API service.');
             }
 
-            $data = $response->json();
-
-            // Parse the response
-            $deliverability = $data['deliverability'] ?? 'UNKNOWN';
-            $isDeliverable = $deliverability === 'DELIVERABLE';
-
-            // Check for disposable email (from is_disposable_email field)
-            $isDisposable = ($data['is_disposable_email']['value'] ?? false) === true;
-
-            // Get quality score if available
-            $qualityScore = (float) ($data['quality_score'] ?? 0.5);
-
-            // Check for autocorrect suggestion
-            $suggestion = $data['autocorrect'] ?? null;
-            if ($suggestion === '' || $suggestion === $email) {
-                $suggestion = null;
-            }
-
-            // Determine overall validity
-            $isValid = $isDeliverable && ! $isDisposable && ($data['is_valid_format']['value'] ?? true);
-
-            Log::info('Email validated via AbstractAPI', [
-                'email' => $email,
-                'valid' => $isValid,
-                'deliverable' => $isDeliverable,
-                'disposable' => $isDisposable,
-                'quality_score' => $qualityScore,
-                'suggestion' => $suggestion,
-            ]);
-
-            return [
-                'valid' => $isValid,
-                'deliverable' => $isDeliverable,
-                'disposable' => $isDisposable,
-                'quality_score' => $qualityScore,
-                'suggestion' => $suggestion,
-                'bypass' => false,
-                'error' => null,
-            ];
-
+            return $this->parseResponse($response->json(), $email);
         } catch (\Exception $e) {
-            Log::warning('AbstractAPI exception, bypassing validation', [
-                'email' => $email,
-                'error' => $e->getMessage(),
-            ]);
-
-            return [
-                'valid' => true,
-                'deliverable' => true,
-                'disposable' => false,
-                'quality_score' => 1.0,
-                'suggestion' => null,
-                'bypass' => true,
-                'error' => $e->getMessage(),
-            ];
+            Log::error('AbstractAPI request exception: ' . $e->getMessage());
+            return $this->getFallbackResponse(error: $e->getMessage());
         }
+
+    }
+    protected function parseResponse(array $response, string $email): array
+    {
+        $status = $response['email_deliverability']['status'] ?? 'unknown';
+        $isDeliverable = ($status === 'deliverable');
+        $isDisposable = $data['email_quality']['is_disposable'] ?? false;
+        $isFormatValid = $data['email_deliverability']['is_format_valid'] ?? true;
+        $qualityScore = (float) ($data['email_quality']['score'] ?? 0.5);
+        $isValid = $isDeliverable && !$isDisposable && $isFormatValid;
+        $suggestion = null;
+
+        return [
+            'valid' => $isValid,
+            'deliverable' => $isDeliverable,
+            'disposable' => $isDisposable,
+            'quality_score' => $qualityScore,
+            'suggestion' => $suggestion,
+            'bypass' => false,
+            'error' => null,
+        ];
     }
 
-    /**
-     * Check if the service is enabled.
-     */
-    public function isEnabled(): bool
+
+
+    protected function isEnabled(): bool
     {
-        return $this->enabled && ! empty($this->apiKey);
+        return $this->enabled && !empty($this->apiKey);
+    }
+
+    protected function getFallBackResponse(bool $bypass = true, ?string $error = null): array
+    {
+        return [
+            'valid' => true,
+            'deliverable' => true,
+            'disposable' => false,
+            'quality_score' => 1.0,
+            'suggestion' => null,
+            'bypass' => $bypass,
+            'error' => $error,
+        ];
     }
 }
