@@ -6,14 +6,13 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Archive, BadgeAlert, ExternalLink, SquarePen, User } from 'lucide-react';
+import { Archive, ExternalLink, Mail, MapPin, Settings, User } from 'lucide-react';
 
 import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
 import { users_T } from '@/types/user-types';
 import ArchiveUser from './users-archive';
 import EditUser from './users-edit';
-import SuspensionUser from './users-suspension';
 import ViewUser from './users-view';
 
 // Role badge styles
@@ -71,12 +70,6 @@ const UserCard = ({
         return user.citizen_details?.barangay || user.official_details?.assigned_brgy || 'N/A';
     };
 
-    // Get user's status
-    const getUserStatus = (user: users_T) => {
-        const status = user.citizen_details?.status || user.official_details?.status || user.status || 'Active';
-        return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-    };
-
     return (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {users.length === 0 && (
@@ -99,30 +92,31 @@ const UserCard = ({
                         <div className="flex items-start justify-between gap-2 mb-3">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
-                                    {/* <User className="h-4 w-4 text-zinc-600 dark:text-zinc-400" /> */}
+                                    <User className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <h3 className="truncate text-sm font-semibold leading-tight">
                                         {getFullName(user)}
                                     </h3>
                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                        {/* <MapPin className="h-3 w-3 shrink-0" /> */}
+                                        <MapPin className="h-3 w-3 shrink-0" />
                                         <span className="truncate">{getBarangay(user)}</span>
                                     </div>
                                 </div>
                             </div>
                             <Badge
                                 variant="outline"
-                                className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 capitalize ${getStatusBadgeStyles(getUserStatus(user))}`}
+                                className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 capitalize ${getStatusBadgeStyles(user.status)}`}
                             >
-                                {getUserStatus(user)}
+                                {user.status || 'N/A'}
                             </Badge>
                         </div>
 
                         {/* User Info - Compact */}
                         <div className="space-y-2 mb-3 text-xs">
                             {/* Email */}
-                            <div className="rounded-md bg-zinc-50 dark:bg-zinc-800/50 p-1.5">
+                            <div className="flex items-center gap-2 rounded-md bg-zinc-50 dark:bg-zinc-800/50 p-1.5">
+                                <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
                                 <span className="truncate">{user.email}</span>
                             </div>
 
@@ -165,30 +159,12 @@ const UserCard = ({
                                                 size="sm"
                                                 className="h-7 w-7 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                             >
-                                                <SquarePen className="h-3.5 w-3.5" />
+                                                <Settings className="h-3.5 w-3.5" />
                                             </Button>
                                         </TooltipTrigger>
                                     </EditUser>
                                     <TooltipContent side="bottom">
                                         <p className="text-xs">Edit User</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
-                            {user.role?.name?.toLowerCase() === 'citizen' && (
-                                <Tooltip>
-                                    <SuspensionUser user={user}>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-7 w-7 p-0 hover:bg-amber-50 dark:hover:bg-amber-950/30"
-                                            >
-                                                <BadgeAlert className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                    </SuspensionUser>
-                                    <TooltipContent side="bottom">
-                                        <p className="text-xs">Suspend User</p>
                                     </TooltipContent>
                                 </Tooltip>
                             )}

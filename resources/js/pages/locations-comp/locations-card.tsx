@@ -11,7 +11,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Archive, ExternalLink, SquarePen } from 'lucide-react';
+import { Cctv, ExternalLink, SquarePen, Trash2 } from 'lucide-react';
 
 import { location_T, LocationCategory_T } from '@/types/location-types';
 import DeleteLocation from './locations-archive';
@@ -75,8 +75,11 @@ function LocationCardView({
                                         <p className="text-sm text-muted-foreground">
                                             {loc.landmark}
                                         </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {loc.cctv_count} camera/s
+                                        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <Cctv size={18} />
+                                            <span>
+                                                {loc.cctv_count} camera/s
+                                            </span>
                                         </p>
                                     </div>
                                     <Badge
@@ -139,7 +142,7 @@ function LocationCardView({
                                                     size="sm"
                                                     className="cursor-pointer"
                                                 >
-                                                    <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                                    <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
                                                 </Button>
                                             </TooltipTrigger>
                                         </DeleteLocation>

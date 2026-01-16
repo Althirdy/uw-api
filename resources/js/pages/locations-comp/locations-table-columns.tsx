@@ -5,10 +5,11 @@ import {
 } from '@/components/ui/tooltip';
 import { ColumnDef } from '@tanstack/react-table';
 import {
-    Archive,
     ArrowUpDown,
+    Cctv,
     ExternalLink,
     SquarePen,
+    Trash2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -73,7 +74,8 @@ export const columns = (): ColumnDef<location_T>[] => [
         cell: ({ row }) => {
             const location = row.original;
             return (
-                <div className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                    <Cctv className="h-4 w-4 text-muted-foreground" />
                     <span>{location.cctv_count || 0} camera/s</span>
                 </div>
             );
@@ -132,7 +134,7 @@ export const columns = (): ColumnDef<location_T>[] => [
                                     className="cursor-pointer"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                    <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
                                 </Button>
                             </TooltipTrigger>
                         </DeleteLocation>

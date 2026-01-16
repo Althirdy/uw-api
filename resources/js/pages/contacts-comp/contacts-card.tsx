@@ -7,7 +7,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Contact } from '@/types/contacts-types';
-import { Archive, ExternalLink, SquarePen, Phone, Users, MapPin } from 'lucide-react';
+import { ExternalLink, MapPin, Phone, Settings, Trash2, Users } from 'lucide-react';
 
 import DeleteContacts from './contacts-delete';
 import EditContacts from './contacts-edit';
@@ -143,7 +143,7 @@ const ContactCard = ({ contacts }: { contacts: Contact[] }) => {
                                             size="sm"
                                             className="h-7 w-7 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                         >
-                                            <SquarePen className="h-3.5 w-3.5" />
+                                            <Settings className="h-3.5 w-3.5" />
                                         </Button>
                                     </TooltipTrigger>
                                 </EditContacts>
@@ -159,7 +159,7 @@ const ContactCard = ({ contacts }: { contacts: Contact[] }) => {
                                             size="sm"
                                             className="h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-950/30"
                                         >
-                                            <Archive className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
+                                            <Trash2 className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
                                         </Button>
                                     </TooltipTrigger>
                                 </DeleteContacts>

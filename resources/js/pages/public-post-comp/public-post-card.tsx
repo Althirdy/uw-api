@@ -21,8 +21,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination';
-import { CheckCircle2 } from 'lucide-react';
-import { ViewActionButton, EditActionButton, ArchiveActionButton } from '@/components/ui/action-buttons';
+import { Archive, ExternalLink as Open, SquarePen, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { PublicPost_T } from '@/types/public-post-types';
@@ -153,13 +152,38 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                         </CardContent>
                         <CardFooter className="mt-auto border-t pt-3">
                             <div className="flex w-full justify-end gap-2">
-                                <ViewPublicPostDetails post={post}>
-                                    <ViewActionButton tooltip="View Details" />
-                                </ViewPublicPostDetails>
-                                
-                                <EditPublicPost post={post}>
-                                    <EditActionButton tooltip="Edit Post" />
-                                </EditPublicPost>
+                                <Tooltip>
+                                    <ViewPublicPostDetails post={post}>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="cursor-pointer"
+                                            >
+                                                <Open className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                    </ViewPublicPostDetails>
+                                    <TooltipContent>
+                                        <p>View Details</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                    <EditPublicPost post={post}>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="cursor-pointer"
+                                            >
+                                                <SquarePen className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                    </EditPublicPost>
+                                    <TooltipContent>
+                                        <p>Edit Post</p>
+                                    </TooltipContent>
+                                </Tooltip>
 
                                 {post.postable?.status === 'ongoing' && (
                                     <Tooltip>
@@ -180,9 +204,22 @@ const PublicPostCard = ({ posts }: { posts: PublicPost_T[] }) => {
                                     </Tooltip>
                                 )}
 
-                                <ArchivePublicPost post={post}>
-                                    <ArchiveActionButton tooltip="Archive Post" />
-                                </ArchivePublicPost>
+                                <Tooltip>
+                                    <ArchivePublicPost post={post}>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="cursor-pointer"
+                                            >
+                                                <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                    </ArchivePublicPost>
+                                    <TooltipContent>
+                                        <p>Archive Post</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             </div>
                         </CardFooter>
                     </Card>

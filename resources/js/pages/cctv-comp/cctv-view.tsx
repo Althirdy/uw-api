@@ -29,11 +29,12 @@ import { router } from '@inertiajs/react';
 import {
     Activity,
     Archive,
+    Camera,
     Eye,
     Filter,
+    MapPin,
     Search,
     Settings,
-    SquarePen,
     Wifi,
     X,
 } from 'lucide-react';
@@ -285,13 +286,19 @@ function CCTVDisplay({
                             {/* Header Row */}
                             <div className="flex items-start justify-between gap-2 mb-3">
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
+                                        <Camera className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                                    </div>
                                     <div className="min-w-0 flex-1">
                                         <h3 className="truncate text-sm font-semibold leading-tight">
                                             {device.device_name}
                                         </h3>
-                                        <p className="text-xs text-muted-foreground truncate">
-                                            {device.location?.barangay}
-                                        </p>
+                                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                            <MapPin className="h-3 w-3 shrink-0" />
+                                            <span className="truncate">
+                                                {device.location?.barangay}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                                 <Badge
@@ -372,7 +379,7 @@ function CCTVDisplay({
                                                 size="sm"
                                                 className="h-7 w-7 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                             >
-                                                <SquarePen className="h-3.5 w-3.5" />
+                                                <Settings className="h-3.5 w-3.5" />
                                             </Button>
                                         </TooltipTrigger>
                                     </EditCCTVDevice>

@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Archive, ArrowUpDown, ExternalLink, SquarePen } from 'lucide-react';
+import { ArrowUpDown, ExternalLink, SquarePen, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -179,7 +179,7 @@ export const columns = (): ColumnDef<Contact>[] => [
                                     className="cursor-pointer"
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                    <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
                                 </Button>
                             </TooltipTrigger>
                         </DeleteContacts>

@@ -44,27 +44,9 @@ export function useFalseAlarmRealtime() {
     // Fetch stats from API
     const fetchStats = useCallback(async () => {
         try {
-            // Get CSRF token from meta tag or cookie
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            
-            const response = await fetch('/api/v1/yolo/false-alarms/stats', {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
-                },
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
+            const response = await fetch('/api/v1/yolo/false-alarms/stats');
             const data = await response.json();
             if (data.success) {
-                console.log(data.data);
                 setStats(data.data);
                 setTodayCount(data.data.statistics.today);
             }
@@ -93,7 +75,10 @@ export function useFalseAlarmRealtime() {
                     variant: 'default',
                 });
 
-                // Refetch stats to get updated data (this will update the list)
+                // Update local count immediately
+                setTodayCount((prev) => prev + 1);
+
+                // Refetch stats to get updated data
                 fetchStats();
             })
             .subscribed(() => {
