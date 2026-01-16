@@ -184,15 +184,4 @@ class ContactController extends Controller
                 ->with('error', 'An error occurred while deleting the contact.');
         }
     }
-
-    public function heatMapContacts()
-    {
-        $contacts = Contact::all();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Contacts retrieved successfully',
-            'data' => $contacts,
-        ], 200);
-    }
 }

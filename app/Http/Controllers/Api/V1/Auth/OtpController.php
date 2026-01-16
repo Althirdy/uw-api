@@ -8,6 +8,7 @@ use App\Models\Otp;
 use App\Models\User;
 use App\Services\MailService;
 use Carbon\Carbon;
+use App\Services\AbstractApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -17,10 +18,11 @@ use Illuminate\Support\Facades\Validator;
 class OtpController extends Controller
 {
     protected MailService $mailService;
-
-    public function __construct(MailService $mailService)
+    protected AbstractApiService $abstractApiService;
+    public function __construct(MailService $mailService, AbstractApiService $abstractApiService)
     {
         $this->mailService = $mailService;
+        $this->abstractApiService = $abstractApiService;
     }
     
     /**
@@ -60,6 +62,38 @@ class OtpController extends Controller
                 'expires_in' => 1, // minutes
             ]
         ]);
+    }
+
+    public function registrationOtp(Request $request): JsonResponse
+    {   
+        
+        $validator = Validator::make($request->all(), [
+            'phone' => 'required|numeric|digits:11',
+            'email' => 'required|email|unique:users,email',
+        ]);
+        
+        
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $emailReputationResult = $this->abstractApiService->validateEmail($request->email);
+
+        if($emailReputationResult['valid'] === false || 
+             $emailReputationResult['deliverable'] === false || 
+             $emailReputationResult['disposable'] === true ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The provided email address is not valid for registration.',
+                'data' => $emailReputationResult
+            ], 422);
+        }
+        
+        return $this->requestOtp($request);
     }
 
     /**
