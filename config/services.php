@@ -43,5 +43,20 @@ return [
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
     ],
+    'semaphore' => [
+        'api_key' => env('SEMAPHORE_API_KEY'),
+        'sender_name' => env('SEMAPHORE_SENDER_NAME', 'SEMAPHORE'),
+    ],
+    'textbee' => [
+        'api_key' => env('TEXTBEE_API_KEY'),
+        'device_id' => env('TEXTBEE_DEVICE_ID'),
+    ],
+
+    // YOLO Python Script API Key
+    'yolo_api_key' => env('YOLO_API_KEY'),
+    'abstract_api' => [
+        'api_key' => env('ABSTRACT_API_KEY'),
+        'enabled' => env('ABSTRACT_API_ENABLED', true),
+    ],
 
 ];

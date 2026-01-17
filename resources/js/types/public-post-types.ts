@@ -13,7 +13,7 @@ export type Report_T = {
     report_type: string;
     transcript: string;
     description: string;
-    latitute: string;
+    latitude: string;
     longtitude: string;
     is_acknowledge: boolean;
     acknowledge_by: number | null;
@@ -25,13 +25,25 @@ export type Report_T = {
 
 export type PublicPost_T = {
     id: number;
-    report_id: number;
+    title: string;
+    content: string;
+    image_path: string | null;
+    category: string;
+    postable_id: number | null;
+    postable_type: string | null;
     published_by: number;
     published_at: string | null;
+    status: 'draft' | 'published' | 'scheduled';
     created_at: string;
     updated_at: string;
+    report?: Report_T;
     deleted_at?: string;
-    report: Report_T;
+    postable?: {
+        id: number;
+        status: 'pending' | 'ongoing' | 'resolved' | 'archived';
+        accident_type?: string;
+        [key: string]: any;
+    };
     publishedBy: User_T;
 };
 

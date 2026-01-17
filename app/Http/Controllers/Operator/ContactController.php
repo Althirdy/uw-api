@@ -39,9 +39,70 @@ class ContactController extends Controller
 
         $contacts = $query->latest()->paginate(10);
 
+        // Fetch distinct responder types from contacts table
+        $responderTypes = Contact::select('responder_type')
+            ->distinct()
+            ->whereNotNull('responder_type')
+            ->orderBy('responder_type')
+            ->get()
+            ->map(function ($contact, $index) {
+                return [
+                    'id' => $index + 1,
+                    'name' => $contact->responder_type,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        // Fetch distinct branch/unit names from contacts table
+        $branchUnitNames = Contact::select('branch_unit_name')
+            ->distinct()
+            ->whereNotNull('branch_unit_name')
+            ->orderBy('branch_unit_name')
+            ->get()
+            ->map(function ($contact, $index) {
+                return [
+                    'id' => $index + 1,
+                    'name' => $contact->branch_unit_name,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        // Fetch distinct locations from contacts table
+        $packageLocations = Contact::select('location')
+            ->distinct()
+            ->whereNotNull('location')
+            ->orderBy('location')
+            ->get()
+            ->map(function ($contact, $index) {
+                return [
+                    'id' => $index + 1,
+                    'name' => $contact->location,
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        // Get distinct active statuses
+        $statuses = Contact::select('active')
+            ->distinct()
+            ->get()
+            ->map(function ($contact) {
+                return [
+                    'value' => $contact->active ? '1' : '0',
+                    'label' => $contact->active ? 'Active' : 'Inactive',
+                ];
+            })
+            ->toArray();
+
         return Inertia::render('contacts', [
             'contacts' => $contacts,
             'filters' => $request->only(['search', 'responder_type', 'active']),
+            'responderTypes' => $responderTypes,
+            'branchUnitNames' => $branchUnitNames,
+            'packageLocations' => $packageLocations,
+            'statuses' => $statuses,
         ]);
     }
 
@@ -122,16 +183,5 @@ class ContactController extends Controller
             return redirect()->back()
                 ->with('error', 'An error occurred while deleting the contact.');
         }
-    }
-
-    public function heatMapContacts()
-    {
-        $contacts = Contact::all();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Contacts retrieved successfully',
-            'data' => $contacts,
-        ], 200);
     }
 }

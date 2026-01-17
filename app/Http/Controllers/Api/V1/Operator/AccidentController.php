@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Operator;
 
+use App\Events\AccidentStatusUpdated;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Resources\Api\V1\AccidentResource;
 use App\Models\Accident;
@@ -90,10 +91,22 @@ class AccidentController extends BaseApiController
     {
         try {
             $validated = $request->validate([
-                'status' => 'required|string|in:pending,ongoing,resolved,archived',
+                'status' => 'required|string|in:Pending,In Progress,Resolved',
             ]);
 
+            // Store previous status for broadcasting
+            $previousStatus = $accident->status;
+
             $accident->update($validated);
+
+            // Broadcast the status change for real-time map updates
+            broadcast(new AccidentStatusUpdated($accident, $previousStatus));
+
+            Log::info('Accident status updated and broadcasted', [
+                'accident_id' => $accident->id,
+                'previous_status' => $previousStatus,
+                'new_status' => $accident->status,
+            ]);
 
             return $this->sendResponse([
                 'accident' => new AccidentResource($accident),

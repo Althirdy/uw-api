@@ -18,11 +18,19 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDateTime } from '@/lib/utils';
 import { reports_T } from '@/types/report-types';
 import { useForm } from '@inertiajs/react';
-import { Globe, LocateFixed, TriangleAlert, User } from 'lucide-react';
+import {
+    Globe,
+    LocateFixed,
+    MoveLeft,
+    Save,
+    TriangleAlert,
+    User,
+} from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 type EditReportProps = {
@@ -35,9 +43,9 @@ type EditReportForm = {
     report_type: string;
     description: string;
     transcript: string;
-    latitute: string;
+    latitude: string;
     longtitude: string;
-    is_acknowledge: boolean;
+    status: string;
 };
 
 function EditReport({ report, reportTypes, children }: EditReportProps) {
@@ -46,13 +54,13 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
             report_type: report.report_type,
             description: report.description,
             transcript: report.transcript || '',
-            latitute: report.latitute,
+            latitude: report.latitude,
             longtitude: report.longtitude,
-            is_acknowledge: report.is_acknowledge,
+            status: report.status || 'Pending',
         });
 
     const [coordinates, setCoordinates] = useState({
-        latitude: report.latitute,
+        latitude: report.latitude,
         longitude: report.longtitude,
     });
 
@@ -62,7 +70,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
             longitude: location.lng.toString(),
         };
         setCoordinates(coords);
-        setData('latitute', coords.latitude);
+        setData('latitude', coords.latitude);
         setData('longtitude', coords.longitude);
     };
 
@@ -106,19 +114,26 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                     {report.report_type}
                                 </p>
                                 <div className="mt-1">
-                                    {!data.is_acknowledge ? (
+                                    {data.status === 'Pending' ? (
                                         <Badge
                                             variant="default"
-                                            className="text-sm"
+                                            className="bg-yellow-500 text-sm"
                                         >
                                             PENDING
+                                        </Badge>
+                                    ) : data.status === 'In Progress' ? (
+                                        <Badge
+                                            variant="default"
+                                            className="bg-blue-500 text-sm"
+                                        >
+                                            IN PROGRESS
                                         </Badge>
                                     ) : (
                                         <Badge
                                             variant="secondary"
-                                            className="text-sm"
+                                            className="bg-green-500 text-sm text-white"
                                         >
-                                            ACKNOWLEDGED
+                                            RESOLVED
                                         </Badge>
                                     )}
                                 </div>
@@ -244,14 +259,14 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                                     value={coordinates.latitude}
                                                     disabled
                                                     className={
-                                                        errors.latitute
+                                                        errors.latitude
                                                             ? 'border-red-500 focus:ring-red-500'
                                                             : ''
                                                     }
                                                 />
-                                                {errors.latitute && (
+                                                {errors.latitude && (
                                                     <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                        {errors.latitute}
+                                                        {errors.latitude}
                                                     </span>
                                                 )}
                                             </div>
@@ -288,29 +303,21 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                             <div className="flex flex-col gap-2">
                                 <div className="grid">
                                     <p className="text-sm font-medium text-[var(--gray)]">
-                                        Acknowledgment Status
+                                        Status
                                     </p>
                                 </div>
                                 <div className="flex w-auto flex-row gap-4">
                                     <div className="grid flex-2 gap-4">
                                         <div className="relative">
                                             <Select
-                                                value={
-                                                    data.is_acknowledge
-                                                        ? 'acknowledged'
-                                                        : 'pending'
-                                                }
+                                                value={data.status}
                                                 onValueChange={(value) =>
-                                                    setData(
-                                                        'is_acknowledge',
-                                                        value ===
-                                                            'acknowledged',
-                                                    )
+                                                    setData('status', value)
                                                 }
                                             >
                                                 <SelectTrigger
                                                     className={
-                                                        errors.is_acknowledge
+                                                        errors.status
                                                             ? 'border-red-500 focus:ring-red-500'
                                                             : ''
                                                     }
@@ -318,17 +325,27 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                                     <SelectValue placeholder="Select status" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="pending">
-                                                        Pending
-                                                    </SelectItem>
-                                                    <SelectItem value="acknowledged">
-                                                        Acknowledged
+                                                    {/* Only show Pending if current status is Pending */}
+                                                    {report.status === 'Pending' && (
+                                                        <SelectItem value="Pending">
+                                                            Pending
+                                                        </SelectItem>
+                                                    )}
+                                                    {/* Show In Progress if current status is Pending or In Progress */}
+                                                    {(report.status === 'Pending' || report.status === 'In Progress') && (
+                                                        <SelectItem value="In Progress">
+                                                            In Progress
+                                                        </SelectItem>
+                                                    )}
+                                                    {/* Resolved is always available */}
+                                                    <SelectItem value="Resolved">
+                                                        Resolved
                                                     </SelectItem>
                                                 </SelectContent>
                                             </Select>
-                                            {errors.is_acknowledge && (
+                                            {errors.status && (
                                                 <span className="absolute -bottom-5 left-0 text-xs text-red-500">
-                                                    {errors.is_acknowledge}
+                                                    {errors.status}
                                                 </span>
                                             )}
                                         </div>
@@ -354,7 +371,7 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                     <div className="flex flex-row items-center gap-2">
                                         <LocateFixed className="h-4 w-4" />
                                         <span>
-                                            Location: {report.latitute},{' '}
+                                            Location: {report.latitude},{' '}
                                             {report.longtitude}
                                         </span>
                                     </div>
@@ -388,7 +405,8 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                     data-dialog-close
                                     className="flex-1"
                                 >
-                                    Cancel
+                                    <MoveLeft className="inline h-4 w-4" />
+                                    Close
                                 </Button>
                             </DialogClose>
                             <Button
@@ -396,6 +414,11 @@ function EditReport({ report, reportTypes, children }: EditReportProps) {
                                 disabled={processing}
                                 className="flex-2"
                             >
+                                {processing ? (
+                                    <Spinner className="inline h-4 w-4" />
+                                ) : (
+                                    <Save className="inline h-4 w-4" />
+                                )}
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>

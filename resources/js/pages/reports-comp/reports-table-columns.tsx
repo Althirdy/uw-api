@@ -2,9 +2,12 @@ import { ColumnDef } from '@tanstack/react-table';
 import {
     Archive,
     ArrowUpDown,
+    Check,
+    CheckCircle,
     ExternalLink as Open,
     SquarePen,
 } from 'lucide-react';
+import { router } from '@inertiajs/react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -98,7 +101,7 @@ export const columns = (reportTypes: string[]): ColumnDef<reports_T>[] => [
             const report = row.original;
             return (
                 <div>
-                    {Number(report.latitute).toFixed(2)},{' '}
+                    {Number(report.latitude).toFixed(2)},{' '}
                     {Number(report.longtitude).toFixed(2)}
                 </div>
             );
@@ -150,8 +153,62 @@ export const columns = (reportTypes: string[]): ColumnDef<reports_T>[] => [
             const report = row.original;
             const reportTypes = (table.options.meta as any)?.reportTypes || [];
 
+            const handleAcknowledge = () => {
+                router.patch(`/report/${report.id}/acknowledge`, {}, {
+                    preserveScroll: true,
+                });
+            };
+
+            const handleResolve = () => {
+                router.patch(`/report/${report.id}/resolve`, {}, {
+                    preserveScroll: true,
+                });
+            };
+
             return (
                 <div className="flex justify-center gap-2">
+                    {!report.is_acknowledge && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer bg-orange-50 text-orange-600 hover:bg-orange-100 hover:text-orange-700 border-orange-200"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleAcknowledge();
+                                    }}
+                                >
+                                    <Check className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Acknowledge Report</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+
+                    {report.status === 'Ongoing' && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 border-green-200"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleResolve();
+                                    }}
+                                >
+                                    <CheckCircle className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Mark as Resolved</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+
                     <Tooltip>
                         <ViewReportDetails report={report}>
                             <TooltipTrigger asChild>

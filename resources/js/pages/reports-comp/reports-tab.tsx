@@ -22,21 +22,17 @@ import { reports_T } from '@/types/report-types';
 const ReportActionTab = ({
     reports,
     reportTypes,
-    statusOptions,
     setFilteredReports,
 }: {
     reports: { data: reports_T[]; links: any[]; meta: any };
     reportTypes: string[];
-    statusOptions: { value: string; label: string }[];
     setFilteredReports: (reports: reports_T[]) => void;
 }) => {
     const [reportTypeOpen, setReportTypeOpen] = useState(false);
-    const [statusOpen, setStatusOpen] = useState(false);
     const [reportTypeValue, setReportTypeValue] = useState<string | null>(null);
-    const [statusValue, setStatusValue] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState<string>('');
 
-    // Filter displayed reports based on selected report type, status, and search query
+    // Filter displayed reports based on selected report type and search query
     useEffect(() => {
         let filteredResults = reports.data;
 
@@ -45,19 +41,6 @@ const ReportActionTab = ({
             filteredResults = filteredResults.filter(
                 (report: reports_T) => report.report_type === reportTypeValue,
             );
-        }
-
-        // Filter by status if selected
-        if (statusValue) {
-            if (statusValue === 'pending') {
-                filteredResults = filteredResults.filter(
-                    (report: reports_T) => !report.is_acknowledge,
-                );
-            } else if (statusValue === 'acknowledged') {
-                filteredResults = filteredResults.filter(
-                    (report: reports_T) => report.is_acknowledge,
-                );
-            }
         }
 
         // Filter by search query (description, report type, or user name)
@@ -79,7 +62,6 @@ const ReportActionTab = ({
         setFilteredReports(filteredResults);
     }, [
         reportTypeValue,
-        statusValue,
         searchQuery,
         reports.data,
         setFilteredReports,
@@ -153,81 +135,6 @@ const ReportActionTab = ({
                                             className={cn(
                                                 'ml-auto',
                                                 reportTypeValue === reportType
-                                                    ? 'opacity-100'
-                                                    : 'opacity-0',
-                                            )}
-                                        />
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-
-            <Popover open={statusOpen} onOpenChange={setStatusOpen}>
-                <PopoverTrigger asChild className="h-12">
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={statusOpen}
-                        className="w-[180px] cursor-pointer justify-between"
-                    >
-                        {statusValue
-                            ? statusOptions.find(
-                                  (option) => option.value === statusValue,
-                              )?.label
-                            : 'Select status...'}
-                        <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[180px] p-0">
-                    <Command>
-                        <CommandInput
-                            placeholder="Search status..."
-                            className="h-9"
-                        />
-                        <CommandList>
-                            <CommandEmpty>No status found.</CommandEmpty>
-                            <CommandGroup>
-                                {/* Add "All Status" option */}
-                                <CommandItem
-                                    key="all-status"
-                                    value=""
-                                    onSelect={() => {
-                                        setStatusValue(null);
-                                        setStatusOpen(false);
-                                    }}
-                                >
-                                    All Status
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            statusValue === null
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                                {/* Use status options for dropdown */}
-                                {statusOptions.map((status) => (
-                                    <CommandItem
-                                        key={status.value}
-                                        value={status.value}
-                                        onSelect={(currentValue) => {
-                                            setStatusValue(
-                                                currentValue === statusValue
-                                                    ? null
-                                                    : currentValue,
-                                            );
-                                            setStatusOpen(false);
-                                        }}
-                                    >
-                                        {status.label}
-                                        <Check
-                                            className={cn(
-                                                'ml-auto',
-                                                statusValue === status.value
                                                     ? 'opacity-100'
                                                     : 'opacity-0',
                                             )}

@@ -2,195 +2,99 @@
 
 namespace App\Http\Controllers\Api\V1\Citizen;
 
-use App\Events\ConcernAssigned;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Requests\Api\V1\Citizen\StoreConcernRequest;
 use App\Http\Requests\Api\V1\Citizen\UpdateConcernRequest;
 use App\Http\Resources\Api\V1\ConcernResource;
-use App\Models\Citizen\Concern;
-use App\Models\ConcernDistribution;
-use App\Models\ConcernHistory;
-use App\Models\IncidentMedia;
-use App\Services\FileUploadService;
-use Illuminate\Support\Facades\DB;
+use App\Services\ConcernService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class ConcernController extends BaseApiController
 {
-    protected $fileUploadService;
+    protected $concernService;
 
-    public function __construct(FileUploadService $fileUploadService)
+    public function __construct(ConcernService $concernService)
     {
-        $this->fileUploadService = $fileUploadService;
+        $this->concernService = $concernService;
     }
 
     /**
      * Display a listing of the resource.
+     * Optimized for FlashList with cursor pagination and simplified data.
+     * Supports filtering by status, category, and severity.
+     *
+     * NOTE: Suspended users CAN view their concerns (read-only access).
      */
-    public function index()
+    public function index(Request $request)
     {
-        try {
-            // Get only concerns belonging to the authenticated user
-            $concerns = Concern::where('citizen_id', auth()->id())
-                ->with([
-                    'media' => function ($query) {
-                        $query->where('source_category', 'citizen_concern');
-                    },
-                    'distribution.purokLeader.officialDetails',
-                    'histories.actor.officialDetails',
-                ])
-                ->orderBy('created_at', 'desc')
-                ->get();
+        $perPage = $request->input('per_page', 4);
 
-            return $this->sendResponse([
-                'concerns' => ConcernResource::collection($concerns),
-            ], 'Manual concerns retrieved successfully');
-
-        } catch (\Exception $e) {
-            Log::error('Error retrieving manual concerns', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return $this->sendError('An error occurred while retrieving concerns: '.$e->getMessage());
+        // Build filters array from request
+        $filters = [];
+        if ($request->filled('status')) {
+            $filters['status'] = $request->input('status');
         }
+        if ($request->filled('category')) {
+            $filters['category'] = $request->input('category');
+        }
+        if ($request->filled('severity')) {
+            $filters['severity'] = $request->input('severity');
+        }
+
+        $concerns = $this->concernService->getUserConcerns(auth()->id(), $perPage, $filters);
+        $concernsCount = $this->concernService->getConcernsCount(auth()->id(), $filters);
+
+        return $this->sendResponse([
+            'concerns' => ConcernResource::collection($concerns),
+            'concerns_count' => $concernsCount,
+            // Manually extract the cursor string
+            'next_cursor' => $concerns->nextCursor()?->encode(),
+            'prev_cursor' => $concerns->previousCursor()?->encode(),
+        ], 'Concerns retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
+     *
+     * SUSPENSION CHECK: Suspended users are blocked from creating concerns.
+     * This allows them to view announcements/accidents but prevents misuse.
      */
     public function store(StoreConcernRequest $request)
     {
         $validated = $request->validated();
 
-        DB::beginTransaction();
+        // Check if user is suspended
+        if (\App\Models\UserSuspension::isUserSuspended(auth()->id())) {
+            $activeSuspension = \App\Models\UserSuspension::getActiveSuspension(auth()->id());
 
-        try {
-            // 🔍 Step 0: Determine Concern Type & Prepare Data
-            $concernType = $validated['type'];
+            $message = 'Your account is currently suspended and cannot create concerns.';
+            if ($activeSuspension) {
+                if ($activeSuspension->punishment_type === 'suspension') {
+                    $message = 'Your account has been permanently suspended and cannot create concerns.';
+                } else {
+                    $expiresAt = $activeSuspension->expires_at->format('F j, Y \\a\\t g:i A');
+                    $message = "Your account is suspended until {$expiresAt} and cannot create concerns.";
+                }
 
-            if ($concernType === 'voice') {
-                $title = $validated['title'] ?? 'Voice Concern - '.now()->format('M d, Y H:i');
-                $description = $validated['description'] ?? 'Audio recording received. Transcription pending...';
-            } else {
-                $title = $validated['title'];
-                $description = $validated['description'];
-            }
-
-            // Generate Tracking Code: CN-YYYYMMDD-XXXX
-            $datePart = now()->format('Ymd');
-            $randomPart = Str::upper(Str::random(4));
-            $trackingCode = "CN-{$datePart}-{$randomPart}";
-
-            // 🟢 Step 1: Create the Concern record
-            $concern = Concern::create([
-                'type' => $concernType,
-                'citizen_id' => auth()->id(), // Use authenticated user's ID
-                'title' => $title,
-                'description' => $description,
-                'status' => 'pending',
-                'category' => $validated['category'],
-                'severity' => $validated['severity'] ?? 'low',
-                'transcript_text' => $validated['transcript_text'] ?? null,
-                'longitude' => $validated['longitude'] ?? null,
-                'latitude' => $validated['latitude'] ?? null,
-                'address' => $validated['address'] ?? null,
-                'custom_location' => $validated['custom_location'] ?? null,
-                'tracking_code' => $trackingCode,
-            ]);
-
-            $uploadedMedia = [];
-
-            // 🟡 Step 2: Handle file uploads
-            // Check for 'files' OR 'images' (fallback)
-            $fileInput = null;
-            if ($request->hasFile('files')) {
-                $fileInput = $request->file('files');
-                Log::info('Manual Concern: Found "files" input.');
-            } elseif ($request->hasFile('images')) {
-                $fileInput = $request->file('images');
-                Log::info('Manual Concern: Found "images" input (fallback used).');
-            } else {
-                Log::warning('Manual Concern: No "files" or "images" detected in request.', [
-                    'keys' => array_keys($request->all()),
-                    'has_file_files' => $request->hasFile('files'),
-                    'has_file_images' => $request->hasFile('images'),
-                ]);
-            }
-
-            if ($fileInput) {
-                $files = $fileInput;
-                $isMultiple = is_array($files);
-
-                // Upload (single or multiple)
-                $uploadResults = $isMultiple
-                    ? $this->fileUploadService->uploadMultiple($files, 'concerns')
-                    : ['successful' => [$this->fileUploadService->uploadSingle($files, 'concerns')]];
-
-                // 🟣 Step 3: Save uploaded files in the database
-                foreach ($uploadResults['successful'] as $upload) {
-                    $mimeType = $upload['mime_type'] ?? '';
-                    $mediaType = str_starts_with($mimeType, 'audio/') ? 'audio' : 'image';
-
-                    $media = IncidentMedia::create([
-                        'source_type' => \App\Models\Citizen\Concern::class,
-                        'source_id' => $concern->id,
-                        'source_category' => 'citizen_concern',
-                        'media_type' => $mediaType,
-                        'original_path' => $upload['public_url'] ?? null,
-                        'blurred_path' => null,
-                        'public_id' => $upload['storage_path'] ?? null,
-                        'original_filename' => $upload['original_filename'] ?? null,
-                        'file_size' => $upload['file_size'] ?? null,
-                        'mime_type' => $mimeType,
-                        'captured_at' => now(),
-                    ]);
-
-                    $uploadedMedia[] = $media->original_path;
+                if ($activeSuspension->reason) {
+                    $message .= " Reason: {$activeSuspension->reason}";
                 }
             }
 
-            // 🔵 Step 4: Distribute concern to purok leader
-            // TODO: Replace hardcoded purok_leader_id with actual location-based logic
-            // For now, all concerns are assigned to purok leader with ID = 2 (Adoracion S. Jumadiao)
-            $purokLeaderId = 2;
+            return $this->sendError($message, [], 403);
+        }
 
-            $distribution = ConcernDistribution::create([
-                'concern_id' => $concern->id,
-                'purok_leader_id' => $purokLeaderId,
-                'status' => 'assigned',
-                'assigned_at' => now(),
-            ]);
+        try {
+            // Determine file input (files or images fallback)
+            $files = $request->file('files') ?? $request->file('images');
 
-            // 🟠 Step 4.5: Create Initial History (Audit Log)
-            ConcernHistory::create([
-                'concern_id' => $concern->id,
-                'acted_by' => null, // System action
-                'status' => 'pending',
-                'remarks' => 'Concern submitted and automatically distributed to Purok Leader.',
-            ]);
+            $concern = $this->concernService->createConcern($validated, auth()->id(), $files);
 
-            // 🟣 Step 5: Broadcast real-time notification to purok leader
-            event(new ConcernAssigned($concern, $distribution, $uploadedMedia));
-
-            DB::commit();
-
-            // 🧠 Step 5.5: Dispatch Background Job for Voice Analysis
-            if ($concernType === 'voice') {
-                ProcessVoiceConcernJob::dispatch($concern->id);
-            }
-
-            // Load relationships for resource
-            $concern->load(['media', 'distribution.purokLeader.officialDetails', 'histories.actor.officialDetails']);
-
-            // 🟢 Step 6: Return successful response
             return $this->sendResponse([
                 'concern' => new ConcernResource($concern),
             ], 'Concern submitted successfully!', 201);
         } catch (\Exception $e) {
-            DB::rollBack();
-
             Log::error('Error creating concern', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -202,120 +106,88 @@ class ConcernController extends BaseApiController
 
     /**
      * Display the specified resource.
+     * Returns full details for when the user selects an item from the list.
+     *
+     * NOTE: Suspended users CAN view concern details (read-only access).
      */
     public function show(string $id)
     {
-        try {
-            // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('id', $id)
-                ->where('citizen_id', auth()->id())
-                ->with([
-                    'media' => function ($query) {
-                        $query->where('source_category', 'citizen_concern');
-                    },
-                    'distribution.purokLeader.officialDetails',
-                    'histories.actor.officialDetails',
-                ])
-                ->first();
 
-            if (! $concern) {
-                return $this->sendError('Manual concern not found or you do not have permission to view it', [], 404);
-            }
+        $concern = $this->concernService->getConcernDetails($id, auth()->id());
 
-            return $this->sendResponse([
-                'concern' => new ConcernResource($concern),
-            ], 'Manual concern retrieved successfully');
+        return $this->sendResponse([
+            'concern' => new ConcernResource($concern),
+        ], 'Concern details retrieved successfully');
 
-        } catch (\Exception $e) {
-            Log::error('Error retrieving manual concern', [
-                'error' => $e->getMessage(),
-                'concern_id' => $id,
-            ]);
+        // try {
+        //     $concern = $this->concernService->getConcernDetails($id, auth()->id());
 
-            return $this->sendError('An error occurred while retrieving concern: '.$e->getMessage());
-        }
+        //     if (!$concern) {
+        //         return $this->sendError('Concern not found or you do not have permission to view it', [], 404);
+        //     }
+
+        //     return $this->sendResponse([
+        //         'concern' => new ConcernResource($concern),
+        //     ], 'Concern details retrieved successfully');
+        // } catch (\Exception $e) {
+        //     Log::error('Error retrieving concern details', [
+        //         'error' => $e->getMessage(),
+        //         'concern_id' => $id,
+        //     ]);
+
+        //     return $this->sendError('An error occurred while retrieving concern: ' . $e->getMessage());
+        // }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateConcernRequest $request, string $id)
-    {
-        DB::beginTransaction();
+    // public function update(UpdateConcernRequest $request, string $id)
+    // {
 
-        try {
-            // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('id', $id)
-                ->where('citizen_id', auth()->id())
-                ->with([
-                    'media' => function ($query) {
-                        $query->where('source_category', 'citizen_concern');
-                    },
-                ])
-                ->first();
+    //     $concern = $this->concernService->updateConcern($id, auth()->id(), $request->validated());
 
-            if (! $concern) {
-                return $this->sendError('Manual concern not found or you do not have permission to update it', [], 404);
-            }
+    //     if (!$concern) {
+    //         return $this->sendError('Concern not found or you do not have permission to update it', [], 404);
+    //     }
 
-            // Update only title and description
-            $concern->update($request->validated());
-
-            DB::commit();
-
-            return $this->sendResponse([
-                'concern' => new ConcernResource($concern),
-            ], 'Manual concern updated successfully');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Error updating manual concern', [
-                'error' => $e->getMessage(),
-                'concern_id' => $id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return $this->sendError('An error occurred while updating concern: '.$e->getMessage());
-        }
-    }
+    //     return $this->sendResponse([
+    //         'concern' => new ConcernResource($concern),
+    //     ], 'Concern updated successfully');
+    // }
 
     /**
      * Remove the specified resource from storage.
+     *
+     * SUSPENSION CHECK: Suspended users are blocked from deleting concerns.
      */
     public function destroy(string $id)
     {
-        DB::beginTransaction();
+        // Check if user is suspended
+        if (\App\Models\UserSuspension::isUserSuspended(auth()->id())) {
+            $activeSuspension = \App\Models\UserSuspension::getActiveSuspension(auth()->id());
 
-        try {
-            // Get concern only if it belongs to the authenticated user
-            $concern = Concern::where('id', $id)
-                ->where('citizen_id', auth()->id())
-                ->first();
+            $message = 'Your account is currently suspended and cannot delete concerns.';
+            if ($activeSuspension) {
+                if ($activeSuspension->punishment_type === 'suspension') {
+                    $message = 'Your account has been permanently suspended and cannot delete concerns.';
+                } else {
+                    $expiresAt = $activeSuspension->expires_at->format('F j, Y \\a\\t g:i A');
+                    $message = "Your account is suspended until {$expiresAt} and cannot delete concerns.";
+                }
 
-            if (! $concern) {
-                return $this->sendError('Manual concern not found or you do not have permission to delete it', [], 404);
+                if ($activeSuspension->reason) {
+                    $message .= " Reason: {$activeSuspension->reason}";
+                }
             }
 
-            // Soft delete the concern
-            $concern->delete();
-
-            DB::commit();
-
-            return $this->sendResponse([
-                'concern_id' => $id,
-            ], 'Manual concern deleted successfully');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error('Error deleting manual concern', [
-                'error' => $e->getMessage(),
-                'concern_id' => $id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return $this->sendError('An error occurred while deleting concern: '.$e->getMessage());
+            return $this->sendError($message, [], 403);
         }
+
+        $this->concernService->deleteConcern($id, auth()->id());
+
+        return $this->sendResponse([
+            'concern_id' => $id,
+        ], 'Concern deleted successfully');
     }
 }

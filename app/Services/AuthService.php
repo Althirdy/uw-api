@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\UrbanWatchException;
 use App\Models\CitizenDetails;
 use App\Models\User;
 use Carbon\Carbon;
@@ -28,7 +29,6 @@ class AuthService
         $purokLeaders = User::with(['role', 'officialDetails'])
             ->where('role_id', 2)
             ->get();
-
         $user = null;
         foreach ($purokLeaders as $leader) {
             if (Hash::check($pin, $leader->password)) {
@@ -36,7 +36,6 @@ class AuthService
                 break;
             }
         }
-
         if (! $user) {
             return null;
         }
@@ -48,9 +47,9 @@ class AuthService
     {
         DB::beginTransaction();
         try {
-            $fullName = trim($data['first_name'].' '.
-                ($data['middle_name'] ?? '').' '.
-                $data['last_name'].
+            $fullName = trim($data['firstName'].' '.
+                ($data['middleName'] ?? '').' '.
+                $data['lastName'].
                 ($data['suffix'] ? ' '.$data['suffix'] : ''));
 
             $user = User::create([
@@ -63,17 +62,18 @@ class AuthService
 
             CitizenDetails::create([
                 'user_id' => $user->id,
-                'first_name' => $data['first_name'],
-                'middle_name' => $data['middle_name'] ?? null,
-                'last_name' => $data['last_name'],
+                'pcn_number' => $data['pcnNumber'],
+                'first_name' => $data['firstName'],
+                'middle_name' => $data['middleName'] ?? null,
+                'last_name' => $data['lastName'],
                 'suffix' => $data['suffix'] ?? null,
-                'date_of_birth' => $data['date_of_birth'],
-                'phone_number' => $data['phone_number'],
+                'date_of_birth' => $data['dateOfBirth'],
+                'phone_number' => $data['phoneNumber'],
                 'address' => $data['address'],
                 'barangay' => $data['barangay'],
                 'city' => $data['city'],
                 'province' => $data['province'],
-                'postal_code' => $data['postal_code'],
+                'postal_code' => $data['postalCode'],
                 'is_verified' => true,
             ]);
 
@@ -82,7 +82,7 @@ class AuthService
             return $this->generateAuthData($user);
         } catch (\Exception $e) {
             DB::rollBack();
-            throw $e;
+            throw new UrbanWatchException('Registration failed: '.$e->getMessage());
         }
     }
 
@@ -109,5 +109,10 @@ class AuthService
             'refreshToken' => $refresh_token,
             'user' => $user,
         ];
+    }
+
+    public function checkPcnNumberExists(string $pcnNumber): bool
+    {
+        return CitizenDetails::where('pcn_number', $pcnNumber)->exists();
     }
 }

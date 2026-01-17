@@ -1,19 +1,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Archive, ExternalLink as Open, SquarePen } from 'lucide-react';
+import { Archive, ExternalLink, Mail, MapPin, Settings, User } from 'lucide-react';
 
 import { location_T } from '@/types/location-types';
 import { roles_T } from '@/types/role-types';
@@ -21,6 +14,36 @@ import { users_T } from '@/types/user-types';
 import ArchiveUser from './users-archive';
 import EditUser from './users-edit';
 import ViewUser from './users-view';
+
+// Role badge styles
+const getRoleBadgeStyles = (roleName?: string) => {
+    switch (roleName?.toLowerCase()) {
+        case 'operator':
+            return 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/30';
+        case 'citizen':
+            return 'bg-amber-500/15 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/30';
+        case 'purok leader':
+            return 'bg-blue-500/15 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border-blue-500/30';
+        case 'admin':
+            return 'bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-400 border-red-500/30';
+        default:
+            return 'bg-zinc-500/15 text-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-400 border-zinc-500/30';
+    }
+};
+
+// Status badge styles
+const getStatusBadgeStyles = (status?: string) => {
+    switch (status?.toLowerCase()) {
+        case 'active':
+            return 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/30';
+        case 'inactive':
+            return 'bg-zinc-500/15 text-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-400 border-zinc-500/30';
+        case 'suspended':
+            return 'bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-400 border-red-500/30';
+        default:
+            return 'bg-zinc-500/15 text-zinc-600 dark:bg-zinc-500/20 dark:text-zinc-400 border-zinc-500/30';
+    }
+};
 
 const UserCard = ({
     users,
@@ -31,114 +54,138 @@ const UserCard = ({
     roles: roles_T[];
     locations: location_T[];
 }) => {
+    // Get user's full name
+    const getFullName = (user: users_T) => {
+        if (user.official_details) {
+            return `${user.official_details.first_name} ${user.official_details.middle_name || ''} ${user.official_details.last_name}`.trim();
+        }
+        if (user.citizen_details) {
+            return `${user.citizen_details.first_name} ${user.citizen_details.middle_name || ''} ${user.citizen_details.last_name}`.trim();
+        }
+        return user.name;
+    };
+
+    // Get user's barangay
+    const getBarangay = (user: users_T) => {
+        return user.citizen_details?.barangay || user.official_details?.assigned_brgy || 'N/A';
+    };
+
     return (
-        <div className="grid auto-rows-min gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {users.length === 0 && (
-                <Card className="col-span-full rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border">
-                    <CardContent className="flex items-center justify-center py-12">
-                        <p className="text-muted-foreground">
-                            No users found matching your selection.
-                        </p>
-                    </CardContent>
-                </Card>
+                <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                    <User className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                    <h3 className="text-sm font-medium text-foreground">No users found</h3>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Try adjusting your search or filters
+                    </p>
+                </div>
             )}
 
-            {/* Use filtered_roles for displaying cards */}
             {users.map((user) => (
                 <Card
                     key={user.id}
-                    className="relative overflow-hidden rounded-[var(--radius)] border border-sidebar-border/70 dark:border-sidebar-border"
+                    className="group relative overflow-hidden border bg-card transition-all duration-200 hover:shadow-md hover:border-primary/20 dark:border-zinc-800 dark:hover:border-zinc-700"
                 >
-                    <CardHeader>
-                        <CardTitle>{user.name}</CardTitle>
-                        <CardDescription>{user.email}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col gap-2 text-sm">
-                            <p className="font-medium">Role & Location</p>
-                            <div className="flex items-center gap-2">
+                    <CardContent className="p-3">
+                        {/* Header Row */}
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-zinc-100 dark:bg-zinc-800">
+                                    <User className="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <h3 className="truncate text-sm font-semibold leading-tight">
+                                        {getFullName(user)}
+                                    </h3>
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                        <MapPin className="h-3 w-3 shrink-0" />
+                                        <span className="truncate">{getBarangay(user)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <Badge
+                                variant="outline"
+                                className={`shrink-0 text-[10px] font-medium px-1.5 py-0.5 capitalize ${getStatusBadgeStyles(user.status)}`}
+                            >
+                                {user.status || 'N/A'}
+                            </Badge>
+                        </div>
+
+                        {/* User Info - Compact */}
+                        <div className="space-y-2 mb-3 text-xs">
+                            {/* Email */}
+                            <div className="flex items-center gap-2 rounded-md bg-zinc-50 dark:bg-zinc-800/50 p-1.5">
+                                <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                                <span className="truncate">{user.email}</span>
+                            </div>
+
+                            {/* Role */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Role</span>
                                 <Badge
-                                    className={`inline-flex items-center rounded-[var(--radius)] px-2.5 py-1 text-xs font-medium text-white ${
-                                        user.role?.name === 'Operator'
-                                            ? 'bg-green-800'
-                                            : user.role?.name === 'Citizen'
-                                              ? 'bg-orange-500'
-                                              : user.role?.name ===
-                                                  'Purok Leader'
-                                                ? 'bg-blue-500'
-                                                : user.role?.name === 'Admin'
-                                                  ? 'bg-red-500'
-                                                  : 'bg-gray-500'
-                                    }`}
+                                    variant="outline"
+                                    className={`text-[10px] font-medium px-1.5 py-0.5 ${getRoleBadgeStyles(user.role?.name)}`}
                                 >
-                                    {user.role ? user.role.name : 'N/A'}
+                                    {user.role?.name || 'N/A'}
                                 </Badge>
-                                <span className="text-muted-foreground">
-                                    at{' '}
-                                    {user.citizen_details?.barangay ||
-                                        user.official_details?.assigned_brgy ||
-                                        'N/A'}
-                                </span>
                             </div>
                         </div>
-                    </CardContent>
-                    <CardFooter>
-                        <div className="flex w-full justify-end gap-2">
+
+                        {/* Action Buttons - Compact */}
+                        <div className="flex items-center justify-end gap-1.5 pt-2 border-t dark:border-zinc-800">
                             <Tooltip>
                                 <ViewUser user={user}>
                                     <TooltipTrigger asChild>
                                         <Button
-                                            variant="outline"
+                                            variant="ghost"
                                             size="sm"
-                                            className="cursor-pointer"
+                                            className="h-7 w-7 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                                         >
-                                            <Open className="h-4 w-4" />
+                                            <ExternalLink className="h-3.5 w-3.5" />
                                         </Button>
                                     </TooltipTrigger>
                                 </ViewUser>
-                                <TooltipContent>
-                                    <p>View Details</p>
+                                <TooltipContent side="bottom">
+                                    <p className="text-xs">View Details</p>
                                 </TooltipContent>
                             </Tooltip>
-                            <Tooltip>
-                                <EditUser
-                                    user={user}
-                                    roles={roles}
-                                    locations={locations}
-                                >
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="cursor-pointer"
-                                        >
-                                            <SquarePen className="h-4 w-4" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                </EditUser>
-                                <TooltipContent>
-                                    <p>Edit User</p>
-                                </TooltipContent>
-                            </Tooltip>
-
+                            {user.role?.name?.toLowerCase() !== 'citizen' && (
+                                <Tooltip>
+                                    <EditUser user={user} roles={roles} locations={locations}>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-7 w-7 p-0 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                            >
+                                                <Settings className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                    </EditUser>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">Edit User</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
                             <Tooltip>
                                 <ArchiveUser user={user}>
                                     <TooltipTrigger asChild>
                                         <Button
-                                            variant="outline"
+                                            variant="ghost"
                                             size="sm"
-                                            className="cursor-pointer"
+                                            className="h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-950/30"
                                         >
-                                            <Archive className="h-4 w-4 text-[var(--destructive)]" />
+                                            <Archive className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
                                         </Button>
                                     </TooltipTrigger>
                                 </ArchiveUser>
-                                <TooltipContent>
-                                    <p>Archive User</p>
+                                <TooltipContent side="bottom">
+                                    <p className="text-xs">Archive User</p>
                                 </TooltipContent>
                             </Tooltip>
                         </div>
-                    </CardFooter>
+                    </CardContent>
                 </Card>
             ))}
         </div>

@@ -47,24 +47,41 @@ function renderDetailItems(items: DetailItem[]) {
     ));
 }
 
-function getStatusInfo(publishedAt: string | null) {
+function getStatusBadge(publishedAt: string | null) {
     if (!publishedAt) {
-        return { label: 'Draft', variant: 'outline' as const };
+        return (
+            <span className="inline-flex items-center rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-medium">
+                Draft
+            </span>
+        );
     }
 
     const publishDate = new Date(publishedAt);
     const now = new Date();
 
     if (publishDate > now) {
-        return { label: 'Scheduled', variant: 'secondary' as const };
+        return (
+            <span className="inline-flex items-center rounded-full bg-yellow-800 px-2.5 py-0.5 text-xs font-medium">
+                Scheduled
+            </span>
+        );
     }
 
-    return { label: 'Published', variant: 'default' as const };
+    return (
+        <span className="inline-flex items-center rounded-full bg-green-800 px-2.5 py-0.5 text-xs font-medium text-foreground">
+            Published
+        </span>
+    );
 }
 
-function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
-    const statusInfo = getStatusInfo(post.published_at);
+const reportTypeColors: Record<string, string> = {
+    CCTV: 'bg-blue-800',
+    'Citizen Concern': 'bg-purple-800',
+    Emergency: 'bg-red-800',
+    Announcement: 'bg-yellow-800',
+};
 
+function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
     const handlePublish = () => {
         router.patch(
             `/public-post/${post.id}/publish`,
@@ -92,43 +109,47 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                 className="flex max-h-[90vh] max-w-none flex-col overflow-hidden p-0 sm:max-w-2xl"
                 showCloseButton={false}
             >
-                <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+                <DialogHeader className="flex-shrink-0 px-6 pt-6">
                     <DialogTitle>Public Post Details</DialogTitle>
                     <DialogDescription className="flex flex-col gap-1">
                         <span>Post ID: #{post.id}</span>
-                        <Badge
-                            variant={statusInfo.variant}
-                            className="w-fit text-sm"
-                        >
-                            {statusInfo.label}
-                        </Badge>
+                        <div className="w-fit">
+                            {getStatusBadge(post.published_at)}
+                        </div>
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex w-full flex-1 flex-col justify-start gap-4 overflow-y-auto px-6 py-4">
-                    {/* Report Preview */}
+                    {/* Post Preview Image */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md font-medium">Report Snapshot</p>
+                        <p className="text-md font-medium">Post Image</p>
                         <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                            <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                            {post.image_path ? (
+                                <img
+                                    src={post.image_path}
+                                    alt={post.title}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+                            )}
                         </div>
                     </div>
 
-                    {/* Report Content */}
+                    {/* Post Content */}
                     <div className="flex flex-col gap-2">
-                        <p className="text-md font-medium">Report Content</p>
+                        <p className="text-md font-medium">Post Content</p>
                         <div className="rounded-lg border bg-muted/30 p-3">
-                            <p className="mb-2 text-sm font-medium">
-                                {post.report?.report_type}
-                            </p>
-                            <p className="mb-2 text-sm text-muted-foreground">
-                                {post.report?.transcript ||
-                                    'No transcript available'}
-                            </p>
-                            {post.report?.description && (
-                                <p className="text-sm text-muted-foreground">
-                                    {post.report.description}
+                            <div className="mb-2 flex items-center justify-between">
+                                <p className="text-sm font-bold uppercase tracking-wide">
+                                    {post.title}
                                 </p>
-                            )}
+                                <Badge variant="outline" className="uppercase">
+                                    {post.category}
+                                </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                {post.content}
+                            </p>
                         </div>
                     </div>
 
@@ -155,30 +176,18 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                         ])}
                     </div>
 
-                    {/* Original Report Details */}
-                    <div className="flex flex-col gap-2">
-                        <p className="text-md font-medium">
-                            Original Report Information
-                        </p>
-                        {renderDetailItems([
-                            {
-                                icon: User,
-                                text: `Reporter: ${post.report?.user?.name || 'Unknown'}`,
-                            },
-                            {
-                                icon: Mail,
-                                text: `Email: ${post.report?.user?.email || 'No email provided'}`,
-                            },
-                            {
-                                icon: LocateFixed,
-                                text: `Location: ${post.report?.latitute || 'N/A'}, ${post.report?.longtitude || 'N/A'}`,
-                            },
-                            {
-                                icon: TriangleAlert,
-                                text: `Report Type: ${post.report?.report_type || 'Unknown'}`,
-                            },
-                        ])}
-                    </div>
+                    {/* Original Source Details (if linked) */}
+                    {post.postable && (
+                        <div className="flex flex-col gap-2">
+                            <p className="text-md font-medium">
+                                Original Source Information
+                            </p>
+                            <div className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                                <p>Linked to: {post.postable_type?.split('\\').pop()}</p>
+                                <p>Source ID: #{post.postable_id}</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <DialogFooter className="flex-shrink-0 px-6 pb-4">
                     <div className="flex w-full gap-2">
@@ -188,7 +197,7 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                                 size="sm"
                                 className="flex-1 cursor-pointer py-4"
                             >
-                                <MoveLeft className="mr-2 inline h-4 w-4" />
+                                <MoveLeft className="inline h-4 w-4" />
                                 Close
                             </Button>
                         </DialogClose>
@@ -199,7 +208,7 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                                 onClick={handlePublish}
                                 className="flex-2 cursor-pointer py-4"
                             >
-                                <Globe className="mr-2 inline h-4 w-4" />
+                                <Globe className="inline h-4 w-4" />
                                 Publish Now
                             </Button>
                         ) : (
@@ -209,7 +218,7 @@ function ViewPublicPostDetails({ post, children }: ViewPublicPostDetailsProps) {
                                 onClick={handleUnpublish}
                                 className="flex-2 cursor-pointer py-4"
                             >
-                                <Eye className="mr-2 inline h-4 w-4" />
+                                <Eye className="inline h-4 w-4" />
                                 Unpublish
                             </Button>
                         )}

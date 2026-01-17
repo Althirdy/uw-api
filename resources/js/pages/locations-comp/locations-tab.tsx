@@ -17,15 +17,13 @@ import { cn } from '@/lib/utils';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { location_T, LocationCategory_T } from '@/types/location-types';
+import { location_T } from '@/types/location-types';
 
 const LocationActionTab = ({
     locations,
-    locationCategory,
     setFilteredLocations,
 }: {
     locations: location_T[];
-    locationCategory: LocationCategory_T[];
     setFilteredLocations: (locations: location_T[]) => void;
 }) => {
     const [categoryOpen, setCategoryOpen] = useState(false);
@@ -52,15 +50,6 @@ const LocationActionTab = ({
     // Filter displayed locations based on selected category, barangay and search query
     useEffect(() => {
         let filteredResults = locations;
-
-        // Filter by category if selected
-        if (categoryValue) {
-            filteredResults = filteredResults.filter(
-                (location: location_T) =>
-                    location.location_category?.name === categoryValue ||
-                    location.category_name === categoryValue,
-            );
-        }
 
         // Filter by barangay if selected
         if (barangayValue) {
@@ -156,76 +145,6 @@ const LocationActionTab = ({
                                             className={cn(
                                                 'ml-auto',
                                                 barangayValue === barangayName
-                                                    ? 'opacity-100'
-                                                    : 'opacity-0',
-                                            )}
-                                        />
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-            <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
-                <PopoverTrigger asChild className="h-12">
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={categoryOpen}
-                        className="w-[180px] cursor-pointer justify-between"
-                    >
-                        {categoryValue || 'Select category...'}
-                        <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[180px] p-0">
-                    <Command>
-                        <CommandInput
-                            placeholder="Search category..."
-                            className="h-9"
-                        />
-                        <CommandList>
-                            <CommandEmpty>No Category found.</CommandEmpty>
-                            <CommandGroup>
-                                {/* Add "All Categories" option */}
-                                <CommandItem
-                                    key="all"
-                                    value=""
-                                    onSelect={() => {
-                                        setCategoryValue(null);
-                                        setCategoryOpen(false);
-                                    }}
-                                >
-                                    All Categories
-                                    <Check
-                                        className={cn(
-                                            'ml-auto',
-                                            categoryValue === null
-                                                ? 'opacity-100'
-                                                : 'opacity-0',
-                                        )}
-                                    />
-                                </CommandItem>
-                                {/* Use locationCategory for dropdown options */}
-                                {locationCategory.map((category) => (
-                                    <CommandItem
-                                        key={category.id}
-                                        value={category.name}
-                                        onSelect={(currentValue) => {
-                                            setCategoryValue(
-                                                currentValue === categoryValue
-                                                    ? null
-                                                    : currentValue,
-                                            );
-                                            setCategoryOpen(false);
-                                        }}
-                                    >
-                                        {category.name}
-                                        <Check
-                                            className={cn(
-                                                'ml-auto',
-                                                categoryValue === category.name
                                                     ? 'opacity-100'
                                                     : 'opacity-0',
                                             )}

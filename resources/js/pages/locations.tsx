@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { locations } from '@/routes';
 import { type BreadcrumbItem } from '@/types';
-import { location_T, LocationCategory_T } from '@/types/location-types';
+import { location_T } from '@/types/location-types';
 import { Head } from '@inertiajs/react';
 import { List, Table } from 'lucide-react';
 import { useState } from 'react';
@@ -18,20 +18,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const locationCategory: LocationCategory_T[] = [
-    { id: 1, name: 'School' },
-    { id: 2, name: 'Hospital' },
-    { id: 3, name: 'Market' },
-    { id: 4, name: 'Park' },
-    { id: 5, name: 'Government Office' },
-];
-
 export default function Locations({
-    locationCategories = [],
     locations = [],
+    packages = [],
 }: {
-    locationCategories?: LocationCategory_T[];
     locations?: location_T[];
+    packages?: { id: number; name: string }[];
 }) {
     const [filteredLocations, setFilteredLocations] = useState<location_T[]>(
         locations || [],
@@ -41,23 +33,12 @@ export default function Locations({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Locations" />
             <div className="space-y-4 p-4">
-                <CreateLocation
-                    locationCategory={
-                        locationCategories.length > 0
-                            ? locationCategories
-                            : locationCategory
-                    }
-                />
+                <CreateLocation packages={packages} />
 
                 <Tabs defaultValue="table" className="w-full space-y-2">
                     <div className="flex flex-row gap-4">
                         <LocationActionTab
                             locations={locations!}
-                            locationCategory={
-                                locationCategories.length > 0
-                                    ? locationCategories
-                                    : locationCategory
-                            }
                             setFilteredLocations={setFilteredLocations}
                         />
                         <TabsList className="h-12 w-24">
@@ -77,24 +58,10 @@ export default function Locations({
                     </div>
 
                     <TabsContent value="table" className="w-full">
-                        <LocationsTable
-                            locations={filteredLocations}
-                            locationCategory={
-                                locationCategories.length > 0
-                                    ? locationCategories
-                                    : locationCategory
-                            }
-                        />
+                        <LocationsTable locations={filteredLocations} />
                     </TabsContent>
                     <TabsContent value="card" className="w-full">
-                        <LocationCardView
-                            locations={filteredLocations}
-                            locationCategory={
-                                locationCategories.length > 0
-                                    ? locationCategories
-                                    : locationCategory
-                            }
-                        />
+                        <LocationCardView locations={filteredLocations} />
                     </TabsContent>
                 </Tabs>
             </div>

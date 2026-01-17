@@ -19,7 +19,13 @@ class cctvDevices extends Model
         'model',
         'resolution',
         'fps',
+        'yolo_enabled',
         'installation_date',
+    ];
+
+    protected $casts = [
+        'yolo_enabled' => 'boolean',
+        'installation_date' => 'date',
     ];
 
     public function location()

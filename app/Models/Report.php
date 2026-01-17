@@ -15,7 +15,7 @@ class Report extends Model
         'report_type',
         'transcript',
         'description',
-        'latitute', // Note: keeping the typo from migration for consistency
+        'latitude',
         'longtitude', // Note: keeping the typo from migration for consistency
         'is_acknowledge',
         'acknowledge_by',
@@ -48,9 +48,9 @@ class Report extends Model
     /**
      * Get the public post associated with this report.
      */
-    public function publicPost(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function publicPost(): \Illuminate\Database\Eloquent\Relations\MorphOne
     {
-        return $this->hasOne(PublicPost::class);
+        return $this->morphOne(PublicPost::class, 'postable');
     }
 
     /**
@@ -139,7 +139,7 @@ class Report extends Model
     public function getCoordinatesAttribute(): array
     {
         return [
-            'latitude' => $this->latitute,
+            'latitude' => $this->latitude,
             'longitude' => $this->longtitude,
         ];
     }

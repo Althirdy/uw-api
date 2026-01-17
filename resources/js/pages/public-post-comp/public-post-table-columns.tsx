@@ -20,15 +20,16 @@ import EditPublicPost from './public-post-edit';
 import ViewPublicPostDetails from './public-post-view';
 
 const reportTypeColors: Record<string, string> = {
-    CCTV: 'bg-blue-100 text-blue-800',
-    'Citizen Concern': 'bg-purple-100 text-purple-800',
-    Emergency: 'bg-red-100 text-red-800',
+    CCTV: 'bg-blue-800 ',
+    'Citizen Concern': 'bg-purple-800 ',
+    Emergency: 'bg-red-800 ',
+    Announcement: 'bg-yellow-800',
 };
 
 function getStatusBadge(publishedAt: string | null) {
     if (!publishedAt) {
         return (
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+            <span className="inline-flex items-center rounded-[var(--radius)] bg-zinc-600 px-2.5 py-0.5 text-xs font-medium">
                 Draft
             </span>
         );
@@ -39,14 +40,14 @@ function getStatusBadge(publishedAt: string | null) {
 
     if (publishDate > now) {
         return (
-            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+            <span className="inline-flex items-center rounded-[var(--radius)] bg-yellow-800 px-2.5 py-0.5 text-xs font-medium">
                 Scheduled
             </span>
         );
     }
 
     return (
-        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+        <span className="inline-flex items-center rounded-[var(--radius)] bg-green-800 px-2.5 py-0.5 text-xs font-medium text-foreground">
             Published
         </span>
     );
@@ -72,7 +73,7 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
         cell: ({ row }) => <div>#{row.getValue('id')}</div>,
     },
     {
-        accessorKey: 'report.report_type',
+        accessorKey: 'category',
         header: ({ column }) => {
             return (
                 <Button
@@ -82,46 +83,46 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
                     }
                     className="cursor-pointer transition-colors duration-200 ease-in-out"
                 >
-                    Report Type
+                    Category
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
             );
         },
         cell: ({ row }) => {
             const post = row.original;
-            const reportType = post.report?.report_type || 'Unknown';
+            const category = post.category || 'General';
             const colorClass =
-                reportTypeColors[reportType] || 'bg-gray-100 text-gray-800';
+                reportTypeColors[category] || 'bg-gray-100 text-gray-800';
 
             return (
                 <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colorClass}`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium uppercase ${colorClass}`}
                 >
-                    {reportType}
+                    {category}
                 </span>
             );
         },
     },
     {
-        id: 'report_content',
-        header: 'Report Content',
+        id: 'content',
+        header: 'Post Content',
         cell: ({ row }) => {
             const post = row.original;
             return (
                 <div className="max-w-xs text-left">
                     <div className="ellipsis flex flex-col truncate">
                         <span className="text-md font-semibold">
-                            {post.report?.transcript}
+                            {post.title}
                         </span>
                         <span
                             className="mt-1 block truncate text-xs text-muted-foreground"
-                            title={post.report?.description}
+                            title={post.content}
                         >
-                            {post.report?.description &&
-                            post.report.description.length > 100
-                                ? post.report.description.substring(0, 100) +
+                            {post.content &&
+                            post.content.length > 100
+                                ? post.content.substring(0, 100) +
                                   '...'
-                                : post.report?.description}
+                                : post.content}
                         </span>
                     </div>
                 </div>
@@ -129,11 +130,11 @@ export const columns = (): ColumnDef<PublicPost_T>[] => [
         },
     },
     {
-        accessorKey: 'report.user.name',
-        header: 'Reporter',
+        accessorKey: 'publishedBy.name',
+        header: 'Published By',
         cell: ({ row }) => {
             const post = row.original;
-            return <div>{post.report?.user?.name || 'Unknown'}</div>;
+            return <div>{post.publishedBy?.name || 'Unknown'}</div>;
         },
     },
     {

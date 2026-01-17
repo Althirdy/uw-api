@@ -15,12 +15,12 @@ import EditContacts from './contacts-edit';
 import ViewContacts from './contacts-view';
 
 const responderTypeColors: Record<string, string> = {
-    Fire: 'bg-red-600 text-white',
+    Fire: 'bg-red-600  text-foreground',
     Emergency: 'bg-yellow-500 text-black',
-    Crime: 'bg-zinc-700 text-white',
+    Crime: 'bg-zinc-700  text-foreground',
     Traffic: 'bg-orange-500 text-black',
-    Barangay: 'bg-blue-500 text-white',
-    Others: 'bg-gray-600 text-white',
+    Barangay: 'bg-blue-500  text-foreground',
+    Others: 'bg-gray-600  text-foreground',
 };
 
 export const columns = (): ColumnDef<Contact>[] => [

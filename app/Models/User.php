@@ -62,11 +62,32 @@ class User extends Authenticatable
     protected function name(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value, array $attributes) => trim(
-                ($attributes['first_name'] ?? '').' '.
-                (($attributes['middle_name'] ?? null) ? (($attributes['middle_name'] ?? '').' ') : '').
-                ($attributes['last_name'] ?? '')
-            ),
+            get: function (?string $value, array $attributes) {
+                // If name is already set in the database, return it
+                if (! empty($value)) {
+                    return $value;
+                }
+
+                // Otherwise, build name from relationships if loaded
+                if ($this->relationLoaded('officialDetails') && $this->officialDetails) {
+                    return trim(
+                        ($this->officialDetails->first_name ?? '').' '.
+                        (($this->officialDetails->middle_name ?? null) ? ($this->officialDetails->middle_name.' ') : '').
+                        ($this->officialDetails->last_name ?? '')
+                    );
+                }
+
+                if ($this->relationLoaded('citizenDetails') && $this->citizenDetails) {
+                    return trim(
+                        ($this->citizenDetails->first_name ?? '').' '.
+                        (($this->citizenDetails->middle_name ?? null) ? ($this->citizenDetails->middle_name.' ') : '').
+                        ($this->citizenDetails->last_name ?? '')
+                    );
+                }
+
+                // Fallback to empty string if no name available
+                return '';
+            },
         );
     }
 
@@ -128,5 +149,17 @@ class User extends Authenticatable
     public function citizenConcerns()
     {
         return $this->hasMany(\App\Models\Citizen\Concern::class, 'citizen_id');
+    }
+
+    public function suspensions()
+    {
+        return $this->hasMany(UserSuspension::class);
+    }
+
+    public function activeSuspension()
+    {
+        return $this->hasOne(UserSuspension::class)
+            ->where('status', 'active')
+            ->orderBy('created_at', 'desc');
     }
 }

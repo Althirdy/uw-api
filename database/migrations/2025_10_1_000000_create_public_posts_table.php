@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('public_posts', function (Blueprint $table) {
             $table->id();
+            $table->string('public_id', 6)->unique();
             $table->unsignedBigInteger('report_id');
             $table->unsignedBigInteger('published_by')->nullable();
             $table->timestamp('published_at')->nullable();
