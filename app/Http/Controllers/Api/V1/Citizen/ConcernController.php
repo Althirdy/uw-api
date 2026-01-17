@@ -51,7 +51,7 @@ class ConcernController extends BaseApiController
             // Manually extract the cursor string
             'next_cursor' => $concerns->nextCursor()?->encode(),
             'prev_cursor' => $concerns->previousCursor()?->encode(),
-        ], 'Concerns retrieved successfully',status: 201);
+        ], 'Concerns retrieved successfully', status: 201);
     }
 
     /**
