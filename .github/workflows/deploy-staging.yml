@@ -5,19 +5,9 @@ on:
       - staging
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted  # 👈 This is the most important change
     steps:
-      - name: Tailscale
-        uses: tailscale/github-action@v2
-        with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-
-      - name: Execute Single Deployment Script
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ vars.STAGING_HOST }}
-          username: althirdy
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          script: |
-            cd ~/urbanwatch/uat-api
-            ./deploy-staging.sh
+      - name: Run Deployment Script
+        run: |
+          cd ~/urbanwatch/uat-api
+          ./deploy-staging.sh
