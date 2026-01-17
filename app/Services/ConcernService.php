@@ -129,6 +129,8 @@ class ConcernService
      */
     public function createConcern(array $data, int $userId, $files = null)
     {
+        $this->checkIfUserSuspended($userId, 'create concerns');
+
         DB::beginTransaction();
 
         try {
@@ -146,7 +148,7 @@ class ConcernService
             // Generate Tracking Code
             $datePart = now()->format('Ymd');
             $randomPart = Str::upper(Str::random(4));
-            $trackingCode = "CN-{$datePart}-{$randomPart}";
+            $trackingCode = 'CN-'.$datePart.'-'.$randomPart;
 
             // Create Concern
             $concern = Concern::create([
@@ -242,19 +244,26 @@ class ConcernService
         }
     }
 
-    // public function updateConcern(string $id, int $userId, array $data)
-    // {
-    //     $concern = Concern::where('id', $id)
-    //         ->where('citizen_id', $userId)
-    //         ->first();
+    public function updateConcern(string $id, int $userId, array $data)
+    {
+        $concern = Concern::where('id', $id)
+            ->where('citizen_id', $userId)
+            ->first();
 
-    //     if (!$concern) {
-    //         throw new UrbanWatchException("Concern not found.");
-    //     }
+        $this->checkIfUserSuspended($userId, 'update concerns');
 
-    //     $concern->update($data);
-    //     return $concern;
-    // }
+        if (! $concern) {
+            throw new UrbanWatchException('Concern not found.');
+        }
+
+        if ($concern->status !== 'pending') {
+            throw new UrbanWatchException('Only pending concerns can be edited.');
+        }
+
+        $concern->update($data);
+
+        return $concern;
+    }
 
     public function deleteConcern(string $id, int $userId)
     {
@@ -262,10 +271,35 @@ class ConcernService
             ->where('citizen_id', $userId)
             ->first();
 
+        $this->checkIfUserSuspended($userId, 'delete concerns');
+
         if (! $concern) {
             throw new UrbanWatchException('Concern not found.');
         }
 
-        $concern->softDelete();
+        $concern->delete();
+    }
+
+    private function checkIfUserSuspended(int $userId, string $action = 'perform this action'): void
+    {
+        if (\App\Models\UserSuspension::isUserSuspended(auth()->id())) {
+            $activeSuspension = \App\Models\UserSuspension::getActiveSuspension(auth()->id());
+
+            $message = "Your account is currently suspended and cannot {$action}.";
+            if ($activeSuspension) {
+                if ($activeSuspension->punishment_type === 'suspension') {
+                    $message = "Your account has been permanently suspended and cannot {$action}.";
+                } else {
+                    $expiresAt = $activeSuspension->expires_at->format('F j, Y \\a\\t g:i A');
+                    $message = "Your account is suspended until {$expiresAt} and cannot {$action}.";
+                }
+
+                if ($activeSuspension->reason) {
+                    $message .= " Reason: {$activeSuspension->reason}";
+                }
+            }
+
+            throw new UrbanWatchException($message);
+        }
     }
 }
