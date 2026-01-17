@@ -1,5 +1,4 @@
 name: Deploy Staging
-
 on:
   push:
     branches:
@@ -8,6 +7,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
       - name: Execute Remote Deployment Script
         uses: appleboy/ssh-action@v1.0.3
         with:
