@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\LocationService;
+use App\Services\TextBeeService;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,6 +16,13 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register services
         $this->app->scoped(LocationService::class);
+
+        $this->app->singleton(TextBeeService::class, function ($app) {
+            return new TextBeeService(
+                config('services.textbee.api_key'),
+                config('services.textbee.device_id')
+            );
+        });
     }
 
     /**

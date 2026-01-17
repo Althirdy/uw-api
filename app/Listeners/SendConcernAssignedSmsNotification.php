@@ -3,13 +3,11 @@
 namespace App\Listeners;
 
 use App\Events\ConcernAssigned;
-use App\Sevices\TextBeeService;
+use App\Services\TextBeeService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Attributes\ListensTo;
 use Illuminate\Support\Facades\Log;
 
-#[ListensTo(ConcernAssigned::class)]
 class SendConcernAssignedSmsNotification implements ShouldQueue
 {
     use InteractsWithQueue;
