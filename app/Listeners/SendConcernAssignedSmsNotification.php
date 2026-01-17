@@ -31,7 +31,16 @@ class SendConcernAssignedSmsNotification implements ShouldQueue
      */
     public function handle(ConcernAssigned $event): void
     {
-        //
+        // Check if SMS notifications are enabled
+        if (! config('services.textbee.sms_notification_enabled', true)) {
+            Log::info('SMS notification skipped (disabled in config)', [
+                'concern_id' => $event->concern->id,
+                'tracking_code' => $event->concern->tracking_code,
+            ]);
+
+            return;
+        }
+
         try {
             $concern = $event->concern;
             $distribution = $event->distribution;
