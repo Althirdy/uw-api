@@ -5,197 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Concern Status Update</title>
     <style>
-        * {
+        /* RESET & BASICS */
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            background-color: #f3f4f6; /* Very light cool gray */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #374151; /* Dark gray, softer than black */
+            -webkit-font-smoothing: antialiased;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-            padding: 20px;
+
+        /* LAYOUT */
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f3f4f6;
+            padding-bottom: 40px;
         }
-        
-        .email-wrapper {
-            max-width: 600px;
-            margin: 0 auto;
+
+        .main-container {
             background-color: #ffffff;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 600px;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Very subtle shadow */
+            border: 1px solid #e5e7eb;
+        }
+
+        /* BRANDING */
+        .header {
+            padding: 30px 40px 10px 40px;
+            text-align: left;
         }
         
-        .email-header {
-            background-color: #3b82f6;
-            color: #ffffff;
-            padding: 24px;
-            text-align: center;
+        .brand-text {
+            color: #2563eb; /* Professional Royal Blue */
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            text-decoration: none;
         }
-        
-        .email-header h1 {
+
+        /* CONTENT */
+        .content {
+            padding: 20px 40px 40px 40px;
+        }
+
+        h1 {
+            color: #111827;
             font-size: 24px;
             font-weight: 600;
-            margin: 0;
+            margin: 0 0 16px 0;
+            line-height: 1.3;
         }
-        
-        .email-body {
-            padding: 32px 24px;
-        }
-        
-        .greeting {
+
+        p {
             font-size: 16px;
-            margin-bottom: 16px;
-            color: #111;
+            line-height: 1.6;
+            margin: 0 0 24px 0;
+            color: #4b5563;
         }
-        
-        .status-update {
-            background-color: #f8fafc;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 24px 0;
-            border-left: 4px solid #3b82f6;
+
+        /* STATUS CARD */
+        .status-card {
+            background-color: #f9fafb; /* Extremely light gray */
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 24px;
         }
-        
-        .status-row {
+
+        .status-transition {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 12px;
-            margin-bottom: 16px;
-        }
-        
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 4px;
+            margin-bottom: 20px;
+            font-weight: 500;
             font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
         }
-        
-        .status-pending { background-color: #fef3c7; color: #92400e; }
-        .status-ongoing { background-color: #dbeafe; color: #1e40af; }
-        .status-escalated { background-color: #fee2e2; color: #991b1b; }
-        .status-resolved { background-color: #d1fae5; color: #065f46; }
-        
-        .arrow { color: #94a3b8; font-size: 18px; }
-        
-        .detail-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e7eb;
+
+        .status-prev {
+            color: #6b7280;
+            text-decoration: line-through;
+        }
+
+        .arrow {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .status-new {
+            color: #2563eb; /* Brand color for the active status */
+            background-color: #eff6ff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+            border: 1px solid #dbeafe;
+        }
+
+        /* DATA GRID */
+        .data-row {
             display: flex;
             justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
         }
         
-        .detail-item:last-child { border-bottom: none; }
-        
-        .detail-label {
-            font-size: 14px;
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
             color: #6b7280;
             font-weight: 500;
         }
-        
-        .detail-value {
-            font-size: 14px;
-            color: #111;
-            font-weight: 500;
-        }
-        
-        .remarks {
-            background-color: #fffbeb;
-            border-left: 3px solid #f59e0b;
-            padding: 12px 16px;
-            margin-top: 16px;
-            border-radius: 4px;
-        }
-        
-        .remarks-label {
-            font-size: 12px;
-            color: #92400e;
+
+        .data-value {
+            color: #111827;
             font-weight: 600;
-            margin-bottom: 4px;
-            text-transform: uppercase;
+            text-align: right;
         }
-        
+
+        /* REMARKS SECTION */
+        .remarks-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #d1d5db;
+        }
+
+        .remarks-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
         .remarks-text {
             font-size: 14px;
-            color: #78350f;
+            color: #374151;
+            font-style: italic;
         }
-        
-        .footer-text {
+
+        /* FOOTER */
+        .footer {
             text-align: center;
-            font-size: 13px;
-            color: #6b7280;
-            margin-top: 24px;
+            padding: 20px;
+            font-size: 12px;
+            color: #9ca3af;
         }
         
-        .footer-brand {
-            font-weight: 600;
-            color: #3b82f6;
-            margin-top: 8px;
+        .footer a {
+            color: #9ca3af;
+            text-decoration: underline;
         }
-        
+
+        /* MOBILE RESPONSIVENESS */
         @media only screen and (max-width: 600px) {
-            .email-body { padding: 24px 16px; }
-            .status-row { flex-direction: column; }
-            .arrow { transform: rotate(90deg); }
-            .detail-item { flex-direction: column; gap: 4px; }
+            .header, .content { padding: 20px; }
+            .status-card { padding: 16px; }
+            .data-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+            .data-value { text-align: left; }
         }
     </style>
 </head>
 <body>
-    <div class="email-wrapper">
-        <div class="email-header">
-            <h1>UrbanWatch</h1>
+
+    <div class="wrapper">
+        <br>
+        <div class="main-container">
+            
+            <div class="header">
+                <span class="brand-text">UrbanWatch</span>
+            </div>
+
+            <div class="content">
+                <h1>Status Update</h1>
+                <p>Hello {{ $citizenName }}, the status of your reported concern has changed.</p>
+
+                <div class="status-card">
+                    
+                    <div class="status-transition">
+                        <span class="status-prev">{{ ucfirst($previousStatus) }}</span>
+                        <span class="arrow">▶</span>
+                        <span class="status-new">{{ ucfirst($newStatus) }}</span>
+                    </div>
+
+                    <div class="data-grid">
+                        <div class="data-row">
+                            <span class="data-label">Concern ID</span>
+                            <span class="data-value">#{{ $concern->id }}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Category</span>
+                            <span class="data-value">{{ ucfirst($concern->category ?? 'General') }}</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="data-label">Updated By</span>
+                            <span class="data-value">{{ $updatedByName }}</span>
+                        </div>
+                    </div>
+
+                    @if($remarks)
+                    <div class="remarks-container">
+                        <div class="remarks-label">Official Remarks</div>
+                        <div class="remarks-text">"{{ $remarks }}"</div>
+                    </div>
+                    @endif
+
+                </div>
+
+                <p style="font-size: 14px; color: #6b7280; margin: 0;">
+                    You can track further progress by logging into your account or contacting your Purok Leader.
+                </p>
+            </div>
         </div>
-        
-        <div class="email-body">
-            <p class="greeting">Hello, {{ $citizenName }}!</p>
-            
-            <p style="font-size: 15px; color: #555; margin-bottom: 8px;">
-                Your concern status has been updated.
-            </p>
-            
-            <div class="status-update">
-                <div class="status-row">
-                    <span class="status-badge status-{{ strtolower($previousStatus) }}">
-                        {{ ucfirst($previousStatus) }}
-                    </span>
-                    <span class="arrow">→</span>
-                    <span class="status-badge status-{{ strtolower($newStatus) }}">
-                        {{ ucfirst($newStatus) }}
-                    </span>
-                </div>
-                
-                <div>
-                    <div class="detail-item">
-                        <span class="detail-label">Concern ID</span>
-                        <span class="detail-value">#{{ $concern->id }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Category</span>
-                        <span class="detail-value">{{ $concern->category ?? 'General' }}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Updated By</span>
-                        <span class="detail-value">{{ $updatedByName }}</span>
-                    </div>
-                </div>
-                
-                @if($remarks)
-                <div class="remarks">
-                    <div class="remarks-label">Remarks</div>
-                    <div class="remarks-text">{{ $remarks }}</div>
-                </div>
-                @endif
-            </div>
-            
-            <div class="footer-text">
-                <p>If you have questions, please contact your Purok Leader.</p>
-                <p class="footer-brand">UrbanWatch</p>
-            </div>
+        <div class="footer">
+            &copy; {{ date('Y') }} UrbanWatch System. <br>
+            Automated notification. Please do not reply.
         </div>
     </div>
 </body>

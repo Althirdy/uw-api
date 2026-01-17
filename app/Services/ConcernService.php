@@ -201,12 +201,21 @@ class ConcernService
             // Distribute to Purok Leader (Hardcoded ID=2 for now per requirements)
             $purokLeaderId = 2;
 
+            $purokLeaderDetails = \App\Models\OfficialsDails::where('id', $purokLeaderId)->first();
+
+            if (!$purokLeaderDetails) {
+                throw new UrbanWatchException("Purok Leader not found for distribution.");
+            }
+
+
             $distribution = ConcernDistribution::create([
                 'concern_id' => $concern->id,
                 'purok_leader_id' => $purokLeaderId,
                 'status' => 'assigned',
                 'assigned_at' => now(),
             ]);
+
+            $distribution->load('purokLeader.officialDetails');
 
             // Create History Log
             ConcernHistory::create([

@@ -46,12 +46,23 @@ class TextBeeService
         return $this->sendSms($recipients, $message);
     }
 
-    public function sendTestMessage($phoneNumber, $testMessage = null)
+    public function sendConcernAssignedNotification($phoneNumber,$concernData)
     {
-        $message = $testMessage ?? "This is a test message from UrbanWatch. Your TextBee integration is working!";
-        
+        $message = $this->formatConcernAssignedMessage($concernData);
         $recipients = is_array($phoneNumber) ? $phoneNumber : [$phoneNumber];
-        
+
         return $this->sendSms($recipients, $message);
+    }
+
+    protected function formatConcernAssignedMessage(array $concernData): string
+    {
+        return "New Concern Assigned!\n" .
+               "Tracking Code: {$concernData['tracking_code']}\n" .
+               "Category: {$concernData['category']}\n" .
+               "Severity: {$concernData['severity']}\n" .
+               "Description: {$concernData['description']}\n" .
+               "Location: " . ($concernData['address'] ?? $concernData['custom_location'] ?? 'Not specified') . "\n\n"
+               "Please address this concern promptly.\n".
+               "Thank you,\nUrbanWatch System";
     }
 }

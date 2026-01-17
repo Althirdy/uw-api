@@ -10,6 +10,9 @@ class GeminiService
     protected $apiKey;
 
     protected $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent';
+    protected $audioModel = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+
+';
 
     public function __construct()
     {
@@ -54,7 +57,7 @@ class GeminiService
 
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post("{$this->baseUrl}?key={$this->apiKey}", [
+            ])->post("{$this->audioModel}?key={$this->apiKey}", [
                 'contents' => [
                     [
                         'parts' => [
@@ -169,7 +172,7 @@ class GeminiService
 
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post("{$this->baseUrl}?key={$this->apiKey}", [
+            ])->post("{$this->audioModel}?key={$this->apiKey}", [
                 'contents' => [
                     [
                         'parts' => [
@@ -265,70 +268,41 @@ class GeminiService
                 }
             }
 
-            $prompt = "You are a STRICT emergency detection AI system analyzing CCTV footage. Your job is to ONLY flag REAL emergencies and REJECT anything that looks normal or is a false positive.\n\n".
-                      "BE VERY CONSERVATIVE - When in doubt, mark as FALSE ALARM. It's better to miss a minor incident than to flood the system with false alarms.\n\n".
-                      "Analyze the image and determine if it shows a REAL EMERGENCY that requires immediate response.\n\n".
-                      "VALID EMERGENCIES (is_valid: true) - Must show CLEAR and OBVIOUS signs:\n".
-                      "- Fire: ACTIVE large flames visible, heavy black smoke rising, building/vehicle clearly on fire, fire spreading\n".
-                      "- Flood: Water level ABOVE normal (at least ankle-deep on roads), vehicles stuck in water, water entering buildings, people wading through flood water\n".
-                      "- Accident: CLEAR vehicle collision damage visible, overturned/crashed vehicles, people lying injured on ground, debris scattered on road, emergency responders already on scene\n\n".
-                      "FALSE ALARMS TO REJECT (is_valid: false):\n\n".
-                      "FIRE FALSE ALARMS - REJECT these:\n".
-                      "- Sunlight, sun glare, or reflections on windows/metal surfaces\n".
-                      "- Fog, mist, steam, exhaust from vehicles or buildings\n".
-                      "- Dust clouds from construction or vehicles\n".
-                      "- Orange/red/yellow colored objects (cars, signs, clothing, banners)\n".
-                      "- Sunset/sunrise lighting making things look orange\n".
-                      "- Red/orange neon signs or lights\n".
-                      "- Candles, lighters, cigarettes, controlled cooking fires\n".
-                      "- Grilling, BBQ, or outdoor cooking\n".
-                      "- Bonfires or campfires in appropriate areas\n".
-                      "- Smoke from cigarettes or vaping\n".
-                      "- Heat haze or shimmer from hot surfaces\n\n".
-                      "FLOOD FALSE ALARMS - REJECT these:\n".
-                      "- Wet roads after rain (water draining normally)\n".
-                      "- Small puddles or standing water in low spots\n".
-                      "- Water from car washes, sprinklers, or cleaning\n".
-                      "- Street cleaning vehicles spraying water\n".
-                      "- Normal rain (even heavy rain without flooding)\n".
-                      "- Reflections on wet pavement\n".
-                      "- Shadows that look like water\n".
-                      "- Rivers/streams/canals at normal levels\n".
-                      "- Drainage systems working normally\n\n".
-                      "ACCIDENT FALSE ALARMS - REJECT these:\n".
-                      "- Normal traffic, even if congested or slow\n".
-                      "- Vehicles stopped at traffic lights or intersections\n".
-                      "- Parked vehicles (even if parked badly)\n".
-                      "- Motorcycles lane splitting or weaving\n".
-                      "- Delivery trucks loading/unloading\n".
-                      "- Construction work or road repairs\n".
-                      "- People crossing streets or jaywalking\n".
-                      "- People running (could be exercise or late)\n".
-                      "- Kids playing, sports, or games on streets\n".
-                      "- People arguing or having discussions\n".
-                      "- Minor fender benders with no visible damage\n".
-                      "- Vehicles pulling over to the side\n".
-                      "- Emergency vehicles passing through (not stopped at scene)\n".
-                      "- Tow trucks picking up normally parked vehicles\n".
-                      "- Blurry or unclear images where you cannot confirm emergency\n\n".
-                      "IMPORTANT RULES:\n".
-                      "- If the image is blurry, dark, or unclear - mark as FALSE ALARM\n".
-                      "- If you're less than 70% confident it's a real emergency - mark as FALSE ALARM\n".
-                      "- Normal daily activities should NEVER be flagged as emergencies\n".
-                      "- When in doubt, choose FALSE ALARM\n\n".
-                      "If the image shows a REAL EMERGENCY (is_valid: true):\n".
+           $prompt = "You are an emergency detection AI system currently operating in DEMO/SIMULATION MODE. Your job is to analyze CCTV footage and flag emergencies for the UrbanWatch system.\n\n".
+                      "CRITICAL DEMO RULES:\n".
+                      "1. ENABLE SIMULATION RECOGNITION: You MUST treat scale models, toy vehicles (like Hotwheels), or printed photos of accidents as REAL vehicles. If you see toy cars crashing, classify it as a REAL 'Accident' with high severity. Do not dismiss them as 'toys' or 'fake'.\n".
+                      "2. LOWER THRESHOLD: Be more sensitive than usual. If an image looks like it MIGHT be an accident/fire/flood, mark it as VALID (is_valid: true). Do not be overly conservative.\n".
+                      "3. Minimum confidence threshold is now 60% (down from 70%).\n\n".
+                      
+                      "Analyze the image and determine if it shows an event requiring response.\n\n".
+                      
+                      "VALID EMERGENCIES (is_valid: true):\n".
+                      "- Fire: Flames, smoke (real or simulated), red/orange lighting suggesting fire\n".
+                      "- Flood: Water covering roads (real or simulated)\n".
+                      "- Accident: Vehicle collisions (real cars OR toy cars), overturned vehicles, debris\n\n".
+
+                      "FALSE ALARMS (is_valid: false) - Only reject if clearly nothing is happening:\n".
+                      "- Empty roads with no obstacles\n".
+                      "- Normal traffic flow (without collision)\n".
+                      "- Clear weather with no water/fire\n".
+                      "- Blurry images where absolutely nothing is distinguishable\n\n".
+
+                      "If the image shows a VALID EMERGENCY (is_valid: true):\n".
                       "1. accident_type: Choose exactly one: 'Fire', 'Flood', or 'Accident'\n".
-                      "2. severity: Choose exactly one: 'Low', 'Medium', or 'High' based on danger level\n".
-                      "3. title: Generate a clear, simple 5-8 word title in conversational Filipino/Tagalog. Use everyday words, not deep or poetic language. Examples: 'Sunog sa Bahay sa Main Street', 'Aksidente ng Dalawang Sasakyan', 'Baha sa Kalsada'\n".
-                      "4. description: Generate a natural 2-3 sentence description in conversational Filipino/Tagalog. Write like you're reporting to someone casually - simple, clear, easy to understand. Avoid formal or poetic words. Just describe what happened, where, and what the situation is.\n".
-                      "5. confidence: Number from 70-100 indicating your confidence this is a real emergency (must be 70+ to be valid)\n".
-                      "6. detected_objects: Array of key objects/elements you detected (e.g., ['flames', 'smoke', 'building'])\n".
-                      "7. reasoning: Brief explanation in English of why this is a real emergency\n\n".
-                      "If the image is a FALSE ALARM (is_valid: false):\n".
+                      "2. severity: 'Low', 'Medium', or 'High' (Treat toy car crashes as 'High' for the demo)\n".
+                      "3. title: Generate a clear 5-8 word title in conversational Filipino/Tagalog. Example: 'May banggaan ng sasakyan sa kalsada'\n".
+                      "4. description: Generate a natural 2-3 sentence description in conversational Filipino/Tagalog. Describe what is happening simply. Example: 'May dalawang sasakyan na nagpang-abot sa gitna ng daan. Mukhang matindi ang tama sa harapan ng kotse.'\n".
+                      "5. confidence: Number from 60-100.\n".
+                      "6. detected_objects: Array of objects (e.g., ['car', 'toy_car', 'collision']).\n".
+                      "7. reasoning: Brief explanation in English. If it's a simulation, state: 'Simulation detected: Toy cars in collision state.'\n\n".
+
+                      "If FALSE ALARM (is_valid: false):\n".
                       "1. Set is_valid to false\n".
                       "2. Set all other fields to null except reasoning\n".
-                      "3. reasoning: Explain in English why this is NOT a real emergency (be specific about what you see)\n".
+                      "3. reasoning: Explain why no emergency is seen.\n\n".
+                      
                       $contextInfo."\n".
+                      
                       "Return ONLY valid JSON with this exact structure:\n".
                       "{\n".
                       "  \"is_valid\": boolean,\n".
@@ -362,7 +336,7 @@ class GeminiService
                 ],
                 'generationConfig' => [
                     'response_mime_type' => 'application/json',
-                    'temperature' => 0.4, // Lower temperature for more consistent/reliable responses
+                    'temperature' => 0.2, // Lower temperature for more consistent/reliable responses
                 ],
             ]);
 
