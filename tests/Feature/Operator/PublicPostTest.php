@@ -47,7 +47,7 @@ class PublicPostTest extends TestCase
         ]);
 
         $response->assertStatus(201);
-  
+
     }
 
     public function test_validation_fails_for_missing_fields()
