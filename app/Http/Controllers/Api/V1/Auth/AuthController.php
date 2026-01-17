@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Http\Controllers\Api\BaseApiController;
 use App\Exceptions\UrbanWatchException;
+use App\Http\Controllers\Api\BaseApiController;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\PurokLeaderLoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
@@ -15,16 +15,18 @@ use App\Services\AuthService;
 use App\Services\GeminiService;
 use App\Services\ImageProcessingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class AuthController extends BaseApiController
 {
     protected $authService;
+
     protected $abstractApiService;
+
     protected $geminiService;
+
     protected $imageService;
+
     public function __construct(AuthService $authService, AbstractApiService $abstractApiService, GeminiService $geminiService, ImageProcessingService $imageService)
     {
         $this->authService = $authService;
@@ -42,7 +44,7 @@ class AuthController extends BaseApiController
         try {
             $authData = $this->authService->login($validated['email'], $validated['password']);
 
-            if (!$authData) {
+            if (! $authData) {
                 throw new UrbanWatchException('Invalid credentials');
             }
 
@@ -74,7 +76,7 @@ class AuthController extends BaseApiController
         $request->validate([
             'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:5120', // max 5MB
         ]);
-        
+
         try {
             $image = $request->file('image');
             $rawContent = $image->get();
@@ -83,29 +85,34 @@ class AuthController extends BaseApiController
             $optimizedContent = $this->imageService->optimizeForAi($rawContent, $mimeType);
 
             $analysis = $this->geminiService->analyzeNationalId(
-                $optimizedContent, 
+                $optimizedContent,
                 $image->getMimeType()
             );
 
-            if ($analysis['backSideDetected']) return $this->sendError('You uploaded the back of the ID. Please upload the front.', 400);
+            if ($analysis['backSideDetected']) {
+                return $this->sendError('You uploaded the back of the ID. Please upload the front.', 400);
+            }
 
-            if (!$analysis['isAuthentic']) return $this->sendError('ID verification failed: ' . ($analysis['reasoning'] ?? 'Image not recognized as a valid PhilID'), 400);
-            
-            if($this->authService->checkPcnNumberExists($analysis['data']['pcnNumber'])){
+            if (! $analysis['isAuthentic']) {
+                return $this->sendError('ID verification failed: '.($analysis['reasoning'] ?? 'Image not recognized as a valid PhilID'), 400);
+            }
+
+            if ($this->authService->checkPcnNumberExists($analysis['data']['pcnNumber'])) {
                 return $this->sendError('The PCN number on this ID is already registered.', 400);
             }
-            
+
             return $this->sendResponse([
                 'verificationId' => uniqid('ver_'),
                 'extractedData' => $analysis['data'],
                 'confidence_score' => $analysis['confidence'],
             ], 'ID uploaded and verified successfully.');
 
-        }catch(Exception $e){
+        } catch (Exception $e) {
             Log::error('ID Upload Error', ['msg' => $e->getMessage()]);
+
             return $this->sendError('Unable to process ID card at this time.', 500);
         }
-    } 
+    }
 
     // Login for Purok Leader
     public function loginPurokLeader(PurokLeaderLoginRequest $request): \Illuminate\Http\JsonResponse
@@ -115,11 +122,15 @@ class AuthController extends BaseApiController
         try {
             $authData = $this->authService->loginPurokLeader($validated['pin']);
 
-            if (!$authData) throw new UrbanWatchException('Invalid PIN');
-                
+            if (! $authData) {
+                throw new UrbanWatchException('Invalid PIN');
+            }
+
             $user = $authData['user'];
 
-            if (!$user->officialDetails) throw new UrbanWatchException('Official details not found for this user');
+            if (! $user->officialDetails) {
+                throw new UrbanWatchException('Official details not found for this user');
+            }
 
             return $this->sendResponse([
                 'token' => $authData['token'],
@@ -178,7 +189,7 @@ class AuthController extends BaseApiController
     {
         try {
             // Verify the token has 'refresh-token' ability
-            if (!$request->user()->tokenCan('refresh-token')) {
+            if (! $request->user()->tokenCan('refresh-token')) {
                 return $this->sendUnauthorized('Invalid token type. Please use refresh token.');
             }
 
@@ -196,6 +207,7 @@ class AuthController extends BaseApiController
 
         try {
             $authData = $this->authService->register($validated);
+
             return $this->sendResponse([
                 'token' => $authData['token'],
                 'refreshToken' => $authData['refreshToken'],
@@ -204,7 +216,7 @@ class AuthController extends BaseApiController
         } catch (UrbanWatchException $e) {
             throw $e;
         } catch (\Exception $e) {
-            return $this->sendError('Registration failed: ' . $e->getMessage());
+            return $this->sendError('Registration failed: '.$e->getMessage());
         }
     }
 }

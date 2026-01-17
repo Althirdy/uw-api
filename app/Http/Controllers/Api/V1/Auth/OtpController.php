@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendOtpJob;
 use App\Models\Otp;
-use App\Models\User;
-use App\Services\MailService;
-use Carbon\Carbon;
 use App\Services\AbstractApiService;
+use App\Services\MailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -18,13 +16,15 @@ use Illuminate\Support\Facades\Validator;
 class OtpController extends Controller
 {
     protected MailService $mailService;
+
     protected AbstractApiService $abstractApiService;
+
     public function __construct(MailService $mailService, AbstractApiService $abstractApiService)
     {
         $this->mailService = $mailService;
         $this->abstractApiService = $abstractApiService;
     }
-    
+
     /**
      * Request OTP via SMS
      */
@@ -37,42 +37,41 @@ class OtpController extends Controller
         $phone = $request->phone;
 
         // Rate limiting: 60 seconds between requests
-        if(Cache::has('otp_lock_'.$phone)) {
-           return response()->json([
-               'success' => false,
-               'message' => 'Please wait 60 seconds before requesting again.'
-           ], 429);
+        if (Cache::has('otp_lock_'.$phone)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please wait 60 seconds before requesting again.',
+            ], 429);
         }
 
         // Generate 6-digit OTP
         $code = rand(100000, 999999);
-        
+
         // Store OTP in cache for 1 minute
-        Cache::put('otp_' . $phone, $code, 60);
-        Cache::put('otp_lock_' . $phone, true, 60);
+        Cache::put('otp_'.$phone, $code, 60);
+        Cache::put('otp_lock_'.$phone, true, 60);
 
         // Dispatch job to send SMS
         SendOtpJob::dispatch($phone, $code);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'OTP sent successfully to your phone!',
             'data' => [
                 'phone' => $phone,
                 'expires_in' => 1, // minutes
-            ]
+            ],
         ]);
     }
 
     public function registrationOtp(Request $request): JsonResponse
-    {   
-        
+    {
+
         $validator = Validator::make($request->all(), [
             'phone' => 'required|numeric|digits:11',
             'email' => 'required|email|unique:users,email',
         ]);
-        
-        
+
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -83,18 +82,16 @@ class OtpController extends Controller
 
         $emailReputationResult = $this->abstractApiService->validateEmail($request->email);
 
-        if($emailReputationResult['valid'] === false || 
-             $emailReputationResult['deliverable'] === false || 
-             $emailReputationResult['disposable'] === true ) {
+        if ($emailReputationResult['valid'] === false ||
+             $emailReputationResult['deliverable'] === false ||
+             $emailReputationResult['disposable'] === true) {
             return response()->json([
                 'success' => false,
                 'message' => 'The provided email address is not valid for registration.',
-                'data' => $emailReputationResult
+                'data' => $emailReputationResult,
             ], 422);
         }
 
-        
-        
         return $this->requestOtp($request);
     }
 
@@ -129,10 +126,11 @@ class OtpController extends Controller
         }
 
         // Check if OTP exists in cache
-        $cachedOtp = Cache::get('otp_' . $phone);
+        $cachedOtp = Cache::get('otp_'.$phone);
 
-        if (!$cachedOtp) {
+        if (! $cachedOtp) {
             RateLimiter::hit($key, 300);
+
             return response()->json([
                 'success' => false,
                 'message' => 'OTP has expired or does not exist. Please request a new one.',
@@ -142,6 +140,7 @@ class OtpController extends Controller
         // Verify OTP code
         if ($cachedOtp != $otpCode) {
             RateLimiter::hit($key, 300);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Incorrect OTP code.',
@@ -149,8 +148,8 @@ class OtpController extends Controller
         }
 
         // OTP is valid - clear it and rate limiter
-        Cache::forget('otp_' . $phone);
-        Cache::forget('otp_lock_' . $phone);
+        Cache::forget('otp_'.$phone);
+        Cache::forget('otp_lock_'.$phone);
         RateLimiter::clear($key);
 
         return response()->json([
@@ -175,33 +174,32 @@ class OtpController extends Controller
         $phone = $request->phone;
 
         // Rate limiting: 60 seconds between resend requests
-        if(Cache::has('otp_lock_'.$phone)) {
-           $remainingTime = Cache::get('otp_lock_'.$phone);
-           return response()->json([
-               'success' => false,
-               'message' => 'Please wait before requesting another OTP.'
-           ], 429);
+        if (Cache::has('otp_lock_'.$phone)) {
+            $remainingTime = Cache::get('otp_lock_'.$phone);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Please wait before requesting another OTP.',
+            ], 429);
         }
 
         // Generate new 6-digit OTP
         $code = rand(100000, 999999);
-        
+
         // Store OTP in cache for 1 minute
-        Cache::put('otp_' . $phone, $code, 60);
-        Cache::put('otp_lock_' . $phone, true, 60);
+        Cache::put('otp_'.$phone, $code, 60);
+        Cache::put('otp_lock_'.$phone, true, 60);
 
         // Dispatch job to send SMS
         SendOtpJob::dispatch($phone, $code);
-        
+
         return response()->json([
             'success' => true,
             'message' => 'OTP resent successfully to your phone!',
             'data' => [
                 'phone' => $phone,
                 'expires_in' => 1, // minutes
-            ]
+            ],
         ]);
     }
-
-
 }

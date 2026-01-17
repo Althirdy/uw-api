@@ -31,7 +31,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('locations', function (Blueprint $table) {
-            if (!Schema::hasColumn('locations', 'location_category')) {
+            if (! Schema::hasColumn('locations', 'location_category')) {
                 // Add the column back without foreign key constraint
                 // The constraint will be added by the original migration
                 $table->unsignedBigInteger('location_category')->nullable()->after('barangay');

@@ -11,8 +11,10 @@ use Illuminate\Queue\SerializesModels;
 
 class SendOtpJob implements ShouldQueue
 {
-    use Queueable,Dispatchable,InteractsWithQueue,SerializesModels;
+    use Dispatchable,InteractsWithQueue,Queueable,SerializesModels;
+
     protected $phoneNumber;
+
     protected $otpCode;
 
     /**

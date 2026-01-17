@@ -60,7 +60,7 @@ class ReportController extends Controller
         $accidents->getCollection()->transform(function ($accident) use ($locations) {
             // First, try to get location from CCTV device (most accurate for YOLO detections)
             $displayLocation = null;
-            
+
             if ($accident->cctvDevice && $accident->cctvDevice->location) {
                 $displayLocation = $accident->cctvDevice->location->location_name;
             } else {

@@ -41,8 +41,6 @@ class ActiveAccidentController extends BaseApiController
      * - id, latitude, longitude, accident_type, severity
      *
      * No relationships are loaded for maximum performance.
-     *
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -82,7 +80,7 @@ class ActiveAccidentController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while retrieving accident markers: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving accident markers: '.$e->getMessage());
         }
     }
 
@@ -95,7 +93,6 @@ class ActiveAccidentController extends BaseApiController
      * - Role 3: Limited data (coordinates, title, description)
      *
      * @param  int  $id  The accident ID
-     * @return JsonResponse
      */
     public function show(Request $request, int $id): JsonResponse
     {
@@ -136,7 +133,7 @@ class ActiveAccidentController extends BaseApiController
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return $this->sendError('An error occurred while retrieving accident details: ' . $e->getMessage());
+            return $this->sendError('An error occurred while retrieving accident details: '.$e->getMessage());
         }
     }
 }

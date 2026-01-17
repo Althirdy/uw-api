@@ -23,18 +23,14 @@ Route::prefix('auth')->group(function () {
     Route::post('/login/purok_leader', [AuthController::class, 'loginPurokLeader']);
 });
 
-
-
 Route::middleware('auth:sanctum')->group(function () {
-        // Logout requires access token
+    // Logout requires access token
     Route::post('/logout', [AuthController::class, 'logout'])
         ->middleware(['auth:sanctum', 'ability.access']);
     // Refresh token endpoint - only accepts refresh tokens
     Route::post('/refresh-token', [AuthController::class, 'refreshToken'])
         ->middleware('auth:sanctum');
 });
-
-
 
 // Protected routes - require access token
 Route::middleware(['auth:sanctum', 'ability.access'])->group(function () {

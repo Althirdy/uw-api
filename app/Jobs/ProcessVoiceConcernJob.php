@@ -137,7 +137,7 @@ class ProcessVoiceConcernJob implements ShouldQueue
                 Log::info('ProcessVoiceConcernJob: Firing ConcernTranscribed event', [
                     'concern_id' => $concern->id,
                 ]);
-                
+
                 event(new ConcernTranscribed($concern));
 
                 Log::info('ProcessVoiceConcernJob: ConcernTranscribed event fired');

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('reports', function (Blueprint $table) {
             $table->renameColumn('latitute', 'latitude');
         });
-        
+
         Schema::table('reports', function (Blueprint $table) {
             $table->string('latitude')->nullable()->change();
             $table->string('longtitude')->nullable()->change();
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('latitude')->nullable()->change();
             $table->string('longtitude')->nullable()->change();
         });
-        
+
         Schema::table('reports', function (Blueprint $table) {
             $table->renameColumn('latitude', 'latitute');
         });

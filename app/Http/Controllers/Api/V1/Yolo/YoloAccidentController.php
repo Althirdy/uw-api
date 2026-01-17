@@ -65,7 +65,7 @@ class YoloAccidentController extends BaseApiController
             $file = $request->file('snapshot');
             $deviceId = $request->input('device_id');
             $detectedAt = $request->input('detected_at');
-            
+
             Log::info('YOLO Snapshot received from Python', [
                 'device_id' => $deviceId,
                 'detected_at' => $detectedAt,
@@ -129,7 +129,7 @@ class YoloAccidentController extends BaseApiController
 
             // Get peak hour today
             $peakHour = FalseAlarm::today()
-                ->when($deviceId, fn($q) => $q->where('cctv_device_id', $deviceId))
+                ->when($deviceId, fn ($q) => $q->where('cctv_device_id', $deviceId))
                 ->selectRaw('HOUR(created_at) as hour, COUNT(*) as count')
                 ->groupBy('hour')
                 ->orderByDesc('count')
@@ -153,7 +153,7 @@ class YoloAccidentController extends BaseApiController
 
             // Get recent false alarms (last 20)
             $recentFalseAlarms = FalseAlarm::with('cctvDevice.location')
-                ->when($deviceId, fn($q) => $q->where('cctv_device_id', $deviceId))
+                ->when($deviceId, fn ($q) => $q->where('cctv_device_id', $deviceId))
                 ->orderByDesc('created_at')
                 ->limit(20)
                 ->get()

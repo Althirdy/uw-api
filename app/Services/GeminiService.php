@@ -10,6 +10,7 @@ class GeminiService
     protected $apiKey;
 
     protected $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent';
+
     protected $audioModel = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
 
 ';
@@ -268,53 +269,53 @@ class GeminiService
                 }
             }
 
-           $prompt = "You are an emergency detection AI system currently operating in DEMO/SIMULATION MODE. Your job is to analyze CCTV footage and flag emergencies for the UrbanWatch system.\n\n".
-                      "CRITICAL DEMO RULES:\n".
-                      "1. ENABLE SIMULATION RECOGNITION: You MUST treat scale models, toy vehicles (like Hotwheels), or printed photos of accidents as REAL vehicles. If you see toy cars crashing, classify it as a REAL 'Accident' with high severity. Do not dismiss them as 'toys' or 'fake'.\n".
-                      "2. LOWER THRESHOLD: Be more sensitive than usual. If an image looks like it MIGHT be an accident/fire/flood, mark it as VALID (is_valid: true). Do not be overly conservative.\n".
-                      "3. Minimum confidence threshold is now 60% (down from 70%).\n\n".
-                      
-                      "Analyze the image and determine if it shows an event requiring response.\n\n".
-                      
-                      "VALID EMERGENCIES (is_valid: true):\n".
-                      "- Fire: Flames, smoke (real or simulated), red/orange lighting suggesting fire\n".
-                      "- Flood: Water covering roads (real or simulated)\n".
-                      "- Accident: Vehicle collisions (real cars OR toy cars), overturned vehicles, debris\n\n".
+            $prompt = "You are an emergency detection AI system currently operating in DEMO/SIMULATION MODE. Your job is to analyze CCTV footage and flag emergencies for the UrbanWatch system.\n\n".
+                       "CRITICAL DEMO RULES:\n".
+                       "1. ENABLE SIMULATION RECOGNITION: You MUST treat scale models, toy vehicles (like Hotwheels), or printed photos of accidents as REAL vehicles. If you see toy cars crashing, classify it as a REAL 'Accident' with high severity. Do not dismiss them as 'toys' or 'fake'.\n".
+                       "2. LOWER THRESHOLD: Be more sensitive than usual. If an image looks like it MIGHT be an accident/fire/flood, mark it as VALID (is_valid: true). Do not be overly conservative.\n".
+                       "3. Minimum confidence threshold is now 60% (down from 70%).\n\n".
 
-                      "FALSE ALARMS (is_valid: false) - Only reject if clearly nothing is happening:\n".
-                      "- Empty roads with no obstacles\n".
-                      "- Normal traffic flow (without collision)\n".
-                      "- Clear weather with no water/fire\n".
-                      "- Blurry images where absolutely nothing is distinguishable\n\n".
+                       "Analyze the image and determine if it shows an event requiring response.\n\n".
 
-                      "If the image shows a VALID EMERGENCY (is_valid: true):\n".
-                      "1. accident_type: Choose exactly one: 'Fire', 'Flood', or 'Accident'\n".
-                      "2. severity: 'Low', 'Medium', or 'High' (Treat toy car crashes as 'High' for the demo)\n".
-                      "3. title: Generate a clear 5-8 word title in conversational Filipino/Tagalog. Example: 'May banggaan ng sasakyan sa kalsada'\n".
-                      "4. description: Generate a natural 2-3 sentence description in conversational Filipino/Tagalog. Describe what is happening simply. Example: 'May dalawang sasakyan na nagpang-abot sa gitna ng daan. Mukhang matindi ang tama sa harapan ng kotse.'\n".
-                      "5. confidence: Number from 60-100.\n".
-                      "6. detected_objects: Array of objects (e.g., ['car', 'toy_car', 'collision']).\n".
-                      "7. reasoning: Brief explanation in English. If it's a simulation, state: 'Simulation detected: Toy cars in collision state.'\n\n".
+                       "VALID EMERGENCIES (is_valid: true):\n".
+                       "- Fire: Flames, smoke (real or simulated), red/orange lighting suggesting fire\n".
+                       "- Flood: Water covering roads (real or simulated)\n".
+                       "- Accident: Vehicle collisions (real cars OR toy cars), overturned vehicles, debris\n\n".
 
-                      "If FALSE ALARM (is_valid: false):\n".
-                      "1. Set is_valid to false\n".
-                      "2. Set all other fields to null except reasoning\n".
-                      "3. reasoning: Explain why no emergency is seen.\n\n".
-                      
-                      $contextInfo."\n".
-                      
-                      "Return ONLY valid JSON with this exact structure:\n".
-                      "{\n".
-                      "  \"is_valid\": boolean,\n".
-                      "  \"accident_type\": \"Fire|Flood|Accident\" or null,\n".
-                      "  \"severity\": \"Low|Medium|High\" or null,\n".
-                      "  \"title\": \"string in Tagalog\" or null,\n".
-                      "  \"description\": \"string in Tagalog\" or null,\n".
-                      "  \"confidence\": number (0-100) or null,\n".
-                      "  \"detected_objects\": [\"array\", \"of\", \"strings\"] or null,\n".
-                      "  \"reasoning\": \"explanation in English\"\n".
-                      "}\n\n".
-                      'Do not include markdown formatting (like ```json) in the response.';
+                       "FALSE ALARMS (is_valid: false) - Only reject if clearly nothing is happening:\n".
+                       "- Empty roads with no obstacles\n".
+                       "- Normal traffic flow (without collision)\n".
+                       "- Clear weather with no water/fire\n".
+                       "- Blurry images where absolutely nothing is distinguishable\n\n".
+
+                       "If the image shows a VALID EMERGENCY (is_valid: true):\n".
+                       "1. accident_type: Choose exactly one: 'Fire', 'Flood', or 'Accident'\n".
+                       "2. severity: 'Low', 'Medium', or 'High' (Treat toy car crashes as 'High' for the demo)\n".
+                       "3. title: Generate a clear 5-8 word title in conversational Filipino/Tagalog. Example: 'May banggaan ng sasakyan sa kalsada'\n".
+                       "4. description: Generate a natural 2-3 sentence description in conversational Filipino/Tagalog. Describe what is happening simply. Example: 'May dalawang sasakyan na nagpang-abot sa gitna ng daan. Mukhang matindi ang tama sa harapan ng kotse.'\n".
+                       "5. confidence: Number from 60-100.\n".
+                       "6. detected_objects: Array of objects (e.g., ['car', 'toy_car', 'collision']).\n".
+                       "7. reasoning: Brief explanation in English. If it's a simulation, state: 'Simulation detected: Toy cars in collision state.'\n\n".
+
+                       "If FALSE ALARM (is_valid: false):\n".
+                       "1. Set is_valid to false\n".
+                       "2. Set all other fields to null except reasoning\n".
+                       "3. reasoning: Explain why no emergency is seen.\n\n".
+
+                       $contextInfo."\n".
+
+                       "Return ONLY valid JSON with this exact structure:\n".
+                       "{\n".
+                       "  \"is_valid\": boolean,\n".
+                       "  \"accident_type\": \"Fire|Flood|Accident\" or null,\n".
+                       "  \"severity\": \"Low|Medium|High\" or null,\n".
+                       "  \"title\": \"string in Tagalog\" or null,\n".
+                       "  \"description\": \"string in Tagalog\" or null,\n".
+                       "  \"confidence\": number (0-100) or null,\n".
+                       "  \"detected_objects\": [\"array\", \"of\", \"strings\"] or null,\n".
+                       "  \"reasoning\": \"explanation in English\"\n".
+                       "}\n\n".
+                       'Do not include markdown formatting (like ```json) in the response.';
 
             $response = Http::timeout(60)->withHeaders([
                 'Content-Type' => 'application/json',
@@ -462,11 +463,11 @@ class GeminiService
                                 [
                                     'inline_data' => [
                                         'mime_type' => $mimeType,
-                                        'data' => base64_encode($fileContent)
-                                    ]
-                                ]
-                            ]
-                        ]
+                                        'data' => base64_encode($fileContent),
+                                    ],
+                                ],
+                            ],
+                        ],
                     ],
                     'generationConfig' => [
                         'response_mime_type' => 'application/json', // Forces JSON response
@@ -482,13 +483,13 @@ class GeminiService
             // 3. Parse Response
             $responseData = $response->json();
             $rawText = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
-            
+
             // Clean markdown just in case (e.g. ```json ... ```)
             $cleanJson = preg_replace('/^```json\s*|\s*```$/', '', trim($rawText));
             $result = json_decode($cleanJson, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \Exception('Failed to parse Gemini JSON: ' . json_last_error_msg());
+                throw new \Exception('Failed to parse Gemini JSON: '.json_last_error_msg());
             }
 
             return $result;
@@ -496,7 +497,7 @@ class GeminiService
         } catch (\Throwable $e) {
             Log::error('Gemini Service Exception', ['error' => $e->getMessage()]);
             // Re-throw or return a safe fallback depending on your preference
-            throw $e; 
+            throw $e;
         }
     }
 }

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('reason')->nullable()->comment('Reason for suspension');
             $table->foreignId('suspended_by')->constrained('users')->comment('Admin who applied the suspension');
             $table->timestamps();
-            
+
             // Index for faster queries
             $table->index('user_id');
             $table->index(['user_id', 'status']);

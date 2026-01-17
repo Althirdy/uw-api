@@ -11,20 +11,18 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
-
     public function login(string $email, string $password)
     {
         $user = User::with(['role', 'officialDetails', 'citizenDetails'])
             ->where('email', $email)
             ->first();
 
-        if (!$user || ! Hash::check($password, $user->password)) {
+        if (! $user || ! Hash::check($password, $user->password)) {
             return null;
         }
 
         return $this->generateAuthData($user);
     }
-
 
     public function loginPurokLeader(string $pin)
     {
@@ -41,6 +39,7 @@ class AuthService
         if (! $user) {
             return null;
         }
+
         return $this->generateAuthData($user);
     }
 
@@ -83,7 +82,7 @@ class AuthService
             return $this->generateAuthData($user);
         } catch (\Exception $e) {
             DB::rollBack();
-            throw new UrbanWatchException('Registration failed: ' . $e->getMessage());
+            throw new UrbanWatchException('Registration failed: '.$e->getMessage());
         }
     }
 
@@ -116,8 +115,4 @@ class AuthService
     {
         return CitizenDetails::where('pcn_number', $pcnNumber)->exists();
     }
-
-
-
-
 }

@@ -64,10 +64,10 @@ class User extends Authenticatable
         return Attribute::make(
             get: function (?string $value, array $attributes) {
                 // If name is already set in the database, return it
-                if (!empty($value)) {
+                if (! empty($value)) {
                     return $value;
                 }
-                
+
                 // Otherwise, build name from relationships if loaded
                 if ($this->relationLoaded('officialDetails') && $this->officialDetails) {
                     return trim(
@@ -76,7 +76,7 @@ class User extends Authenticatable
                         ($this->officialDetails->last_name ?? '')
                     );
                 }
-                
+
                 if ($this->relationLoaded('citizenDetails') && $this->citizenDetails) {
                     return trim(
                         ($this->citizenDetails->first_name ?? '').' '.
@@ -84,7 +84,7 @@ class User extends Authenticatable
                         ($this->citizenDetails->last_name ?? '')
                     );
                 }
-                
+
                 // Fallback to empty string if no name available
                 return '';
             },

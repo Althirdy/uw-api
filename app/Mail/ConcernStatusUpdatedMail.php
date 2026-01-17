@@ -15,9 +15,13 @@ class ConcernStatusUpdatedMail extends Mailable
     use Queueable, SerializesModels;
 
     public Concern $concern;
+
     public User $updatedBy;
+
     public string $previousStatus;
+
     public string $newStatus;
+
     public ?string $remarks;
 
     /**
@@ -43,7 +47,7 @@ class ConcernStatusUpdatedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Concern Status Update - ' . ucfirst($this->newStatus),
+            subject: 'Concern Status Update - '.ucfirst($this->newStatus),
         );
     }
 
@@ -73,9 +77,10 @@ class ConcernStatusUpdatedMail extends Mailable
     {
         if ($this->concern->citizen && $this->concern->citizen->citizenDetails) {
             $details = $this->concern->citizen->citizenDetails;
+
             return trim("{$details->first_name} {$details->last_name}");
         }
-        
+
         return $this->concern->citizen?->name ?? 'Citizen';
     }
 
@@ -86,9 +91,10 @@ class ConcernStatusUpdatedMail extends Mailable
     {
         if ($this->updatedBy->officialDetails) {
             $details = $this->updatedBy->officialDetails;
+
             return trim("{$details->first_name} {$details->last_name}");
         }
-        
+
         return $this->updatedBy->name ?? 'Purok Leader';
     }
 

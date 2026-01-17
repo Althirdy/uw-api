@@ -16,7 +16,6 @@ class ActiveAccidentResource extends JsonResource
      * Create a new resource instance.
      *
      * @param  mixed  $resource
-     * @param  int  $roleId
      */
     public function __construct($resource, int $roleId = 3)
     {
@@ -81,8 +80,6 @@ class ActiveAccidentResource extends JsonResource
 
     /**
      * Get detailed location information from CCTV device.
-     *
-     * @return array|null
      */
     protected function getLocationDetails(): ?array
     {
@@ -107,7 +104,6 @@ class ActiveAccidentResource extends JsonResource
      * Create a collection with role context.
      *
      * @param  mixed  $resource
-     * @param  int  $roleId
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public static function collectionWithRole($resource, int $roleId)

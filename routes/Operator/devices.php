@@ -27,7 +27,7 @@ Route::middleware('auth')->group(function () {
         // Get UW Devices with relationships
         $uwDevices = UwDevice::with([
             'location:id,location_name,landmark,barangay',
-            'cctvDevice:id,device_name,location_id'
+            'cctvDevice:id,device_name,location_id',
         ])->paginate(10);
 
         $uwDevices->getCollection()->transform(function ($device) {

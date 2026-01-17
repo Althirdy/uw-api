@@ -9,10 +9,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * DEPRECATED: This middleware is no longer used.
- * 
+ *
  * Suspended users are allowed to login and view content (announcements, accidents, etc.)
  * but are blocked from write operations (submitting/deleting concerns) via controller-level checks.
- * 
+ *
  * This approach allows suspended citizens to stay informed while preventing misuse.
  */
 class CheckUserSuspension
@@ -27,24 +27,24 @@ class CheckUserSuspension
         // MIDDLEWARE DISABLED
         // Suspension is now checked at controller level for write operations only
         // Suspended users can login and view content
-        
+
         return $next($request);
-        
+
         /* ORIGINAL LOGIC - NOW DISABLED
         if (auth()->check()) {
             $userId = auth()->id();
-            
+
             // Check if user is suspended
             if (UserSuspension::isUserSuspended($userId)) {
                 $activeSuspension = UserSuspension::getActiveSuspension($userId);
-                
+
                 // Log out the user
                 auth()->logout();
-                
+
                 // Invalidate session
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
-                
+
                 // Prepare suspension message
                 $message = 'Your account has been suspended.';
                 if ($activeSuspension) {
@@ -54,18 +54,18 @@ class CheckUserSuspension
                         $expiresAt = $activeSuspension->expires_at->format('F j, Y \a\t g:i A');
                         $message = "Your account has been temporarily suspended until {$expiresAt}.";
                     }
-                    
+
                     if ($activeSuspension->reason) {
                         $message .= " Reason: {$activeSuspension->reason}";
                     }
                 }
-                
+
                 // Redirect to login with error message
                 return redirect()->route('login')
                     ->with('error', $message);
             }
         }
-        
+
         return $next($request);
         */
     }

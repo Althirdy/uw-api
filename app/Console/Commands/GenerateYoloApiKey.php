@@ -26,7 +26,7 @@ class GenerateYoloApiKey extends Command
      */
     public function handle()
     {
-        $apiKey = 'yolo_' . Str::random(64);
+        $apiKey = 'yolo_'.Str::random(64);
 
         $this->info('YOLO API Key generated successfully!');
         $this->line('');
@@ -37,7 +37,7 @@ class GenerateYoloApiKey extends Command
         $this->comment('GET /api/v1/yolo/enabled-cctvs');
         $this->line('');
         $this->info('Example Python code:');
-        $this->line('headers = {"x-api-key": "' . $apiKey . '"}');
+        $this->line('headers = {"x-api-key": "'.$apiKey.'"}');
         $this->line('response = requests.get(url, headers=headers)');
 
         return Command::SUCCESS;

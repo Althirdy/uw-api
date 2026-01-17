@@ -10,7 +10,7 @@ class UserSuspensionExampleSeeder extends Seeder
 {
     /**
      * Seed example suspension data for testing
-     * 
+     *
      * This seeder creates example scenarios:
      * 1. User with no suspensions (can receive Warning 1)
      * 2. User with expired Warning 1 (can receive Warning 2 or Permanent)
@@ -22,9 +22,10 @@ class UserSuspensionExampleSeeder extends Seeder
     {
         // Get or create an admin user to apply suspensions
         $admin = User::where('role_id', 1)->first();
-        
-        if (!$admin) {
+
+        if (! $admin) {
             $this->command->error('No admin user found. Please create an admin user first.');
+
             return;
         }
 
@@ -70,7 +71,7 @@ class UserSuspensionExampleSeeder extends Seeder
         // Scenario 3: User with Warning 1 and Warning 2
         if ($citizens->count() > 2) {
             $user3 = $citizens[2];
-            
+
             // First warning (expired)
             UserSuspension::create([
                 'user_id' => $user3->id,
@@ -100,7 +101,7 @@ class UserSuspensionExampleSeeder extends Seeder
         // Scenario 4: Permanently suspended user
         if ($citizens->count() > 3) {
             $user4 = $citizens[3];
-            
+
             // Warning 1 (expired)
             UserSuspension::create([
                 'user_id' => $user4->id,
@@ -141,14 +142,14 @@ class UserSuspensionExampleSeeder extends Seeder
             if ($user4->citizenDetails) {
                 $user4->citizenDetails->update(['status' => 'suspended']);
             }
-            
+
             $this->command->info("✓ Created permanent suspension for user: {$user4->email}");
         }
 
         // Scenario 5: User with revoked suspension
         if ($citizens->count() > 4) {
             $user5 = $citizens[4];
-            
+
             UserSuspension::create([
                 'user_id' => $user5->id,
                 'punishment_type' => 'warning_1',
@@ -159,15 +160,15 @@ class UserSuspensionExampleSeeder extends Seeder
                 'reason' => 'Misunderstanding - report was legitimate. Revoked by admin.',
                 'suspended_by' => $admin->id,
             ]);
-            
+
             $this->command->info("✓ Created revoked Warning 1 for user: {$user5->email}");
         }
 
         $this->command->info("\n📊 Suspension scenarios created successfully!");
-        $this->command->info("You can now test the suspension system with these users.");
+        $this->command->info('You can now test the suspension system with these users.');
         $this->command->info("\nTo test:");
-        $this->command->info("1. Visit /users in your browser");
-        $this->command->info("2. Click suspend on different users to see available punishments");
-        $this->command->info("3. Check that the correct options appear based on their history");
+        $this->command->info('1. Visit /users in your browser');
+        $this->command->info('2. Click suspend on different users to see available punishments');
+        $this->command->info('3. Check that the correct options appear based on their history');
     }
 }

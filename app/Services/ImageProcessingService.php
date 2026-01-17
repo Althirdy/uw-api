@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-
 class ImageProcessingService
 {
-/**
+    /**
      * Compress and optimize image for AI analysis.
      */
     public function optimizeForAi(string $fileContent, string $mimeType): string
@@ -14,18 +13,22 @@ class ImageProcessingService
             $image = @imagecreatefromstring($fileContent);
             if ($image === false) {
                 Log::warning('Image processing failed: Invalid image data');
+
                 return $fileContent;
             }
 
             // 1. Fix Mobile Rotation (EXIF)
             if (function_exists('exif_read_data')) {
-                $stream = 'data://application/octet-stream;base64,' . base64_encode($fileContent);
+                $stream = 'data://application/octet-stream;base64,'.base64_encode($fileContent);
                 $exif = @exif_read_data($stream);
-                if (!empty($exif['Orientation'])) {
+                if (! empty($exif['Orientation'])) {
                     switch ($exif['Orientation']) {
-                        case 3: $image = imagerotate($image, 180, 0); break;
-                        case 6: $image = imagerotate($image, -90, 0); break;
-                        case 8: $image = imagerotate($image, 90, 0); break;
+                        case 3: $image = imagerotate($image, 180, 0);
+                            break;
+                        case 6: $image = imagerotate($image, -90, 0);
+                            break;
+                        case 8: $image = imagerotate($image, 90, 0);
+                            break;
                     }
                 }
             }
@@ -33,11 +36,12 @@ class ImageProcessingService
             // 2. Resize Logic
             $originalWidth = imagesx($image);
             $originalHeight = imagesy($image);
-            $maxWidth = 1920; 
+            $maxWidth = 1920;
             $maxHeight = 1920;
 
             if ($originalWidth <= $maxWidth && $originalHeight <= $maxHeight) {
                 imagedestroy($image);
+
                 return $fileContent;
             }
 
@@ -74,8 +78,8 @@ class ImageProcessingService
 
         } catch (\Throwable $e) {
             Log::warning('Image optimization failed, using original', ['error' => $e->getMessage()]);
+
             return $fileContent;
         }
     }
-    
 }

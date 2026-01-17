@@ -22,7 +22,7 @@ class ConcernResource extends JsonResource
             'status' => $this->status,
             'severity' => $this->severity,
             'category' => $this->category,
-            
+
             // AI Category Detection Fields
             // 'userSelectedCategory' => $this->user_selected_category,
             // 'userSelectedSeverity' => $this->user_selected_severity,
@@ -46,24 +46,24 @@ class ConcernResource extends JsonResource
             'media' => MediaResource::collection($this->whenLoaded('media')),
 
             // 5. Simplify Relationships
-            'assignedTo' => $this->whenLoaded('distribution', function() {
+            'assignedTo' => $this->whenLoaded('distribution', function () {
                 $purokLeader = $this->distribution->purokLeader ?? null;
-                
-                if (!$purokLeader) {
+
+                if (! $purokLeader) {
                     return null;
                 }
-                
+
                 $officialDetails = $purokLeader->officialDetails ?? null;
-                
+
                 return [
-                    'name' => $officialDetails 
+                    'name' => $officialDetails
                         ? trim("{$officialDetails->first_name} {$officialDetails->last_name}")
                         : $purokLeader->name,
                     'role' => 'Purok Leader',
                 ];
             }),
 
-            'timeline' => $this->whenLoaded('histories', fn() => $this->histories->map(fn($history) => [
+            'timeline' => $this->whenLoaded('histories', fn () => $this->histories->map(fn ($history) => [
                 'id' => $history->id,
                 'status' => $history->status,
                 'remarks' => $history->remarks,
@@ -72,12 +72,11 @@ class ConcernResource extends JsonResource
                 // We flatten it to a single string because the UI usually just needs the name.
                 'actor' => $history->actor_display_name,
 
-                // OPTIMIZATION: Remove 'timeAgo'. 
+                // OPTIMIZATION: Remove 'timeAgo'.
                 // Send the raw date and let React Native's 'date-fns' handle "5 mins ago".
                 // This makes the cache valid for longer.
                 'date' => $history->created_at->toIso8601String(),
             ])),
-
 
             'createdAt' => $this->created_at->diffForHumans(),
             // 'updatedAt' => $this->updated_at->diffForHumans(),

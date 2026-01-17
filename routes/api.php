@@ -23,12 +23,9 @@ Route::prefix('v1')->group(function () {
     require __DIR__.'/api/v1/yolo.php';
     // Public Post routes
     Route::get('/mobile/public-posts', [App\Http\Controllers\Operator\PublicPostController::class, 'getMobilePublicPosts'])
-    ->middleware('auth:sanctum');
+        ->middleware('auth:sanctum');
 
 });
-
-
-
 
 /**
  * Health Check Endpoint

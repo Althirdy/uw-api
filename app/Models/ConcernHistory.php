@@ -33,7 +33,7 @@ class ConcernHistory extends Model
     public function getActorDisplayNameAttribute(): string
     {
         // 1. If there is no actor, it's the System
-        if (!$this->actor) {
+        if (! $this->actor) {
             return 'UrbanWatch System';
         }
 

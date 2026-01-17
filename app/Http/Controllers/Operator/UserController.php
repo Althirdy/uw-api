@@ -311,7 +311,7 @@ class UserController extends Controller
     {
         try {
             $availablePunishments = UserSuspension::getAvailablePunishments($user->id);
-            
+
             // Get suspension history
             $suspensionHistory = UserSuspension::where('user_id', $user->id)
                 ->with('suspendedBy:id,name,email')
@@ -348,7 +348,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to fetch available punishments.',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -359,7 +359,7 @@ class UserController extends Controller
     public function applySuspension(Request $request, User $user)
     {
         try {
-           
+
             $validated = $request->validate([
                 'punishment_type' => 'required|in:warning_1,warning_2,suspension',
                 'reason' => 'nullable|string|max:1000',
@@ -370,19 +370,20 @@ class UserController extends Controller
             // Verify that the punishment type is allowed for this user
             $availablePunishments = UserSuspension::getAvailablePunishments($user->id);
             \Log::info('Available punishments', ['punishments' => $availablePunishments]);
-            
+
             $allowedTypes = array_column($availablePunishments, 'type');
             \Log::info('Allowed types', ['allowed' => $allowedTypes, 'requested' => $validated['punishment_type']]);
 
-            if (!in_array($validated['punishment_type'], $allowedTypes)) {
+            if (! in_array($validated['punishment_type'], $allowedTypes)) {
                 \Log::warning('Punishment type not allowed');
+
                 return back()->withErrors(['error' => 'This punishment type is not available for this user.']);
             }
 
             DB::beginTransaction();
-            
+
             \Log::info('About to apply suspension');
-            
+
             // Apply the suspension
             $suspension = UserSuspension::applySuspension(
                 $user->id,
@@ -393,7 +394,7 @@ class UserController extends Controller
 
             \Log::info('Suspension created', [
                 'suspension_id' => $suspension->id,
-                'suspension_data' => $suspension->toArray()
+                'suspension_data' => $suspension->toArray(),
             ]);
 
             // Update user status to suspended for all punishment types
@@ -408,7 +409,7 @@ class UserController extends Controller
             DB::commit();
             \Log::info('Transaction committed successfully');
 
-            $punishmentLabel = match($validated['punishment_type']) {
+            $punishmentLabel = match ($validated['punishment_type']) {
                 'warning_1' => 'Warning 1 (3 days)',
                 'warning_2' => 'Warning 2 (7 days)',
                 'suspension' => 'Permanent Suspension',
@@ -418,7 +419,7 @@ class UserController extends Controller
 
             return redirect()->route('users')
                 ->with('success', "User suspended successfully with {$punishmentLabel}.");
-                
+
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Validation failed', ['errors' => $e->errors()]);
             throw $e;
@@ -430,9 +431,10 @@ class UserController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
                 'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'line' => $e->getLine(),
             ]);
-            return back()->withErrors(['error' => 'Failed to apply suspension: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to apply suspension: '.$e->getMessage()]);
         }
     }
 
@@ -444,7 +446,7 @@ class UserController extends Controller
         try {
             $activeSuspension = UserSuspension::getActiveSuspension($user->id);
 
-            if (!$activeSuspension) {
+            if (! $activeSuspension) {
                 return back()->with('error', 'No active suspension found for this user.');
             }
 
@@ -466,6 +468,7 @@ class UserController extends Controller
                     ->with('success', 'Suspension revoked successfully. User has been restored.');
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return back()
                     ->with('error', 'Failed to revoke suspension. Please try again.');
             }

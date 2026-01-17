@@ -18,9 +18,13 @@ class SendConcernStatusNotificationJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public Concern $concern;
+
     public User $updatedBy;
+
     public string $previousStatus;
+
     public string $newStatus;
+
     public ?string $remarks;
 
     /**
@@ -63,10 +67,11 @@ class SendConcernStatusNotificationJob implements ShouldQueue
             // Get the citizen's email
             $citizenEmail = $this->getCitizenEmail();
 
-            if (!$citizenEmail) {
+            if (! $citizenEmail) {
                 Log::warning('Cannot send concern status notification - no citizen email found', [
                     'concern_id' => $this->concern->id,
                 ]);
+
                 return;
             }
 

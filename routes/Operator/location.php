@@ -8,7 +8,7 @@ use Inertia\Inertia;
 Route::middleware('auth')->group(function () {
     Route::get('locations', function () {
         $locations = Locations::with([
-            'cctvDevices:id,location_id'
+            'cctvDevices:id,location_id',
         ])
             ->select('id', 'location_name', 'landmark', 'barangay', 'latitude', 'longitude', 'description')
             ->get();
@@ -16,6 +16,7 @@ Route::middleware('auth')->group(function () {
         $locations->transform(function ($location) {
             $location->cctv_count = $location->cctvDevices->count();
             unset($location->cctvDevices);
+
             return $location;
         });
 
@@ -49,7 +50,7 @@ Route::middleware('auth')->group(function () {
 
         return Inertia::render('locations', [
             'locations' => $locations,
-            'packages' => $packages
+            'packages' => $packages,
         ]);
     })->name('locations');
 

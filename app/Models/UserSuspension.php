@@ -2,24 +2,24 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * User Suspension Model
- * 
+ *
  * SUSPENSION POLICY:
  * - Suspended users CAN login and view content (announcements, accidents, concerns)
  * - Suspended users CANNOT perform write operations (create/delete concerns)
  * - This allows citizens to stay informed while preventing misuse
- * 
+ *
  * PUNISHMENT LEVELS:
  * 1. warning_1: 3-day temporary suspension
- * 2. warning_2: 7-day temporary suspension  
+ * 2. warning_2: 7-day temporary suspension
  * 3. suspension: Permanent ban (stores identity to prevent re-registration)
- * 
+ *
  * IMPLEMENTATION:
  * - Login: No suspension check (intentionally allows suspended users)
  * - Registration: Checks isIdentityBanned() to prevent banned users from re-registering
@@ -83,6 +83,7 @@ class UserSuspension extends Model
         // Check if temporary suspension has expired
         if ($this->expires_at && $this->expires_at->isPast()) {
             $this->update(['status' => 'expired']);
+
             return false;
         }
 
@@ -111,14 +112,14 @@ class UserSuspension extends Model
             ->first();
 
         // No previous warnings - can only give warning_1
-        if (!$latestSuspension) {
+        if (! $latestSuspension) {
             return [
                 [
                     'type' => 'warning_1',
                     'label' => 'Warning 1',
                     'duration' => 3,
-                    'description' => '3 days suspension'
-                ]
+                    'description' => '3 days suspension',
+                ],
             ];
         }
 
@@ -129,14 +130,14 @@ class UserSuspension extends Model
                     'type' => 'warning_2',
                     'label' => 'Warning 2',
                     'duration' => 7,
-                    'description' => '7 days suspension'
+                    'description' => '7 days suspension',
                 ],
                 [
                     'type' => 'suspension',
                     'label' => 'Permanent Suspension',
                     'duration' => null,
-                    'description' => 'Permanent ban from the app'
-                ]
+                    'description' => 'Permanent ban from the app',
+                ],
             ];
         }
 
@@ -147,8 +148,8 @@ class UserSuspension extends Model
                     'type' => 'suspension',
                     'label' => 'Permanent Suspension',
                     'duration' => null,
-                    'description' => 'Permanent ban from the app'
-                ]
+                    'description' => 'Permanent ban from the app',
+                ],
             ];
         }
 
@@ -160,7 +161,7 @@ class UserSuspension extends Model
      */
     public static function applySuspension(int $userId, string $punishmentType, int $adminId, ?string $reason = null): self
     {
-        $durationDays = match($punishmentType) {
+        $durationDays = match ($punishmentType) {
             'warning_1' => 3,
             'warning_2' => 7,
             'suspension' => null,
@@ -228,13 +229,6 @@ class UserSuspension extends Model
 
     /**
      * Check if registration identity matches a permanently banned user
-     * 
-     * @param string $phoneNumber
-     * @param string $firstName
-     * @param string|null $middleName
-     * @param string $lastName
-     * @param string|null $suffix
-     * @return bool
      */
     public static function isIdentityBanned(
         string $phoneNumber,

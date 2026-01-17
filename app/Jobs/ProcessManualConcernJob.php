@@ -106,7 +106,7 @@ class ProcessManualConcernJob implements ShouldQueue
 
                 // Fire AI Category Updated Event
                 $concern->load('distribution');
-                
+
                 Log::info('ProcessManualConcernJob: Firing ConcernAICategoryUpdated event', [
                     'concern_id' => $concern->id,
                     'citizen_id' => $concern->citizen_id,

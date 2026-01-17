@@ -76,11 +76,11 @@ class ConcernAICategoryUpdated implements ShouldBroadcast
             'ai_category' => $this->concern->ai_category,
             'ai_severity' => $this->concern->ai_severity,
             'ai_confidence' => $this->concern->ai_confidence,
-            'ai_processed_at' => $this->concern->ai_processed_at ? 
-                (is_string($this->concern->ai_processed_at) ? $this->concern->ai_processed_at : $this->concern->ai_processed_at->toISOString()) 
+            'ai_processed_at' => $this->concern->ai_processed_at ?
+                (is_string($this->concern->ai_processed_at) ? $this->concern->ai_processed_at : $this->concern->ai_processed_at->toISOString())
                 : null,
-            'updated_at' => $this->concern->updated_at ? 
-                (is_string($this->concern->updated_at) ? $this->concern->updated_at : $this->concern->updated_at->toISOString()) 
+            'updated_at' => $this->concern->updated_at ?
+                (is_string($this->concern->updated_at) ? $this->concern->updated_at : $this->concern->updated_at->toISOString())
                 : null,
         ];
 

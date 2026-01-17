@@ -4,16 +4,16 @@ namespace App\Services;
 
 use App\Events\ConcernAssigned;
 use App\Exceptions\UrbanWatchException;
+use App\Jobs\ProcessManualConcernJob;
+use App\Jobs\ProcessVoiceConcernJob;
 use App\Models\Citizen\Concern;
 use App\Models\ConcernDistribution;
 use App\Models\ConcernHistory;
 use App\Models\IncidentMedia;
-use App\Jobs\ProcessVoiceConcernJob;
-use App\Jobs\ProcessManualConcernJob;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ConcernService
 {
@@ -31,8 +31,8 @@ class ConcernService
      */
     public function getUserConcerns(int $userId, int $perPage = 15, array $filters = [])
     {
-        if (!User::find($userId)) {
-            throw new UrbanWatchException("User not found.");
+        if (! User::find($userId)) {
+            throw new UrbanWatchException('User not found.');
         }
 
         $query = Concern::where('citizen_id', $userId)
@@ -44,25 +44,25 @@ class ConcernService
                 'description',
                 'status',
                 'category',
-                'created_at'
+                'created_at',
             ]);
 
         // Apply filters
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->where('category', $filters['category']);
         }
 
-        if (!empty($filters['severity'])) {
+        if (! empty($filters['severity'])) {
             $query->where('severity', $filters['severity']);
         }
 
         $concerns = $query
             ->with([
-                'distribution.purokLeader.officialDetails'
+                'distribution.purokLeader.officialDetails',
             ])
             ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
@@ -73,22 +73,22 @@ class ConcernService
 
     public function getConcernsCount(int $userId, array $filters = [])
     {
-        if (!User::find($userId)) {
-            throw new UrbanWatchException("User not found.");
+        if (! User::find($userId)) {
+            throw new UrbanWatchException('User not found.');
         }
 
         $query = Concern::where('citizen_id', $userId);
 
         // Apply the same filters as getUserConcerns
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->where('category', $filters['category']);
         }
 
-        if (!empty($filters['severity'])) {
+        if (! empty($filters['severity'])) {
             $query->where('severity', $filters['severity']);
         }
 
@@ -113,14 +113,13 @@ class ConcernService
                 'histories.actor.officialDetails',
             ])
             ->first();
-        if (!User::find($userId)) {
-            throw new UrbanWatchException("User not found.");
+        if (! User::find($userId)) {
+            throw new UrbanWatchException('User not found.');
         }
 
-        if (!$concern) {
-            throw new UrbanWatchException("Concern not found.");
+        if (! $concern) {
+            throw new UrbanWatchException('Concern not found.');
         }
-
 
         return $concern;
     }
@@ -137,7 +136,7 @@ class ConcernService
 
             // Prepare Title & Description
             if ($concernType === 'voice') {
-                $title = $data['title'] ?? 'Voice Concern - ' . now()->format('M d, Y H:i');
+                $title = $data['title'] ?? 'Voice Concern - '.now()->format('M d, Y H:i');
                 $description = $data['description'] ?? 'Audio recording received. Transcription pending...';
             } else {
                 $title = $data['title'];
@@ -203,10 +202,9 @@ class ConcernService
 
             $purokLeaderDetails = \App\Models\OfficialsDails::where('id', $purokLeaderId)->first();
 
-            if (!$purokLeaderDetails) {
-                throw new UrbanWatchException("Purok Leader not found for distribution.");
+            if (! $purokLeaderDetails) {
+                throw new UrbanWatchException('Purok Leader not found for distribution.');
             }
-
 
             $distribution = ConcernDistribution::create([
                 'concern_id' => $concern->id,
@@ -250,7 +248,6 @@ class ConcernService
     //         ->where('citizen_id', $userId)
     //         ->first();
 
-       
     //     if (!$concern) {
     //         throw new UrbanWatchException("Concern not found.");
     //     }
@@ -265,8 +262,8 @@ class ConcernService
             ->where('citizen_id', $userId)
             ->first();
 
-        if (!$concern) {
-            throw new UrbanWatchException("Concern not found.");
+        if (! $concern) {
+            throw new UrbanWatchException('Concern not found.');
         }
 
         $concern->softDelete();
