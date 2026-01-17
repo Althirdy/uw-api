@@ -55,7 +55,7 @@ class ConcernManagementTest extends TestCase
             'citizen_id' => $this->citizen->id,
             'category' => 'safety',
             'status' => 'pending',
-            'tracking_code' => fn() => 'TRK-' . uniqid(),
+            'tracking_code' => fn () => 'TRK-'.uniqid(),
         ]);
 
         $response = $this->getJson('/api/v1/concerns');
@@ -315,7 +315,7 @@ class ConcernManagementTest extends TestCase
         $response->assertStatus(400)
             ->assertJsonPath('success', false);
 
-        $this->assertStringContainsString("cannot delete concerns", $response->json('message'));
+        $this->assertStringContainsString('cannot delete concerns', $response->json('message'));
     }
 
     /*
