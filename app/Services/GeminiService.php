@@ -11,9 +11,7 @@ class GeminiService
 
     protected $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-001:generateContent';
 
-    protected $audioModel = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
-
-';
+    protected $audioModel = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
     public function __construct()
     {

@@ -56,8 +56,16 @@ class ProcessVoiceConcernJob implements ShouldQueue
             // Assuming public_id stores the relative storage path as per FileUploadService
             $storagePath = $audioMedia->public_id;
 
-            // Use the default configured disk (S3 in your case)
+            // Use the same disk logic as FileUploadService for consistency
             $disk = config('filesystems.default');
+
+            // Apply same fallback logic as FileUploadService
+            if ($disk === 's3' && empty(config('filesystems.disks.s3.bucket'))) {
+                $disk = 'public';
+            }
+            if ($disk === 'local') {
+                $disk = 'public';
+            }
 
             if (! Storage::disk($disk)->exists($storagePath)) {
                 Log::error('ProcessVoiceConcernJob: Audio file not found in storage', [
