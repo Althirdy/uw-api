@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tailscale
-        uses: tailscale/github-action@v3
+        uses: tailscale/github-action@v2
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
 
-      - name: Execute Remote Deployment Script
+      - name: Execute Single Deployment Script
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ vars.STAGING_HOST }}
@@ -20,10 +20,4 @@ jobs:
           key: ${{ secrets.STAGING_SSH_KEY }}
           script: |
             cd ~/urbanwatch/uat-api
-            git pull origin staging
-            docker compose -f docker-compose.uat.yml exec -T uat-app composer install --no-dev
-            docker compose -f docker-compose.uat.yml exec -T uat-app npm install
-            docker compose -f docker-compose.uat.yml exec -T uat-app npm run build
-            docker compose -f docker-compose.uat.yml exec -T uat-app php artisan migrate --force
-            docker compose -f docker-compose.uat.yml exec -T uat-app php artisan optimize
-            docker compose -f docker-compose.uat.yml exec -T uat-app chown -R www-data:www-data storage bootstrap/cache
+            ./deploy-staging.sh
