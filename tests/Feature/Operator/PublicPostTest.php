@@ -26,6 +26,8 @@ class PublicPostTest extends TestCase
         $response->assertStatus(201);
         $this->assertDatabaseHas('public_posts', [
             'title' => 'Test Post',
+            'content' => 'This is a test content.',
+            'category' => 'General',
             'status' => 'published',
         ]);
     }
@@ -45,8 +47,7 @@ class PublicPostTest extends TestCase
         ]);
 
         $response->assertStatus(201);
-        // We can't easily assert file existence because FileUploadSer  vice logic might be complex with paths,
-        // but we expect success.
+  
     }
 
     public function test_validation_fails_for_missing_fields()

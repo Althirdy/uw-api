@@ -8,6 +8,17 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
+    services:
+      mariadb:
+        image: mariadb:10.11  
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: yes
+          MARIADB_DATABASE: urbanwatch_testing
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=3
+
+
     steps:
     - uses: actions/checkout@v4
 
@@ -32,7 +43,6 @@ jobs:
     - name: Directory Permissions
       run: chmod -R 777 storage bootstrap/cache
 
-    # 3. Install Frontend Dependencies & Build
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -45,12 +55,16 @@ jobs:
     - name: Build Frontend Assets
       run: npm run build
 
-    # 4. Check Code Style (Replaces lint.yml)
-    # This checks if your code follows Laravel standards without modifying it
     - name: Check Code Style (Pint)
       run: ./vendor/bin/pint --test
-
-    # 5. Run Tests (Replaces tests.yml)
-    # Uses in-memory SQLite by default for speed
+      
     - name: Execute tests (Unit and Feature)
+      env:
+        # Override the phpunit.xml sqlite defaults
+        DB_CONNECTION: mariadb
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_DATABASE: urbanwatch_testing
+        DB_USERNAME: root
+        DB_PASSWORD: 
       run: php artisan test

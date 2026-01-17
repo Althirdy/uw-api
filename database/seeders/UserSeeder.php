@@ -81,6 +81,7 @@ class UserSeeder extends Seeder
         CitizenDetails::firstOrCreate(
             ['user_id' => User::where('email', 'sangertbr@gmail.com')->first()->id],
             [
+                'pcn_number' => 'PCN-2024-0001',
                 'first_name' => 'Sanger',
                 'middle_name' => 'T.',
                 'last_name' => 'Briones',
